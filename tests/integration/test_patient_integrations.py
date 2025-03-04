@@ -1,6 +1,6 @@
 from fastapi import status
 from fastapi.testclient import TestClient
-from src.constants import EXCEPTION_MESSAGE_IDS_DO_NOT_MATCH
+from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.encounter.schemas import EncounterBase
 from src.patient.constants import (
     BASE_URL,
@@ -8,13 +8,13 @@ from src.patient.constants import (
     EXCEPTION_MESSAGE_PATIENT_NOT_FOUND,
     EXCEPTION_MESSAGE_PATIENT_HAS_ENCOUNTERS,
 )
-from src.patient.schemas import PatientBase, PatientBaseWithId
+from src.patient.schemas import PatientBase, PatientExtended
 from tests.conftest import create_patient_id
 
 
 def test_create_patient_201(
     patient_base: PatientBase,
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     response = test_client.post(url=BASE_URL, json=patient_base.model_dump())
@@ -46,7 +46,7 @@ def test_get_patients_200_empty_list(
 
 def test_get_patients_200_nonempty_list(
     patient_base: PatientBase,
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     create_patient_id(patient_base, test_client)
@@ -59,7 +59,7 @@ def test_get_patients_200_nonempty_list(
 
 def test_get_patient_by_id_200(
     patient_base: PatientBase,
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -72,7 +72,7 @@ def test_get_patient_by_id_200(
 
 
 def test_get_patient_by_id_404_patient_not_found(
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     patient_id = patient_base_with_id.id
@@ -85,7 +85,7 @@ def test_get_patient_by_id_404_patient_not_found(
 
 def test_update_patient_by_id_200(
     patient_base: PatientBase,
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -103,7 +103,7 @@ def test_update_patient_by_id_200(
 
 
 def test_update_patient_by_id_400_ids_not_match(
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     patient_id = patient_base_with_id.id + 1
@@ -114,11 +114,11 @@ def test_update_patient_by_id_400_ids_not_match(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == EXCEPTION_MESSAGE_IDS_DO_NOT_MATCH
+    assert response.json()["detail"] == EXC_MSG_IDS_DO_NOT_MATCH
 
 
 def test_update_patient_by_id_404_patient_not_found(
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     patient_id = patient_base_with_id.id
@@ -134,7 +134,7 @@ def test_update_patient_by_id_404_patient_not_found(
 
 def test_update_patient_by_id_409_email_not_unique(
     patient_base: PatientBase,
-    patient_base_with_id: PatientBaseWithId,
+    patient_base_with_id: PatientExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)

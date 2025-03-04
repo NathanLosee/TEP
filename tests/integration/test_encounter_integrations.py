@@ -1,12 +1,12 @@
 from fastapi import status
 from fastapi.testclient import TestClient
-from src.constants import EXCEPTION_MESSAGE_IDS_DO_NOT_MATCH
+from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.encounter.constants import (
     BASE_URL,
     EXCEPTION_MESSAGE_ENCOUNTER_NOT_FOUND,
     EXCEPTION_MESSAGE_ENCOUNTER_NOT_FOR_PATIENT,
 )
-from src.encounter.schemas import EncounterBase, EncounterBaseWithId
+from src.encounter.schemas import EncounterBase, EncounterExtended
 from src.patient.constants import EXCEPTION_MESSAGE_PATIENT_NOT_FOUND
 from src.patient.schemas import PatientBase
 from tests.conftest import create_patient_id, create_encounter_id
@@ -15,7 +15,7 @@ from tests.conftest import create_patient_id, create_encounter_id
 def test_create_encounter_201(
     patient_base: PatientBase,
     encounter_base: EncounterBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -45,7 +45,7 @@ def test_create_encounter_400_patient_ids_not_match(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == EXCEPTION_MESSAGE_IDS_DO_NOT_MATCH
+    assert response.json()["detail"] == EXC_MSG_IDS_DO_NOT_MATCH
 
 
 def test_create_encounter_404_patient_not_exist(
@@ -78,7 +78,7 @@ def test_get_encounters_200_empty_list(
 def test_get_encounters_200_nonempty_list(
     patient_base: PatientBase,
     encounter_base: EncounterBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -109,7 +109,7 @@ def test_get_encounters_404_patient_not_exist(
 def test_update_encounter_by_id_200(
     patient_base: PatientBase,
     encounter_base: EncounterBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -129,7 +129,7 @@ def test_update_encounter_by_id_200(
 
 def test_update_encounter_by_id_400_patient_ids_not_match(
     patient_base: PatientBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -142,11 +142,11 @@ def test_update_encounter_by_id_400_patient_ids_not_match(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == EXCEPTION_MESSAGE_IDS_DO_NOT_MATCH
+    assert response.json()["detail"] == EXC_MSG_IDS_DO_NOT_MATCH
 
 
 def test_update_encounter_by_id_404_patient_not_exist(
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = 1
@@ -163,7 +163,7 @@ def test_update_encounter_by_id_404_patient_not_exist(
 
 def test_update_encounter_by_id_400_encounter_ids_not_match(
     patient_base: PatientBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -176,12 +176,12 @@ def test_update_encounter_by_id_400_encounter_ids_not_match(
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == EXCEPTION_MESSAGE_IDS_DO_NOT_MATCH
+    assert response.json()["detail"] == EXC_MSG_IDS_DO_NOT_MATCH
 
 
 def test_update_encounter_by_id_404_encounter_not_exist(
     patient_base: PatientBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)
@@ -199,7 +199,7 @@ def test_update_encounter_by_id_404_encounter_not_exist(
 def test_update_encounter_by_id_404_encounter_not_for_patient(
     patient_base: PatientBase,
     encounter_base: EncounterBase,
-    encounter_base_with_id: EncounterBaseWithId,
+    encounter_base_with_id: EncounterExtended,
     test_client: TestClient,
 ):
     patient_id = create_patient_id(patient_base, test_client)

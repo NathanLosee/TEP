@@ -14,11 +14,7 @@ from src.config import get_settings
 Base: DeclarativeBase = declarative_base()
 
 settings = get_settings()
-SQL_ALCHEMY_DATABASE_URL = (
-    f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
-    f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}"
-    f"/{settings.POSTGRES_DB}"
-)
+SQL_ALCHEMY_DATABASE_URL = "sqlite:///tep.sqlite"
 
 engine = create_engine(SQL_ALCHEMY_DATABASE_URL)
 

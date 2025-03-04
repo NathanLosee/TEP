@@ -10,10 +10,10 @@ from src.database import Base, cleanup_tables, get_db
 from src.main import app, import_routers
 from src.encounter.constants import BASE_URL as ENCOUNTER_URL
 from src.encounter.models import Encounter
-from src.encounter.schemas import EncounterBase, EncounterBaseWithId
+from src.encounter.schemas import EncounterBase, EncounterExtended
 from src.patient.constants import BASE_URL as PATIENT_URL
 from src.patient.models import Patient
-from src.patient.schemas import PatientBase, PatientBaseWithId
+from src.patient.schemas import PatientBase, PatientExtended
 from unittest.mock import Mock, create_autospec
 
 
@@ -91,12 +91,12 @@ def encounter_base(encounter_data: dict) -> EncounterBase:
 
 
 @pytest.fixture
-def encounter_base_with_id(encounter_data: dict) -> EncounterBaseWithId:
-    return EncounterBaseWithId(**encounter_data, id=1)
+def encounter_base_with_id(encounter_data: dict) -> EncounterExtended:
+    return EncounterExtended(**encounter_data, id=1)
 
 
 @pytest.fixture
-def encounter_model(encounter_base_with_id: EncounterBaseWithId) -> Encounter:
+def encounter_model(encounter_base_with_id: EncounterExtended) -> Encounter:
     return Encounter(**encounter_base_with_id.model_dump())
 
 
@@ -138,13 +138,13 @@ def patient_base(patient_data: dict) -> PatientBase:
 
 
 @pytest.fixture
-def patient_base_with_id(patient_data: dict) -> PatientBaseWithId:
-    return PatientBaseWithId(**patient_data, id=1)
+def patient_base_with_id(patient_data: dict) -> PatientExtended:
+    return PatientExtended(**patient_data, id=1)
 
 
 @pytest.fixture
 def patient_model(
-    patient_base_with_id: PatientBaseWithId, encounter_model: Encounter
+    patient_base_with_id: PatientExtended, encounter_model: Encounter
 ) -> Patient:
     return Patient(
         **patient_base_with_id.model_dump(), encounters=[encounter_model]
