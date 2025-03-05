@@ -12,8 +12,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTask
+from starlette.middleware.sessions import SessionMiddleware
 from starlette.types import Message
-from src.config import Settings, get_settings
+from src.config import Settings, get_settings, load_rsa_private_key
 from src.database import cleanup_tables, get_db
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
@@ -35,6 +36,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(SessionMiddleware, secret_key="secret")
 
 
 AppSettings = Annotated[Settings, Depends(get_settings)]
@@ -111,7 +114,7 @@ def get_extra_info(
 
 
 def write_log_data(request: Request, req_body, response: Response, res_body):
-    """The the log for an incoming request.
+    """The log for an incoming request.
 
     Args:
         request (Request): The incoming request
@@ -217,3 +220,4 @@ def root() -> dict:
 
 
 import_routers()
+load_rsa_private_key()

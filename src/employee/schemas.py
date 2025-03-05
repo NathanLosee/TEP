@@ -13,7 +13,9 @@ from pydantic import (
     Field,
 )
 from src.auth.schemas import AuthRoleExtended
+from src.department.schemas import DepartmentExtended
 from src.employee.constants import NAME_REGEX
+from src.org_unit.schemas import OrgUnitExtended
 
 
 class EmployeeBase(BaseModel):
@@ -61,5 +63,22 @@ class EmployeeExtended(EmployeeBase):
 
     id: int
     authRoles: list[AuthRoleExtended]
+    org_unit: OrgUnitExtended
+    departments: list[DepartmentExtended]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class EmployeePassword(BaseModel):
+    """Pydantic schema for request/response data.
+
+    Attributes:
+        id (int): Unique identifier of the employee's data in the database.
+        password (str): Password of the employee.
+
+    """
+
+    id: int
+    password: str
+
+    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
