@@ -1,4 +1,4 @@
-"""Module defining API for auth_role role-related operations."""
+"""Module defining API for auth role-related operations."""
 
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
@@ -6,10 +6,14 @@ from src.database import get_db
 import src.employee.routes as employee_routes
 from src.employee.schemas import EmployeeExtended
 import src.services as common_services
-from src.auth.constants import BASE_URL
-import src.auth.repository as auth_role_repository
-import src.auth.services as auth_role_services
-from src.auth.schemas import AuthRoleBase, AuthRoleExtended
+from src.auth_role.constants import BASE_URL
+import src.auth_role.repository as auth_role_repository
+import src.auth_role.services as auth_role_services
+from src.auth_role.schemas import (
+    PermissionBase,
+    AuthRoleBase,
+    AuthRoleExtended,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["auth_role"])
 
@@ -70,6 +74,33 @@ def create_auth_role_membership(
     return auth_role_repository.create_membership(
         auth_role_id, employee_id, db
     )
+
+
+@router.post(
+    "/{auth_role_id}/permissions",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AuthRoleExtended,
+)
+def create_auth_role_permission(
+    auth_role_id: int,
+    request: PermissionBase,
+    db: Session = Depends(get_db),
+):
+    """Insert new permission.
+
+    Args:
+        auth_role_id (int): The auth role's unique identifier.
+        request (PermissionBase): Request data for new permission.
+        db (Session): Database session for current request.
+
+    Returns:
+        AuthRoleExtended: The auth role data with new permission.
+
+    """
+    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
+    auth_role_services.validate_auth_role_exists(auth_role)
+
+    return auth_role_repository.create_permission(auth_role_id, request, db)
 
 
 @router.get(
@@ -215,4 +246,35 @@ def delete_auth_role_membership(
 
     return auth_role_repository.delete_membership(
         auth_role_id, employee_id, db
+    )
+
+
+@router.delete(
+    "/{auth_role_id}/permissions/",
+    status_code=status.HTTP_200_OK,
+    response_model=AuthRoleExtended,
+)
+def delete_auth_role_permission(
+    auth_role_id: int,
+    resource: str,
+    http_method: str,
+    db: Session = Depends(get_db),
+):
+    """Delete permission.
+
+    Args:
+        auth_role_id (int): The auth role's unique identifier.
+        resource (str): The resource of the permission.
+        http_method (str): The HTTP method of the permission.
+        db (Session): Database session for current request.
+
+    Returns:
+        AuthRoleExtended: The auth role data without removed permission.
+
+    """
+    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
+    auth_role_services.validate_auth_role_exists(auth_role)
+
+    return auth_role_repository.delete_permission(
+        auth_role_id, resource, http_method, db
     )

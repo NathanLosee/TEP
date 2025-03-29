@@ -2,13 +2,13 @@
 
 from typing import Optional
 from fastapi import HTTPException, status
-from src.auth.constants import (
+from src.auth_role.constants import (
     EXC_MSG_AUTH_NOT_FOUND,
     EXC_MSG_NAME_ALREADY_EXISTS,
     EXC_MSG_EMPLOYEE_IS_MEMBER,
     EXC_MSG_EMPLOYEE_NOT_MEMBER,
 )
-from src.auth.models import AuthRole
+from src.auth_role.models import AuthRole
 from src.employee.models import Employee
 
 

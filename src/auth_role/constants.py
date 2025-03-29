@@ -1,4 +1,4 @@
-"""Module for defining auth-level constants."""
+"""Module for defining auth role-level constants."""
 
 from src.constants import NAME_CHAR_REGEX as N
 

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
-from src.auth import auth
+import src.auth as auth
 from src.database import get_db
 import src.services as common_services
 from src.employee.constants import BASE_URL
@@ -123,7 +123,7 @@ def update_employee_password_by_id(
     employee = employee_repository.get_employee_by_id(id, db)
     employee_services.validate_employee_exists(employee)
     if request.password:
-        request.password = auth.decrypt_and_hash_password(request.password)
+        request.password = auth.hash_value(request.password)
 
     return employee_repository.update_employee_password_by_id(
         employee, request, db

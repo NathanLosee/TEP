@@ -7,7 +7,7 @@ Classes:
 
 from datetime import date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.auth.models import AuthRole
+from src.auth_role.models import AuthRole
 from src.database import Base
 from src.department.models import Department, DepartmentMembership
 from src.employee.constants import IDENTIFIER
@@ -50,7 +50,7 @@ class Employee(Base):
     org_unit_id: Mapped[int] = mapped_column(nullable=False)
     manager_id: Mapped[int] = mapped_column(nullable=True)
     manager: Mapped["Employee"] = relationship("Employee")
-    auth_roles: Mapped[AuthRole] = relationship(
+    auth_role: Mapped[AuthRole] = relationship(
         AuthRole, back_populates="employees"
     )
     org_unit: Mapped[OrgUnit] = relationship(

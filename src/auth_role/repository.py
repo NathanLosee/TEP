@@ -1,10 +1,18 @@
-"""Module providing database interactivity for auth role-related operations.
-"""
+"""Module providing database interactivity for auth role-related operations."""
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.auth.models import AuthRole, AuthRoleMembership
-from src.auth.schemas import AuthRoleBase, AuthRoleExtended
+from src.auth_role.models import (
+    AuthRolePermission,
+    AuthRole,
+    AuthRoleMembership,
+)
+from src.auth_role.schemas import (
+    PermissionBase,
+    AuthRoleBase,
+    AuthRoleExtended,
+)
+from src.constants import ResourceType, HTTPMethod
 
 
 def create_auth_role(request: AuthRoleBase, db: Session) -> AuthRole:
@@ -21,7 +29,6 @@ def create_auth_role(request: AuthRoleBase, db: Session) -> AuthRole:
     auth_role = AuthRole(**request.model_dump())
     db.add(auth_role)
     db.commit()
-    db.refresh(auth_role)
     return auth_role
 
 
@@ -44,7 +51,28 @@ def create_membership(
     )
     db.add(membership)
     db.commit()
-    db.refresh(membership)
+    return get_auth_role_by_id(auth_role_id, db)
+
+
+def create_permission(
+    auth_role_id: int, request: PermissionBase, db: Session
+) -> AuthRole:
+    """Insert new permission data.
+
+    Args:
+        auth_role_id (int): The id of the auth role in the permission.
+        request (PermissionBase): Request data for new permission.
+        db (Session): Database session for the current request.
+
+    Returns:
+        Auth: The auth role with updated permissions.
+
+    """
+    permission = AuthRolePermission(
+        auth_role_id=auth_role_id, **request.model_dump()
+    )
+    db.add(permission)
+    db.commit()
     return get_auth_role_by_id(auth_role_id, db)
 
 
@@ -141,6 +169,34 @@ def delete_membership(
         select(AuthRoleMembership)
         .where(AuthRoleMembership.auth_role_id == auth_role_id)
         .where(AuthRoleMembership.employee_id == employee_id)
+    )
+    db.commit()
+    return get_auth_role_by_id(auth_role_id, db)
+
+
+def delete_permission(
+    auth_role_id: int,
+    resource: ResourceType,
+    http_method: HTTPMethod,
+    db: Session,
+) -> AuthRole:
+    """Delete a permission's data.
+
+    Args:
+        auth_role_id (int): The id of the auth role in the permission.
+        resource (ResourceType): The resource of the permission.
+        http_method (HTTPMethod): The HTTP method of the permission.
+        db (Session): Database session for the current request.
+
+    Returns:
+        Auth: The auth role with updated permissions.
+
+    """
+    db.delete(
+        select(AuthRolePermission)
+        .where(AuthRolePermission.auth_role_id == auth_role_id)
+        .where(AuthRolePermission.resource == resource)
+        .where(AuthRolePermission.http_method == http_method)
     )
     db.commit()
     return get_auth_role_by_id(auth_role_id, db)

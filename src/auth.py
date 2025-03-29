@@ -1,6 +1,8 @@
+import os
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes, serialization
 from jwt import JWT, AbstractJWKBase, jwk_from_pem
+from src.constants import HTTPMethod, ResourceType
 
 rsa_private_key: rsa.RSAPrivateKey = None
 rsa_public_key: rsa.RSAPublicKey = None
@@ -14,10 +16,23 @@ def load_keys():
     """Load the RSA private and public keys from local file."""
     global rsa_private_key, rsa_public_key, signing_key, verifying_key
 
-    with open("rsa_private_key.pem", "rb") as private_key_file:
-        rsa_private_key = serialization.load_pem_private_key(
-            private_key_file.read(), password=None
+    if not os.path.exists("rsa_private_key.pem"):
+        rsa_private_key = rsa.generate_private_key(
+            public_exponent=65537, key_size=2048
         )
+        with open("rsa_private_key.pem", "wb") as private_key_file:
+            private_key_file.write(
+                rsa_private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
+    else:
+        with open("rsa_private_key.pem", "rb") as private_key_file:
+            rsa_private_key = serialization.load_pem_private_key(
+                private_key_file.read(), password=None
+            )
 
     rsa_public_key = rsa_private_key.public_key()
 
@@ -78,16 +93,27 @@ def decode_jwt_token(jwt: str) -> dict:
     return jwt_instance.decode(jwt, verifying_key, algorithms=["RS256"])
 
 
-def requires_auth_role(auth_role: str, jwt: str) -> bool:
-    """Return whether the provided JWT has the required auth role.
+def requires_permission(
+    jwt: str, method: HTTPMethod, resource: ResourceType
+) -> bool:
+    """Check if the JWT token has the required permission.
 
     Args:
-        auth_role (str): The auth role required.
-        jwt (str): The JWT token to validate.
+        jwt (str): The JWT token to check.
+        method (HTTPMethod): The HTTP method to check.
+        resource (ResourceType): The resource to check.
 
     Returns:
-        bool: True if the JWT has the required auth role.
+        bool: True if the JWT token has the required permission.
 
     """
-    payload = jwt_instance.decode(jwt, verifying_key)
-    return auth_role in payload["auth_roles"]
+    payload = decode_jwt_token(jwt)
+    has_permission = False
+    for permission in payload["permissions"]:
+        if (
+            permission["http_method"] == method
+            and permission["resource"] == resource
+        ):
+            has_permission = True
+            break
+    return has_permission

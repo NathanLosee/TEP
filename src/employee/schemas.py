@@ -12,7 +12,7 @@ from pydantic import (
     ConfigDict,
     Field,
 )
-from src.auth.schemas import AuthRoleExtended
+from src.auth_role.schemas import AuthRoleExtended
 from src.department.schemas import DepartmentExtended
 from src.employee.constants import NAME_REGEX
 from src.org_unit.schemas import OrgUnitExtended
