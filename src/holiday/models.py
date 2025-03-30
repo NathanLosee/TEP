@@ -6,10 +6,18 @@ Classes:
 """
 
 from datetime import date
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 from src.holiday.constants import IDENTIFIER
-from src.org_unit.models import OrgUnit
+from src.org_unit.constants import IDENTIFIER as ORG_UNIT_IDENTIFIER
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from src.org_unit.models import OrgUnit
+else:
+    OrgUnit = "OrgUnit"
 
 
 class Holiday(Base):
@@ -29,7 +37,7 @@ class Holiday(Base):
     start_date: Mapped[date] = mapped_column(nullable=False)
     end_date: Mapped[date] = mapped_column(nullable=False)
     org_unit_id: Mapped[int] = mapped_column(
-        ForeignKey=OrgUnit.id, nullable=False
+        ForeignKey(ORG_UNIT_IDENTIFIER + ".id"), nullable=False
     )
     org_unit: Mapped[OrgUnit] = relationship(passive_deletes=True)
 

@@ -4,6 +4,7 @@ from src.constants import NAME_CHAR_REGEX as N
 
 IDENTIFIER = "auth_roles"
 MEMBERSHIP_IDENTIFIER = "auth_role_memberships"
+PERMISSION_IDENTIFIER = "auth_role_permissions"
 BASE_URL = f"/{IDENTIFIER}"
 NAME_REGEX = f"^{N}+$"
 NAME_MAX_LENGTH = 100

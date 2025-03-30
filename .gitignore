@@ -247,3 +247,4 @@ data_postgres
 
 # VS Code settings
 .vscode
+tep.sqlite

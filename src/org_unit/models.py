@@ -8,8 +8,15 @@ Classes:
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 from src.org_unit.constants import IDENTIFIER
-from src.employee.models import Employee
-from src.holiday.models import Holiday
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from src.employee.models import Employee
+    from src.holiday.models import Holiday
+else:
+    Employee = "Employee"
+    Holiday = "Holiday"
 
 
 class OrgUnit(Base):

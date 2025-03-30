@@ -12,8 +12,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 from src.department.constants import IDENTIFIER, MEMBERSHIP_IDENTIFIER
 from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
-from src.employee.models import Employee
-from src.job.models import Job
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from src.employee.models import Employee
+    from src.job.models import Job
+else:
+    Employee = "Employee"
+    Job = "Job"
 
 
 class DepartmentMembership(Base):
@@ -27,10 +34,12 @@ class DepartmentMembership(Base):
     """
 
     department_id: Mapped[int] = mapped_column(
-        ForeignKey(IDENTIFIER + ".id"), nullable=False
+        ForeignKey(IDENTIFIER + ".id"), primary_key=True, nullable=False
     )
     employee_id: Mapped[int] = mapped_column(
-        ForeignKey(EMPLOYEE_IDENTIFIER + ".id"), nullable=False
+        ForeignKey(EMPLOYEE_IDENTIFIER + ".id"),
+        primary_key=True,
+        nullable=False,
     )
 
     __tablename__ = MEMBERSHIP_IDENTIFIER

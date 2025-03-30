@@ -1,13 +1,10 @@
-from contextlib import asynccontextmanager
-
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from src.config import get_settings
-from src.database import Base, cleanup_tables, get_db
-from src.main import app, import_routers
+from src.database import Base, get_db
+from src.main import app
 from src.encounter.constants import BASE_URL as ENCOUNTER_URL
 from src.encounter.models import Encounter
 from src.encounter.schemas import EncounterBase, EncounterExtended
@@ -20,11 +17,7 @@ from unittest.mock import Mock, create_autospec
 test_app = TestClient(app)
 
 settings = get_settings()
-TEST_DATABASE_URL = (
-    f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
-    f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}"
-    f"/{settings.POSTGRES_DB}_test"
-)
+TEST_DATABASE_URL = "sqlite:///tep_test.sqlite"
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine

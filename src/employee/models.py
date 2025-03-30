@@ -7,11 +7,20 @@ Classes:
 
 from datetime import date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.auth_role.models import AuthRole
 from src.database import Base
-from src.department.models import Department, DepartmentMembership
+from src.department.constants import MEMBERSHIP_IDENTIFIER
 from src.employee.constants import IDENTIFIER
-from src.org_unit.models import OrgUnit
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from src.auth_role.models import AuthRole
+    from src.department.models import Department
+    from src.org_unit.models import OrgUnit
+else:
+    AuthRole = "AuthRole"
+    Department = "Department"
+    OrgUnit = "OrgUnit"
 
 
 class Employee(Base):
@@ -57,7 +66,7 @@ class Employee(Base):
         OrgUnit, back_populates="employees"
     )
     departments: Mapped[list[Department]] = relationship(
-        secondary=DepartmentMembership,
+        secondary=MEMBERSHIP_IDENTIFIER,
         back_populates="departments",
         cascade="all, delete",
     )
