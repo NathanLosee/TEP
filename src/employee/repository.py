@@ -6,7 +6,6 @@ from src.employee.models import Employee
 from src.employee.schemas import (
     EmployeeBase,
     EmployeeExtended,
-    EmployeePassword,
 )
 
 
@@ -64,28 +63,6 @@ def update_employee_by_id(
     Args:
         employee (Employee): The employee data to be updated.
         request (EmployeeExtended): Request data for updating employee.
-        db (Session): Database session for the current request.
-
-    Returns:
-        Employee: The updated employee.
-
-    """
-    employee_update = Employee(**request.model_dump())
-    db.merge(employee_update)
-    db.commit()
-    db.refresh(employee)
-    return employee
-
-
-def update_employee_password_by_id(
-    employee: Employee, request: EmployeePassword, db: Session
-) -> Employee:
-    """Update a employee's existing data.
-
-    Args:
-        employee (Employee): The employee data to be updated.
-        request (EmployeePassword): Request data for updating employee
-            password.
         db (Session): Database session for the current request.
 
     Returns:

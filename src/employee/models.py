@@ -6,20 +6,30 @@ Classes:
 """
 
 from datetime import date
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
-from src.department.constants import MEMBERSHIP_IDENTIFIER
+from src.department.constants import (
+    MEMBERSHIP_IDENTIFIER as DEPARTMENT_MEMBERSHIP_IDENTIFIER,
+)
 from src.employee.constants import IDENTIFIER
+from src.org_unit.constants import IDENTIFIER as ORG_UNIT_IDENTIFIER
+from src.auth_role.constants import (
+    MEMBERSHIP_IDENTIFIER as AUTH_ROLE_MEMBERSHIP_IDENTIFIER,
+)
+from src.holiday_group.constants import IDENTIFIER as HOLIDAY_GROUP_IDENTIFIER
 from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
     from src.auth_role.models import AuthRole
     from src.department.models import Department
+    from src.holiday_group.models import HolidayGroup
     from src.org_unit.models import OrgUnit
 else:
     AuthRole = "AuthRole"
     Department = "Department"
+    HolidayGroup = "HolidayGroup"
     OrgUnit = "OrgUnit"
 
 
@@ -39,6 +49,8 @@ class Employee(Base):
         time_type (bool): Whether the employee is full-time or part-time.
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
         allow_delete (bool): Whether the employee is allowed to be deleted.
+        auth_role_id (int): Unique identifier of the auth role the employee
+            possesses.
         org_unit_id (int): Unique identifier of the org unit the employee
             belongs to.
         manager_id (int): Unique identifier of the employee's manager.
@@ -46,7 +58,7 @@ class Employee(Base):
     """
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    alt_id: Mapped[int] = mapped_column(nullable=False)
+    alt_id: Mapped[int] = mapped_column(nullable=True)
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str] = mapped_column(nullable=False)
     password: Mapped[str] = mapped_column(nullable=True)
@@ -56,20 +68,31 @@ class Employee(Base):
     time_type: Mapped[bool] = mapped_column(nullable=False)
     allow_clocking: Mapped[bool] = mapped_column(nullable=False)
     allow_delete: Mapped[bool] = mapped_column(nullable=False)
-    org_unit_id: Mapped[int] = mapped_column(nullable=False)
-    manager_id: Mapped[int] = mapped_column(nullable=True)
-    manager: Mapped["Employee"] = relationship("Employee")
-    auth_role: Mapped[AuthRole] = relationship(
-        AuthRole, back_populates="employees"
+    holiday_group_id: Mapped[int] = mapped_column(
+        ForeignKey(HOLIDAY_GROUP_IDENTIFIER + ".id"), nullable=True
     )
+    org_unit_id: Mapped[int] = mapped_column(
+        ForeignKey(ORG_UNIT_IDENTIFIER + ".id"), nullable=False
+    )
+    manager_id: Mapped[int] = mapped_column(
+        ForeignKey(IDENTIFIER + ".id"), nullable=True
+    )
+    manager: Mapped["Employee"] = relationship("Employee")
     org_unit: Mapped[OrgUnit] = relationship(
         OrgUnit, back_populates="employees"
     )
-    departments: Mapped[list[Department]] = relationship(
-        secondary=MEMBERSHIP_IDENTIFIER,
-        back_populates="departments",
+    auth_roles: Mapped[list[AuthRole]] = relationship(
+        secondary=AUTH_ROLE_MEMBERSHIP_IDENTIFIER,
+        back_populates="employees",
         cascade="all, delete",
     )
-    manager: Mapped["Employee"] = relationship("Employee")
+    departments: Mapped[list[Department]] = relationship(
+        secondary=DEPARTMENT_MEMBERSHIP_IDENTIFIER,
+        back_populates="employees",
+        cascade="all, delete",
+    )
+    holiday_group: Mapped[HolidayGroup] = relationship(
+        HolidayGroup, back_populates="employees"
+    )
 
     __tablename__ = IDENTIFIER

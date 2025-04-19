@@ -12,9 +12,9 @@ EXC_MSG_IDS_DO_NOT_MATCH = "Ids in body and path do not match."
 class HTTPMethod(enum.Enum):
     """Class to define HTTP methods."""
 
-    GET = "GET"
-    POST = "POST"
-    PUT = "PUT"
+    CREATE = "CREATE"
+    READ = "READ"
+    UPDATE = "UPDATE"
     DELETE = "DELETE"
 
 
@@ -23,8 +23,8 @@ class ResourceType(enum.Enum):
 
     EMPLOYEE = "employee"
     DEPARTMENT = "department"
+    DEPARTMENT_MEMBERSHIP = "department_membership"
     HOLIDAY = "holiday"
-    JOB = "job"
     ORG_UNIT = "org_unit"
     AUTH_ROLE = "auth_role"
     AUTH_ROLE_PERMISSION = "auth_role_permission"

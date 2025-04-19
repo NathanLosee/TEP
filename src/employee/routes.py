@@ -11,7 +11,6 @@ import src.employee.services as employee_services
 from src.employee.schemas import (
     EmployeeBase,
     EmployeeExtended,
-    EmployeePassword,
 )
 
 router = APIRouter(prefix=BASE_URL, tags=["employee"])
@@ -97,37 +96,8 @@ def update_employee_by_id(
     employee = employee_repository.get_employee_by_id(id, db)
     employee_services.validate_employee_exists(employee)
 
+    request.password = auth.hash_value(request.password)
     return employee_repository.update_employee_by_id(employee, request, db)
-
-
-@router.put(
-    "/{id}",
-    status_code=status.HTTP_200_OK,
-    response_model=EmployeeExtended,
-)
-def update_employee_password_by_id(
-    id: int, request: EmployeePassword, db: Session = Depends(get_db)
-):
-    """Update data for employee with provided id.
-
-    Args:
-        id (int): The employee's unique identifier.
-        request (EmployeePassword): Request data to update employee password.
-        db (Session): Database session for current request.
-
-    Returns:
-        EmployeeExtended: The updated employee.
-
-    """
-    common_services.validate_ids_match(request.id, id)
-    employee = employee_repository.get_employee_by_id(id, db)
-    employee_services.validate_employee_exists(employee)
-    if request.password:
-        request.password = auth.hash_value(request.password)
-
-    return employee_repository.update_employee_password_by_id(
-        employee, request, db
-    )
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

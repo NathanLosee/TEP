@@ -4,7 +4,6 @@ from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.employee.schemas import EmployeeExtended
-from src.holiday.schemas import HolidayExtended
 import src.services as common_services
 from src.org_unit.constants import BASE_URL
 import src.org_unit.repository as org_unit_repository
@@ -85,14 +84,14 @@ def get_org_unit(id: int, db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
     response_model=list[EmployeeExtended],
 )
-def get_employees_by_department(
+def get_employees_by_org_unit(
     id: int,
     db: Session = Depends(get_db),
 ):
-    """Retrieve all employees for a given department.
+    """Retrieve all employees for a given org unit.
 
     Args:
-        id (int): The department's unique identifier.
+        id (int): The org unit's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
@@ -103,31 +102,6 @@ def get_employees_by_department(
     org_unit_services.validate_org_unit_exists(org_unit)
 
     return org_unit.employees
-
-
-@router.get(
-    "/{id}/holidays",
-    status_code=status.HTTP_200_OK,
-    response_model=list[HolidayExtended],
-)
-def get_holidays_by_department(
-    id: int,
-    db: Session = Depends(get_db),
-):
-    """Retrieve all holidays for a given department.
-
-    Args:
-        id (int): The department's unique identifier.
-        db (Session): Database session for current request.
-
-    Returns:
-        list[HolidayExtended]: The retrieved holidays for the given org unit.
-
-    """
-    org_unit = get_org_unit(id, db)
-    org_unit_services.validate_org_unit_exists(org_unit)
-
-    return org_unit.holidays
 
 
 @router.put(
@@ -151,7 +125,7 @@ def update_org_unit(
         OrgUnitExtended: The updated org unit.
 
     """
-    common_services.validate_ids_match(request.org_unit_id, id)
+    common_services.validate_ids_match(request.id, id)
     org_unit = org_unit_repository.get_org_unit_by_id(id, db)
     org_unit_services.validate_org_unit_exists(org_unit)
     org_unit_with_same_name = org_unit_repository.get_org_unit_by_name(
@@ -176,6 +150,5 @@ def delete_org_unit(id: int, db: Session = Depends(get_db)):
     org_unit = org_unit_repository.get_org_unit_by_id(id, db)
     org_unit_services.validate_org_unit_exists(org_unit)
     org_unit_services.validate_org_unit_employees_list_is_empty(org_unit)
-    org_unit_services.validate_org_unit_holidays_list_is_empty(org_unit)
 
     org_unit_repository.delete_org_unit(org_unit, db)

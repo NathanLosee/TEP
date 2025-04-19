@@ -10,8 +10,7 @@ def get_employee_by_id_and_password(
     employee_id: int,
     password: str,
 ) -> Employee:
-    """
-    Retrieve an employee by ID and password.
+    """Retrieve an employee by ID and password.
 
     Args:
         db (Session): Database session.

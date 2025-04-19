@@ -7,15 +7,24 @@ Classes:
 """
 
 from datetime import date
+from typing import Optional
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
 )
-from src.auth_role.schemas import AuthRoleExtended
-from src.department.schemas import DepartmentExtended
 from src.employee.constants import NAME_REGEX
-from src.org_unit.schemas import OrgUnitExtended
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from src.auth_role.schemas import AuthRoleBase
+    from src.department.schemas import DepartmentBase
+    from src.org_unit.schemas import OrgUnitBase
+else:
+    AuthRoleBase = "AuthRoleBase"
+    DepartmentBase = "DepartmentBase"
+    OrgUnitBase = "OrgUnitBase"
 
 
 class EmployeeBase(BaseModel):
@@ -41,6 +50,7 @@ class EmployeeBase(BaseModel):
     alt_id: int
     first_name: str = Field(pattern=NAME_REGEX)
     last_name: str = Field(pattern=NAME_REGEX)
+    password: Optional[str] = Field(exclude=True, default=None)
     payroll_type: str
     payroll_sync: date
     workweek_type: str
@@ -58,27 +68,16 @@ class EmployeeExtended(EmployeeBase):
 
     Attributes:
         id (int): Unique identifier of the employee's data in the database.
+        org_unit (list[OrgUnitBase]): The org unit the employee belongs to.
+        auth_roles (list[AuthRoleBase]): List of auth roles the employee has.
+        departments (list[DepartmentBase]): List of departments the employee is
+            a member of.
 
     """
 
     id: int
-    authRoles: list[AuthRoleExtended]
-    org_unit: OrgUnitExtended
-    departments: list[DepartmentExtended]
+    org_unit: OrgUnitBase
+    auth_roles: list[AuthRoleBase]
+    departments: list[DepartmentBase]
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class EmployeePassword(BaseModel):
-    """Pydantic schema for request/response data.
-
-    Attributes:
-        id (int): Unique identifier of the employee's data in the database.
-        password (str): Password of the employee.
-
-    """
-
-    id: int
-    password: str
-
-    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)

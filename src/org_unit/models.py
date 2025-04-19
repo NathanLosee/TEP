@@ -13,10 +13,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.employee.models import Employee
-    from src.holiday.models import Holiday
 else:
     Employee = "Employee"
-    Holiday = "Holiday"
 
 
 class OrgUnit(Base):
@@ -32,9 +30,6 @@ class OrgUnit(Base):
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     employees: Mapped[list[Employee]] = relationship(
         Employee, back_populates="org_unit", cascade="all, delete"
-    )
-    holidays: Mapped[list[Holiday]] = relationship(
-        Holiday, back_populates="org_unit", cascade="all, delete"
     )
 
     __tablename__ = IDENTIFIER

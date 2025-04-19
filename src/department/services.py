@@ -8,7 +8,6 @@ from src.department.constants import (
     EXC_MSG_EMPLOYEE_IS_MEMBER,
     EXC_MSG_EMPLOYEE_NOT_MEMBER,
     EXC_MSG_EMPLOYEES_ASSIGNED,
-    EXC_MSG_JOBS_ASSIGNED,
 )
 from src.department.models import Department
 from src.employee.models import Employee
@@ -50,7 +49,7 @@ def validate_department_name_is_unique(
         HTTPException (409): If the provided name is already in use.
 
     Returns:
-        bool: True if department name is unique.
+        bool: True if the name is unique.
 
     """
     if (
@@ -64,9 +63,10 @@ def validate_department_name_is_unique(
     return True
 
 
-def validate_employee_is_in_department(
+def validate_department_should_have_employee(
     department: Department,
     employee: Employee,
+    should_have: bool,
 ) -> bool:
     """Return whether the provided department has the provided employee.
 
@@ -75,44 +75,27 @@ def validate_employee_is_in_department(
         employee (Employee): The employee to validate.
 
     Raises:
-        HTTPException (409): If department does not have employee.
+        HTTPException (409): If department does have employee and shouldn't.
+        HTTPException (404): If department does not have employee and should.
 
     Returns:
-        bool: True if department does have employee.
+        bool: True if department has employee and should, or if it doesn't
+            have employee and shouldn't.
 
     """
     for emp in department.employees:
         if employee.id == emp.id:
+            if not should_have:
+                HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=EXC_MSG_EMPLOYEE_IS_MEMBER,
+                )
             return True
-    raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail=EXC_MSG_EMPLOYEE_NOT_MEMBER,
-    )
-
-
-def validate_employee_is_not_in_department(
-    department: Department,
-    employee: Employee,
-) -> bool:
-    """Return whether the provided department has the provided employee.
-
-    Args:
-        department (Department): The department to validate.
-        employee (Employee): The employee to validate.
-
-    Raises:
-        HTTPException (409): If department does have employee.
-
-    Returns:
-        bool: True if department does not have employee.
-
-    """
-    for emp in department.employees:
-        if employee.id == emp.id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=EXC_MSG_EMPLOYEE_IS_MEMBER,
-            )
+    if should_have:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=EXC_MSG_EMPLOYEE_NOT_MEMBER,
+        )
     return True
 
 
@@ -135,28 +118,5 @@ def validate_department_employees_list_is_empty(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=EXC_MSG_EMPLOYEES_ASSIGNED,
-        )
-    return True
-
-
-def validate_department_jobs_list_is_empty(
-    department: Department | None,
-) -> bool:
-    """Return whether the provided department has jobs.
-
-    Args:
-        department (Department): The department to validate.
-
-    Raises:
-        HTTPException (409): If department does have jobs.
-
-    Returns:
-        bool: True if department does not have jobs.
-
-    """
-    if department.jobs is not None and len(department.jobs) > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=EXC_MSG_JOBS_ASSIGNED,
         )
     return True

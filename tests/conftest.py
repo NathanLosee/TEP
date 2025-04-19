@@ -2,15 +2,29 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from src.auth_role.models import AuthRole
+from src.auth_role.schemas import (
+    AuthRoleBase,
+    AuthRoleExtended,
+    PermissionBase,
+)
 from src.config import get_settings
 from src.database import Base, get_db
+from src.department.models import Department
+from src.department.schemas import DepartmentBase, DepartmentExtended
+from src.employee.models import Employee
+from src.employee.schemas import EmployeeBase, EmployeeExtended
+from src.holiday_group.constants import BASE_URL as HOLIDAY_URL
+from src.holiday_group.models import HolidayGroup
+from src.holiday_group.schemas import (
+    HolidayBase,
+    HolidayGroupBase,
+    HolidayGroupExtended,
+)
 from src.main import app
-from src.encounter.constants import BASE_URL as ENCOUNTER_URL
-from src.encounter.models import Encounter
-from src.encounter.schemas import EncounterBase, EncounterExtended
-from src.patient.constants import BASE_URL as PATIENT_URL
-from src.patient.models import Patient
-from src.patient.schemas import PatientBase, PatientExtended
+from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
+from src.org_unit.models import OrgUnit
+from src.org_unit.schemas import OrgUnitBase, OrgUnitExtended
 from unittest.mock import Mock, create_autospec
 
 
@@ -59,92 +73,179 @@ def test_client():
     yield test_app
 
 
+# --- AuthRole Fixtures ---
 @pytest.fixture
-def encounter_data() -> dict:
+def auth_role_data() -> dict:
     return {
-        "patient_id": 1,
-        "notes": "An encounter of the 3rd kind.",
-        "visit_code": "L3T 1O1",
-        "provider": "Miracle Clinic",
-        "billing_code": "123.456.789-00",
-        "icd10": "A11",
-        "total_cost": "12.31",
-        "copay": "0.12",
-        "chief_complaint": "no complaints",
-        "pulse": 0,
-        "systolic": 1,
-        "diastolic": 2,
-        "date": "2024-03-11",
+        "name": "Admin",
     }
 
 
 @pytest.fixture
-def encounter_base(encounter_data: dict) -> EncounterBase:
-    return EncounterBase(**encounter_data)
-
-
-@pytest.fixture
-def encounter_base_with_id(encounter_data: dict) -> EncounterExtended:
-    return EncounterExtended(**encounter_data, id=1)
-
-
-@pytest.fixture
-def encounter_model(encounter_base_with_id: EncounterExtended) -> Encounter:
-    return Encounter(**encounter_base_with_id.model_dump())
-
-
-def create_encounter_id(
-    patient_id: int,
-    encounter: EncounterBase,
-    client: TestClient,
-) -> int:
-    encounter.patient_id = patient_id
-    response = client.post(
-        url=ENCOUNTER_URL.format(patient_id=patient_id),
-        json=encounter.model_dump(),
-    )
-    return response.json()["id"]
-
-
-@pytest.fixture
-def patient_data() -> dict:
+def auth_role_permission_data() -> dict:
     return {
-        "first_name": "Ricky",
-        "last_name": "Rando",
-        "ssn": "555-55-5555",
-        "email": "rrando@catalyte.io",
-        "age": 35,
-        "height": 69,
-        "weight": 220,
-        "insurance": "employer",
-        "gender": "male",
-        "street": "Fake St",
-        "city": "Nowhere",
-        "state": "OH",
-        "postal": "55555",
+        "auth_role_id": 1,
+        "http_method": "GET",
+        "resource": "employee",
+        "restrict_to_self": False,
     }
 
 
 @pytest.fixture
-def patient_base(patient_data: dict) -> PatientBase:
-    return PatientBase(**patient_data)
+def auth_role_base(auth_role_data: dict) -> AuthRoleBase:
+    return AuthRoleBase(**auth_role_data)
 
 
 @pytest.fixture
-def patient_base_with_id(patient_data: dict) -> PatientExtended:
-    return PatientExtended(**patient_data, id=1)
-
-
-@pytest.fixture
-def patient_model(
-    patient_base_with_id: PatientExtended, encounter_model: Encounter
-) -> Patient:
-    return Patient(
-        **patient_base_with_id.model_dump(), encounters=[encounter_model]
+def auth_role_extended(auth_role_data: dict) -> AuthRoleExtended:
+    return AuthRoleExtended(
+        **auth_role_data, id=1, permissions=[], employees=[]
     )
 
 
-def create_patient_id(patient: PatientBase, client: TestClient) -> int:
-    print(patient.model_dump())
-    response = client.post(url=PATIENT_URL, json=patient.model_dump())
-    return response.json()["id"]
+@pytest.fixture
+def auth_role_permission_base(
+    auth_role_permission_data: dict,
+) -> PermissionBase:
+    return PermissionBase(**auth_role_permission_data)
+
+
+@pytest.fixture
+def auth_role_model(auth_role_extended: AuthRoleExtended) -> AuthRole:
+    return AuthRole(**auth_role_extended.model_dump())
+
+
+# --- Department Fixtures ---
+@pytest.fixture
+def department_data() -> dict:
+    return {
+        "name": "Human Resources",
+    }
+
+
+@pytest.fixture
+def department_base(department_data: dict) -> DepartmentBase:
+    return DepartmentBase(**department_data)
+
+
+@pytest.fixture
+def department_extended(department_data: dict) -> DepartmentExtended:
+    return DepartmentExtended(**department_data, id=1, employees=[])
+
+
+@pytest.fixture
+def department_model(
+    department_extended: DepartmentExtended,
+) -> Department:
+    return Department(**department_extended.model_dump())
+
+
+# --- Employee Fixtures ---
+@pytest.fixture
+def employee_data() -> dict:
+    return {
+        "alt_id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "password": None,
+        "payroll_type": "hourly",
+        "payroll_sync": "2024-03-11",
+        "workweek_type": "standard",
+        "time_type": True,
+        "allow_clocking": True,
+        "allow_delete": True,
+        "auth_role_id": 1,
+        "org_unit_id": 1,
+        "manager_id": None,
+    }
+
+
+@pytest.fixture
+def employee_base(employee_data: dict) -> EmployeeBase:
+    return EmployeeBase(**employee_data)
+
+
+@pytest.fixture
+def employee_extended(employee_data: dict) -> EmployeeExtended:
+    return EmployeeExtended(**employee_data, id=1)
+
+
+@pytest.fixture
+def employee_model(
+    employee_extended: EmployeeExtended,
+) -> Employee:
+    return Employee(**employee_extended.model_dump())
+
+
+def create_employee_dependencies(
+    holiday_group_base: HolidayGroupBase,
+    org_unit_base: OrgUnitBase,
+    test_client: TestClient,
+):
+    test_client.post(url=HOLIDAY_URL, json=holiday_group_base.model_dump())
+    test_client.post(url=ORG_UNIT_URL, json=org_unit_base.model_dump())
+
+
+# --- Holiday Fixtures ---
+@pytest.fixture
+def holiday_group_data() -> dict:
+    return {
+        "name": "Public Holidays",
+    }
+
+
+@pytest.fixture
+def holiday_data() -> dict:
+    return {
+        "name": "New Year's Day",
+        "start_date": "2024-01-01",
+        "end_date": "2024-01-01",
+        "org_unit_id": 1,
+    }
+
+
+@pytest.fixture
+def holiday_group_base(holiday_group_data: dict) -> HolidayGroupBase:
+    return HolidayGroupBase(**holiday_group_data)
+
+
+@pytest.fixture
+def holiday_group_extended(holiday_group_data: dict) -> HolidayGroupExtended:
+    return HolidayGroupExtended(**holiday_group_data, id=1)
+
+
+@pytest.fixture
+def holiday_group_model(
+    holiday_group_extended: HolidayGroupExtended,
+) -> HolidayGroup:
+    return HolidayGroup(**holiday_group_extended.model_dump())
+
+
+@pytest.fixture
+def holiday_base(holiday_data: dict) -> HolidayBase:
+    return HolidayBase(**holiday_data)
+
+
+# --- OrgUnit Fixtures ---
+@pytest.fixture
+def org_unit_data() -> dict:
+    return {
+        "name": "Head Office",
+    }
+
+
+@pytest.fixture
+def org_unit_base(org_unit_data: dict) -> OrgUnitBase:
+    return OrgUnitBase(**org_unit_data)
+
+
+@pytest.fixture
+def org_unit_extended(org_unit_data: dict) -> OrgUnitExtended:
+    return OrgUnitExtended(**org_unit_data, id=1)
+
+
+@pytest.fixture
+def org_unit_model(
+    org_unit_extended: OrgUnitExtended,
+) -> OrgUnit:
+    return OrgUnit(**org_unit_extended.model_dump())

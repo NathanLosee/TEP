@@ -17,10 +17,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.employee.models import Employee
-    from src.job.models import Job
 else:
     Employee = "Employee"
-    Job = "Job"
 
 
 class DepartmentMembership(Base):
@@ -60,9 +58,6 @@ class Department(Base):
         secondary=DepartmentMembership,
         back_populates="departments",
         cascade="all, delete",
-    )
-    jobs: Mapped[list[Job]] = relationship(
-        "Job", back_populates="department", cascade="all, delete"
     )
 
     __tablename__ = IDENTIFIER

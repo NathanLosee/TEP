@@ -6,7 +6,6 @@ from src.org_unit.constants import (
     EXC_MSG_ORG_NOT_FOUND,
     EXC_MSG_NAME_ALREADY_EXISTS,
     EXC_MSG_EMPLOYEES_ASSIGNED,
-    EXC_MSG_HOLIDAYS_ASSIGNED,
 )
 from src.org_unit.models import OrgUnit
 
@@ -80,28 +79,5 @@ def validate_org_unit_employees_list_is_empty(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=EXC_MSG_EMPLOYEES_ASSIGNED,
-        )
-    return True
-
-
-def validate_org_unit_holidays_list_is_empty(
-    org_unit: OrgUnit | None,
-) -> bool:
-    """Return whether the provided org unit has holidays.
-
-    Args:
-        org_unit (OrgUnit): The org unit to validate.
-
-    Raises:
-        HTTPException (409): If org unit does have holidays.
-
-    Returns:
-        bool: True if org unit does not have holidays.
-
-    """
-    if org_unit.holidays is not None and len(org_unit.holidays) > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=EXC_MSG_HOLIDAYS_ASSIGNED,
         )
     return True

@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from src.database import get_db
 import src.employee.routes as employee_routes
 from src.employee.schemas import EmployeeExtended
-from src.job.schemas import JobExtended
 import src.services as common_services
 from src.department.constants import BASE_URL
 import src.department.repository as department_repository
@@ -64,8 +63,8 @@ def create_department_membership(
     department = department_repository.get_department_by_id(department_id, db)
     department_services.validate_department_exists(department)
     employee = employee_routes.get_employee_by_id(employee_id, db)
-    department_services.validate_employee_is_not_in_department(
-        department, employee
+    department_services.validate_department_should_have_employee(
+        department, employee, False
     )
 
     return department_repository.create_membership(
@@ -141,31 +140,6 @@ def get_employees_by_department(
     return department.employees
 
 
-@router.get(
-    "/{id}/jobs",
-    status_code=status.HTTP_200_OK,
-    response_model=list[JobExtended],
-)
-def get_jobs_by_department(
-    id: int,
-    db: Session = Depends(get_db),
-):
-    """Retrieve all jobs for a given department.
-
-    Args:
-        id (int): The department's unique identifier.
-        db (Session): Database session for current request.
-
-    Returns:
-        list[JobExtended]: The retrieved jobs for the given department.
-
-    """
-    department = get_department(id, db)
-    department_services.validate_department_exists(department)
-
-    return department.jobs
-
-
 @router.put(
     "/{id}",
     status_code=status.HTTP_200_OK,
@@ -212,7 +186,6 @@ def delete_department(id: int, db: Session = Depends(get_db)):
     department = department_repository.get_department_by_id(id, db)
     department_services.validate_department_exists(department)
     department_services.validate_department_employees_list_is_empty(department)
-    department_services.validate_department_jobs_list_is_empty(department)
 
     department_repository.delete_department(department, db)
 
@@ -239,8 +212,8 @@ def delete_department_membership(
     department = department_repository.get_department_by_id(department_id, db)
     department_services.validate_department_exists(department)
     employee = employee_routes.get_employee_by_id(employee_id, db)
-    department_services.validate_employee_is_in_department(
-        department, employee
+    department_services.validate_department_should_have_employee(
+        department, employee, True
     )
 
     return department_repository.delete_membership(

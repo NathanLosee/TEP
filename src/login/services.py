@@ -11,16 +11,15 @@ from src.login.constants import (
 def validate_login(
     employee: Employee,
 ) -> Optional[bool]:
-    """
-    Validate user credentials.
+    """Validate user credentials.
 
     Args:
         employee (Employee): The employee object containing user credentials.
 
     Returns:
         bool: True if credentials are valid, False otherwise.
+
     """
-    # Placeholder for actual authentication logic
     if employee:
         return True
     else:
@@ -30,32 +29,39 @@ def validate_login(
         )
 
 
-def generate_permissions(
-    employee: Employee,
-) -> dict[str, list[dict[str, str]]]:
-    """
-    Generate permissions for the authenticated user.
+def generate_permission_list(employee: Employee) -> list[dict]:
+    """Generate permission list for the logged-in user.
 
     Args:
         employee (Employee): The employee object containing user credentials.
 
     Returns:
-        dict[str, list[dict[str, str]]]: A dictionary of permissions for the
-            user.
+        list[dict]: A list of unique permissions for the user.
+
     """
-    permissions = {}
-    resources = set()
-    for permission in employee.auth_role.permissions:
-        resources.add(permission.resource)
-    for resource in resources:
-        permissions[resource] = {
-            [
-                {
-                    "http_method": permission.http_method,
-                    "restrict_to_self": permission.restrict_to_self,
-                }
-                for permission in employee.auth_role.permissions
-                if permission.resource == permission.resource
-            ]
+    permissions_set = set()
+    for auth_role in employee.auth_roles:
+        for permission in auth_role.permissions:
+            if not permission.restrict_to_self:
+                permissions_set.discard(
+                    (
+                        permission.resource,
+                        permission.http_method,
+                        True,
+                    )
+                )
+            permissions_set.add(
+                (
+                    permission.resource,
+                    permission.http_method,
+                    permission.restrict_to_self,
+                )
+            )
+    return [
+        {
+            "resource": resource,
+            "http_method": http_method,
+            "restrict_to_self": restrict_to_self,
         }
-    return permissions
+        for resource, http_method, restrict_to_self, _ in permissions_set
+    ]

@@ -14,7 +14,8 @@ from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTask
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.types import Message
-from src.config import Settings, get_settings, load_rsa_private_key
+from src.auth import load_keys
+from src.config import Settings, get_settings
 from src.database import cleanup_tables, get_db
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
@@ -220,4 +221,4 @@ def root() -> dict:
 
 
 import_routers()
-load_rsa_private_key()
+load_keys()

@@ -46,37 +46,6 @@ def create_auth_role(request: AuthRoleBase, db: Session = Depends(get_db)):
 
 
 @router.post(
-    "/{auth_role_id}/employees/{employee_id}",
-    status_code=status.HTTP_201_CREATED,
-    response_model=AuthRoleExtended,
-)
-def create_auth_role_membership(
-    auth_role_id: int, employee_id: int, db: Session = Depends(get_db)
-):
-    """Insert new membership.
-
-    Args:
-        auth_role_id (int): The auth role's unique identifier.
-        employee_id (int): The employee's unique identifier.
-        db (Session): Database session for current request.
-
-    Returns:
-        AuthRoleExtended: The auth role data with new employee.
-
-    """
-    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
-    auth_role_services.validate_auth_role_exists(auth_role)
-    employee = employee_routes.get_employee_by_id(employee_id, db)
-    auth_role_services.validate_employee_is_not_in_auth_role(
-        auth_role, employee
-    )
-
-    return auth_role_repository.create_membership(
-        auth_role_id, employee_id, db
-    )
-
-
-@router.post(
     "/{auth_role_id}/permissions",
     status_code=status.HTTP_201_CREATED,
     response_model=AuthRoleExtended,
@@ -99,8 +68,45 @@ def create_auth_role_permission(
     """
     auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
     auth_role_services.validate_auth_role_exists(auth_role)
+    auth_role_services.validate_auth_role_permission_exists(
+        auth_role,
+        request.resource,
+        request.http_method,
+        should_exist=False,
+    )
 
     return auth_role_repository.create_permission(auth_role_id, request, db)
+
+
+@router.post(
+    "/{auth_role_id}/employees/{employee_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AuthRoleExtended,
+)
+def create_auth_role_membership(
+    auth_role_id: int, employee_id: int, db: Session = Depends(get_db)
+):
+    """Insert new membership.
+
+    Args:
+        auth_role_id (int): The auth role's unique identifier.
+        employee_id (int): The employee's unique identifier.
+        db (Session): Database session for current request.
+
+    Returns:
+        AuthRoleExtended: The auth role data with new employee.
+
+    """
+    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
+    auth_role_services.validate_auth_role_exists(auth_role)
+    employee = employee_routes.get_employee_by_id(employee_id, db)
+    auth_role_services.validate_employee_should_have_auth_role(
+        auth_role, employee, False
+    )
+
+    return auth_role_repository.create_membership(
+        auth_role_id, employee_id, db
+    )
 
 
 @router.get(
@@ -192,7 +198,7 @@ def update_auth_role(
         AuthRoleExtended: The updated auth role.
 
     """
-    common_services.validate_ids_match(request.auth_role_id, id)
+    common_services.validate_ids_match(request.id, id)
     auth_role = auth_role_repository.get_auth_role_by_id(id, db)
     auth_role_services.validate_auth_role_exists(auth_role)
     auth_role_with_same_name = auth_role_repository.get_auth_role_by_name(
@@ -221,35 +227,6 @@ def delete_auth_role(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete(
-    "/{auth_role_id}/employees/{employee_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=AuthRoleExtended,
-)
-def delete_auth_role_membership(
-    auth_role_id: int, employee_id: int, db: Session = Depends(get_db)
-):
-    """Delete membership.
-
-    Args:
-        auth_role_id (int): The auth role's unique identifier.
-        employee_id (int): The employee's unique identifier.
-        db (Session): Database session for current request.
-
-    Returns:
-        AuthRoleExtended: The auth role data without removed employee.
-
-    """
-    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
-    auth_role_services.validate_auth_role_exists(auth_role)
-    employee = employee_routes.get_employee_by_id(employee_id, db)
-    auth_role_services.validate_employee_is_in_auth_role(auth_role, employee)
-
-    return auth_role_repository.delete_membership(
-        auth_role_id, employee_id, db
-    )
-
-
-@router.delete(
     "/{auth_role_id}/permissions/",
     status_code=status.HTTP_200_OK,
     response_model=AuthRoleExtended,
@@ -274,7 +251,46 @@ def delete_auth_role_permission(
     """
     auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
     auth_role_services.validate_auth_role_exists(auth_role)
+    auth_role_services.validate_auth_role_permission_exists(
+        auth_role,
+        resource,
+        http_method,
+        should_exist=True,
+    )
 
     return auth_role_repository.delete_permission(
         auth_role_id, resource, http_method, db
+    )
+
+
+@router.delete(
+    "/{auth_role_id}/employees/{employee_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=AuthRoleExtended,
+)
+def delete_auth_role_membership(
+    auth_role_id: int, employee_id: int, db: Session = Depends(get_db)
+):
+    """Delete membership.
+
+    Args:
+        auth_role_id (int): The auth role's unique identifier.
+        employee_id (int): The employee's unique identifier.
+        db (Session): Database session for current request.
+
+    Returns:
+        AuthRoleExtended: The auth role data without removed employee.
+
+    """
+    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
+    auth_role_services.validate_auth_role_exists(auth_role)
+    employee_with_auth_role = employee_routes.get_employee_by_id(
+        employee_id, db
+    )
+    auth_role_services.validate_employee_should_have_auth_role(
+        auth_role, employee_with_auth_role, True
+    )
+
+    return auth_role_repository.delete_membership(
+        auth_role_id, employee_id, db
     )
