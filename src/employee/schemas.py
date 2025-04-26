@@ -8,23 +8,8 @@ Classes:
 
 from datetime import date
 from typing import Optional
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-)
+from pydantic import BaseModel, ConfigDict, Field
 from src.employee.constants import NAME_REGEX
-from typing import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    from src.auth_role.schemas import AuthRoleBase
-    from src.department.schemas import DepartmentBase
-    from src.org_unit.schemas import OrgUnitBase
-else:
-    AuthRoleBase = "AuthRoleBase"
-    DepartmentBase = "DepartmentBase"
-    OrgUnitBase = "OrgUnitBase"
 
 
 class EmployeeBase(BaseModel):
@@ -44,6 +29,8 @@ class EmployeeBase(BaseModel):
         org_unit_id (int): Unique identifier of the org unit the employee
             belongs to.
         manager_id (int): Unique identifier of the employee's manager.
+        holiday_group_id (int): Unique identifier of the holiday group the
+            employee belongs to.
 
     """
 
@@ -58,7 +45,8 @@ class EmployeeBase(BaseModel):
     allow_clocking: bool
     allow_delete: bool
     org_unit_id: int
-    manager_id: int
+    manager_id: Optional[int] = Field(default=None)
+    holiday_group_id: Optional[int] = Field(default=None)
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
 
@@ -68,16 +56,9 @@ class EmployeeExtended(EmployeeBase):
 
     Attributes:
         id (int): Unique identifier of the employee's data in the database.
-        org_unit (list[OrgUnitBase]): The org unit the employee belongs to.
-        auth_roles (list[AuthRoleBase]): List of auth roles the employee has.
-        departments (list[DepartmentBase]): List of departments the employee is
-            a member of.
 
     """
 
     id: int
-    org_unit: OrgUnitBase
-    auth_roles: list[AuthRoleBase]
-    departments: list[DepartmentBase]
 
     model_config = ConfigDict(from_attributes=True)

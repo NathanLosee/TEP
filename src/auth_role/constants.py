@@ -10,7 +10,5 @@ NAME_REGEX = f"^{N}+$"
 NAME_MAX_LENGTH = 100
 EXC_MSG_NAME_ALREADY_EXISTS = "Auth role with name already exists."
 EXC_MSG_AUTH_ROLE_NOT_FOUND = "Auth role does not exist."
-EXC_MSG_PERMISSION_ALEADY_EXISTS = "Permission already exists."
-EXC_MSG_PERMISSION_NOT_FOUND = "Permission does not exist."
 EXC_MSG_EMPLOYEE_IS_MEMBER = "The employee already has this auth role."
 EXC_MSG_EMPLOYEE_NOT_MEMBER = "The employee does not have this auth role."

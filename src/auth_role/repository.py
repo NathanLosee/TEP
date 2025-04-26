@@ -7,12 +7,7 @@ from src.auth_role.models import (
     AuthRole,
     AuthRoleMembership,
 )
-from src.auth_role.schemas import (
-    PermissionBase,
-    AuthRoleBase,
-    AuthRoleExtended,
-)
-from src.constants import ResourceType, HTTPMethod
+from src.auth_role.schemas import AuthRoleBase, AuthRoleExtended
 
 
 def create_auth_role(request: AuthRoleBase, db: Session) -> AuthRole:
@@ -26,7 +21,12 @@ def create_auth_role(request: AuthRoleBase, db: Session) -> AuthRole:
         Org_unit: The created auth.
 
     """
-    auth_role = AuthRole(**request.model_dump())
+    auth_role = AuthRole(
+        **request.model_dump(exclude={"permissions"}),
+        permissions=[
+            AuthRolePermission(**p.model_dump()) for p in request.permissions
+        ],
+    )
     db.add(auth_role)
     db.commit()
     return auth_role
@@ -43,7 +43,7 @@ def create_membership(
         db (Session): Database session for the current request.
 
     Returns:
-        Auth: The auth role with updated membership.
+        AuthRole: The auth role with updated membership.
 
     """
     membership = AuthRoleMembership(
@@ -51,29 +51,9 @@ def create_membership(
     )
     db.add(membership)
     db.commit()
-    return get_auth_role_by_id(auth_role_id, db)
-
-
-def create_permission(
-    auth_role_id: int, request: PermissionBase, db: Session
-) -> AuthRole:
-    """Insert new permission data.
-
-    Args:
-        auth_role_id (int): The id of the auth role in the permission.
-        request (PermissionBase): Request data for new permission.
-        db (Session): Database session for the current request.
-
-    Returns:
-        Auth: The auth role with updated permissions.
-
-    """
-    permission = AuthRolePermission(
-        auth_role_id=auth_role_id, **request.model_dump()
-    )
-    db.add(permission)
-    db.commit()
-    return get_auth_role_by_id(auth_role_id, db)
+    auth_role = get_auth_role_by_id(auth_role_id, db)
+    db.refresh(auth_role)
+    return auth_role
 
 
 def get_auth_roles(db: Session) -> list[AuthRole]:
@@ -126,13 +106,19 @@ def update_auth_role(
 
     Args:
         auth (Auth): The auth data to be updated.
-        request (AuthExtended): Request data for updating auth.
+        request (AuthRoleExtended): Request data for updating auth.
         db (Session): Database session for the current request.
 
     Returns:
         Auth: The updated auth.
     """
-    auth_role_update = AuthRole(**request.model_dump())
+    auth_role_update = AuthRole(
+        **request.model_dump(exclude={"permissions"}),
+        permissions=[
+            AuthRolePermission(**p.model_dump(), auth_role_id=auth_role.id)
+            for p in request.permissions
+        ],
+    )
     db.merge(auth_role_update)
     db.commit()
     db.refresh(auth_role)
@@ -165,38 +151,14 @@ def delete_membership(
         Auth: The auth role with updated membership.
 
     """
-    db.delete(
-        select(AuthRoleMembership)
-        .where(AuthRoleMembership.auth_role_id == auth_role_id)
-        .where(AuthRoleMembership.employee_id == employee_id)
-    )
+    membership = db.scalars(
+        select(AuthRoleMembership).where(
+            AuthRoleMembership.auth_role_id == auth_role_id,
+            AuthRoleMembership.employee_id == employee_id,
+        )
+    ).first()
+    db.delete(membership)
     db.commit()
-    return get_auth_role_by_id(auth_role_id, db)
-
-
-def delete_permission(
-    auth_role_id: int,
-    resource: ResourceType,
-    http_method: HTTPMethod,
-    db: Session,
-) -> AuthRole:
-    """Delete a permission's data.
-
-    Args:
-        auth_role_id (int): The id of the auth role in the permission.
-        resource (ResourceType): The resource of the permission.
-        http_method (HTTPMethod): The HTTP method of the permission.
-        db (Session): Database session for the current request.
-
-    Returns:
-        Auth: The auth role with updated permissions.
-
-    """
-    db.delete(
-        select(AuthRolePermission)
-        .where(AuthRolePermission.auth_role_id == auth_role_id)
-        .where(AuthRolePermission.resource == resource)
-        .where(AuthRolePermission.http_method == http_method)
-    )
-    db.commit()
-    return get_auth_role_by_id(auth_role_id, db)
+    auth_role = get_auth_role_by_id(auth_role_id, db)
+    db.refresh(auth_role)
+    return auth_role

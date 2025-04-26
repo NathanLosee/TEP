@@ -5,8 +5,6 @@ from fastapi import HTTPException, status
 from src.auth_role.constants import (
     EXC_MSG_AUTH_ROLE_NOT_FOUND,
     EXC_MSG_NAME_ALREADY_EXISTS,
-    EXC_MSG_PERMISSION_ALEADY_EXISTS,
-    EXC_MSG_PERMISSION_NOT_FOUND,
     EXC_MSG_EMPLOYEE_IS_MEMBER,
     EXC_MSG_EMPLOYEE_NOT_MEMBER,
 )
@@ -60,48 +58,6 @@ def validate_auth_role_name_is_unique(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=EXC_MSG_NAME_ALREADY_EXISTS,
-        )
-    return True
-
-
-def validate_auth_role_permission_exists(
-    auth_role: AuthRole,
-    permission_resource: str,
-    permission_http_method: str,
-    should_exist: bool,
-) -> bool:
-    """Return whether the provided auth role has the provided permission.
-
-    Args:
-        auth_role (AuthRole): The auth role to validate.
-        permission_resource (str): The resource of the permission.
-        permission_http_method (str): The HTTP method of the permission.
-        should_exist (bool): Whether the permission should exist.
-
-    Raises:
-        HTTPException (404): If permission does not exist but should.
-        HTTPException (409): If permission does exist but shouldn't.
-
-    Returns:
-        bool: True if the permission exists and should_exist is True,
-            or if the permission does not exist and should_exist is False.
-
-    """
-    for permission in auth_role.permissions:
-        if (
-            permission.resource == permission_resource
-            and permission.http_method == permission_http_method
-        ):
-            if not should_exist:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=EXC_MSG_PERMISSION_ALEADY_EXISTS,
-                )
-            return True
-    if should_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=EXC_MSG_PERMISSION_NOT_FOUND,
         )
     return True
 

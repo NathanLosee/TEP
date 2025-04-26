@@ -14,7 +14,8 @@ from src.department.schemas import (
 )
 from src.employee.schemas import EmployeeBase
 from src.employee.constants import BASE_URL as EMPLOYEE_URL
-from tests.conftest import create_employee_dependencies
+from src.org_unit.schemas import OrgUnitBase
+from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 
 
 def test_create_department_201(
@@ -52,13 +53,18 @@ def test_create_department_409_name_already_exists(
 def test_create_department_membership_201(
     department_base: DepartmentBase,
     employee_base: EmployeeBase,
+    org_unit_base: OrgUnitBase,
     test_client: TestClient,
 ):
     department_id = test_client.post(
         BASE_URL,
         json=department_base.model_dump(),
     ).json()["id"]
-    create_employee_dependencies(employee_base, test_client)
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_base.model_dump(),
@@ -90,13 +96,18 @@ def test_create_department_membership_404_department_not_found(
 def test_create_department_membership_409_employee_already_member(
     department_base: DepartmentBase,
     employee_base: EmployeeBase,
+    org_unit_base: OrgUnitBase,
     test_client: TestClient,
 ):
     department_id = test_client.post(
         BASE_URL,
         json=department_base.model_dump(),
     ).json()["id"]
-    create_employee_dependencies(employee_base, test_client)
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_base.model_dump(),
@@ -185,13 +196,19 @@ def test_get_employees_by_department_200_nonempty_list(
     department_base: DepartmentBase,
     employee_base: EmployeeBase,
     employee_extended: EmployeeBase,
+    org_unit_base: OrgUnitBase,
     test_client: TestClient,
 ):
     department_id = test_client.post(
         BASE_URL,
         json=department_base.model_dump(),
     ).json()["id"]
-    create_employee_dependencies(employee_base, test_client)
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
+    employee_extended.org_unit_id = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_base.model_dump(),
@@ -317,13 +334,18 @@ def test_delete_department_404_department_not_found(
 def test_delete_department_409_employees_assigned(
     department_base: DepartmentBase,
     employee_base: EmployeeBase,
+    org_unit_base: OrgUnitBase,
     test_client: TestClient,
 ):
     department_id = test_client.post(
         BASE_URL,
         json=department_base.model_dump(),
     ).json()["id"]
-    create_employee_dependencies(employee_base, test_client)
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_base.model_dump(),
@@ -342,13 +364,18 @@ def test_delete_department_409_employees_assigned(
 def test_delete_department_membership_200(
     department_base: DepartmentBase,
     employee_base: EmployeeBase,
+    org_unit_base: OrgUnitBase,
     test_client: TestClient,
 ):
     department_id = test_client.post(
         BASE_URL,
         json=department_base.model_dump(),
     ).json()["id"]
-    create_employee_dependencies(employee_base, test_client)
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_base.model_dump(),
@@ -382,13 +409,18 @@ def test_delete_department_membership_404_department_not_found(
 def test_delete_department_membership_404_employee_not_member(
     department_base: DepartmentBase,
     employee_base: EmployeeBase,
+    org_unit_base: OrgUnitBase,
     test_client: TestClient,
 ):
     department_id = test_client.post(
         BASE_URL,
         json=department_base.model_dump(),
     ).json()["id"]
-    create_employee_dependencies(employee_base, test_client)
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_base.model_dump(),

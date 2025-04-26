@@ -55,7 +55,7 @@ class Department(Base):
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     employees: Mapped[list[Employee]] = relationship(
-        secondary=DepartmentMembership,
+        secondary=MEMBERSHIP_IDENTIFIER,
         back_populates="departments",
         cascade="all, delete",
     )

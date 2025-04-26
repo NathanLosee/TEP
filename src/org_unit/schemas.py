@@ -8,13 +8,6 @@ Classes:
 
 from pydantic import BaseModel, ConfigDict, Field
 from src.org_unit.constants import NAME_MAX_LENGTH, NAME_REGEX
-from typing import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    from src.employee.schemas import EmployeeBase
-else:
-    EmployeeBase = "EmployeeBase"
 
 
 class OrgUnitBase(BaseModel):
@@ -37,11 +30,9 @@ class OrgUnitExtended(OrgUnitBase):
 
     Attributes:
         id (int): Unique identifier of the org unit's data in the database.
-        employees (list[EmployeeBase]): List of employees in the org unit.
 
     """
 
     id: int
-    employees: list[EmployeeBase]
 
     model_config = ConfigDict(from_attributes=True)

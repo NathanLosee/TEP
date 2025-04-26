@@ -5,7 +5,7 @@ import enum
 
 DIGIT_REGEX = "[[:digit:]]"
 CAP_CHAR_REGEX = "[[:upper:]]"
-NAME_CHAR_REGEX = "[-''[:alpha:]]"
+NAME_CHAR_REGEX = "[-'' [:alpha:]]"
 EXC_MSG_IDS_DO_NOT_MATCH = "Ids in body and path do not match."
 
 
@@ -21,11 +21,11 @@ class HTTPMethod(enum.Enum):
 class ResourceType(enum.Enum):
     """Class to define resource types."""
 
-    EMPLOYEE = "employee"
-    DEPARTMENT = "department"
-    DEPARTMENT_MEMBERSHIP = "department_membership"
-    HOLIDAY = "holiday"
-    ORG_UNIT = "org_unit"
-    AUTH_ROLE = "auth_role"
-    AUTH_ROLE_PERMISSION = "auth_role_permission"
-    AUTH_ROLE_MEMBERSHIP = "auth_role_membership"
+    EMPLOYEE = "EMPLOYEE"
+    DEPARTMENT = "DEPARTMENT"
+    DEPARTMENT_MEMBERSHIP = "DEPARTMENT_MEMBERSHIP"
+    HOLIDAY = "HOLIDAY"
+    ORG_UNIT = "ORG_UNIT"
+    AUTH_ROLE = "AUTH_ROLE"
+    AUTH_ROLE_PERMISSION = "AUTH_ROLE_PERMISSION"
+    AUTH_ROLE_MEMBERSHIP = "AUTH_ROLE_MEMBERSHIP"

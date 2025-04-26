@@ -8,7 +8,6 @@ Classes:
 """
 
 from datetime import date
-from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from src.holiday_group.constants import NAME_MAX_LENGTH, NAME_REGEX
 
@@ -30,7 +29,7 @@ class HolidayBase(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
 
     @model_validator(mode="after")
-    def check_values(self) -> Self:
+    def check_values(self):
         if self.end_date < self.start_date:
             raise ValueError("endDate must be greater than startDate.")
         return self

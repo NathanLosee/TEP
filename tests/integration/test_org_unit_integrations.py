@@ -12,7 +12,6 @@ from src.org_unit.schemas import (
     OrgUnitBase,
     OrgUnitExtended,
 )
-from tests.conftest import create_employee_dependencies
 
 
 def test_create_org_unit_201(
@@ -104,13 +103,18 @@ def test_get_employees_by_org_unit_200_empty_list(
 
 def test_get_employees_by_org_unit_200_nonempty_list(
     org_unit_base: OrgUnitBase,
+    employee_base: EmployeeBase,
     employee_extended: EmployeeExtended,
     test_client: TestClient,
 ):
-    create_employee_dependencies()
     org_unit_id = test_client.post(
         BASE_URL, json=org_unit_base.model_dump()
     ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
+    employee_extended.org_unit_id = org_unit_id
+    test_client.post(EMPLOYEE_URL, json=employee_base.model_dump()).json()[
+        "id"
+    ]
 
     response = test_client.get(f"{BASE_URL}/{org_unit_id}/employees")
 
@@ -209,15 +213,17 @@ def test_delete_org_unit_404_not_found(
 
 
 def test_delete_org_unit_409_employees_assigned(
+    org_unit_base: OrgUnitBase,
     employee_base: EmployeeBase,
     test_client: TestClient,
 ):
-    create_employee_dependencies()
-    test_client.post(EMPLOYEE_URL, json=employee_base.model_dump()).json()[
-        "id"
-    ]
+    org_unit_id = test_client.post(
+        BASE_URL, json=org_unit_base.model_dump()
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
+    test_client.post(EMPLOYEE_URL, json=employee_base.model_dump())
 
-    response = test_client.delete(f"{BASE_URL}/1")
+    response = test_client.delete(f"{BASE_URL}/{org_unit_id}")
 
     assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json() == {"detail": EXC_MSG_EMPLOYEES_ASSIGNED}

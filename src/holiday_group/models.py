@@ -21,27 +21,6 @@ else:
     Employee = "Employee"
 
 
-class HolidayGroup(Base):
-    """SQLAlchemy model for holiday group data.
-
-    Attributes:
-        id (int): Unique identifier of the holiday group in the database.
-        name (str): Name of the holiday group.
-
-    """
-
-    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
-    holidays: Mapped[list["Holiday"]] = relationship(
-        IDENTIFIER, back_populates="holiday_group"
-    )
-    employees: Mapped[list[Employee]] = relationship(
-        Employee, back_populates="holiday_group"
-    )
-
-    __tablename__ = IDENTIFIER
-
-
 class Holiday(Base):
     """SQLAlchemy model for holiday data.
 
@@ -57,10 +36,28 @@ class Holiday(Base):
     start_date: Mapped[date] = mapped_column(nullable=False)
     end_date: Mapped[date] = mapped_column(nullable=False)
     holiday_group_id: Mapped[int] = mapped_column(
-        ForeignKey("holiday_groups.id"), primary_key=True, nullable=False
-    )
-    holiday_group: Mapped[HolidayGroup] = relationship(
-        HolidayGroup, back_populates="holidays"
+        ForeignKey(IDENTIFIER + ".id"), primary_key=True, nullable=False
     )
 
     __tablename__ = HOLIDAY_IDENTIFIER
+
+
+class HolidayGroup(Base):
+    """SQLAlchemy model for holiday group data.
+
+    Attributes:
+        id (int): Unique identifier of the holiday group in the database.
+        name (str): Name of the holiday group.
+
+    """
+
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    holidays: Mapped[list["Holiday"]] = relationship(
+        Holiday, cascade="all, delete"
+    )
+    employees: Mapped[list[Employee]] = relationship(
+        Employee, back_populates="holiday_group"
+    )
+
+    __tablename__ = IDENTIFIER

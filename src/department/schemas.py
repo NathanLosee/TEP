@@ -8,13 +8,6 @@ Classes:
 
 from pydantic import BaseModel, ConfigDict, Field
 from src.department.constants import NAME_MAX_LENGTH, NAME_REGEX
-from typing import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    from src.employee.schemas import EmployeeBase
-else:
-    EmployeeBase = "EmployeeBase"
 
 
 class DepartmentBase(BaseModel):
@@ -37,11 +30,9 @@ class DepartmentExtended(DepartmentBase):
 
     Attributes:
         id (int): Unique identifier of the department's data in the database.
-        employees (list[EmployeeBase]): List of employees in the department.
 
     """
 
     id: int
-    employees: list[EmployeeBase]
 
     model_config = ConfigDict(from_attributes=True)

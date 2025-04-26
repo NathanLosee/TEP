@@ -10,13 +10,6 @@ Classes:
 
 from pydantic import BaseModel, ConfigDict, Field
 from src.auth_role.constants import NAME_MAX_LENGTH, NAME_REGEX
-from typing import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    from src.employee.schemas import EmployeeBase
-else:
-    EmployeeBase = "EmployeeBase"
 
 
 class PermissionBase(BaseModel):
@@ -44,10 +37,13 @@ class AuthRoleBase(BaseModel):
 
     Attributes:
         name (str): Name of the auth role.
+        permissions (list[PermissionBase]): List of permissions associated
+            with this auth role.
 
     """
 
     name: str = Field(pattern=NAME_REGEX, max_length=NAME_MAX_LENGTH)
+    permissions: list[PermissionBase]
 
     model_config = ConfigDict(
         str_strip_whitespace=True, str_min_length=1, populate_by_name=True
@@ -59,14 +55,9 @@ class AuthRoleExtended(AuthRoleBase):
 
     Attributes:
         id (int): Unique identifier of the auth's data in the database.
-        employees (list[EmployeeBase]): List of employees with this auth role.
-        permissions (list[PermissionBase]): List of permissions associated
-            with this auth role.
 
     """
 
     id: int
-    employees: list[EmployeeBase]
-    permissions: list[PermissionBase]
 
     model_config = ConfigDict(from_attributes=True)

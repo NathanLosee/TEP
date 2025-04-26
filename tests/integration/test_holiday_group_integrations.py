@@ -12,6 +12,10 @@ from src.holiday_group.schemas import (
     HolidayGroupBase,
     HolidayGroupExtended,
 )
+from src.employee.constants import BASE_URL as EMPLOYEE_URL
+from src.employee.schemas import EmployeeBase, EmployeeExtended
+from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
+from src.org_unit.schemas import OrgUnitBase
 
 
 def test_create_holiday_group_201(
@@ -194,6 +198,45 @@ def test_get_holidays_by_group_404_holiday_group_not_found(
     holiday_group_id = 999
 
     response = test_client.get(f"{BASE_URL}/{holiday_group_id}/holidays")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == EXC_MSG_HOLIDAY_GROUP_NOT_FOUND
+
+
+def test_get_employees_by_holiday_group_200(
+    holiday_group_base: HolidayGroupBase,
+    employee_base: EmployeeBase,
+    employee_extended: EmployeeExtended,
+    org_unit_base: OrgUnitBase,
+    test_client: TestClient,
+):
+    holiday_group_id = test_client.post(
+        BASE_URL,
+        json=holiday_group_base.model_dump(),
+    ).json()["id"]
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_base.model_dump(),
+    ).json()["id"]
+    employee_base.org_unit_id = org_unit_id
+    employee_extended.org_unit_id = org_unit_id
+    test_client.post(
+        EMPLOYEE_URL,
+        json=employee_base.model_dump(),
+    ).json()["id"]
+
+    response = test_client.get(f"{BASE_URL}/{holiday_group_id}/employees")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [employee_extended.model_dump()]
+
+
+def test_get_employees_by_holiday_group_404_holiday_group_not_found(
+    test_client: TestClient,
+):
+    holiday_group_id = 999
+
+    response = test_client.get(f"{BASE_URL}/{holiday_group_id}/employees")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == EXC_MSG_HOLIDAY_GROUP_NOT_FOUND

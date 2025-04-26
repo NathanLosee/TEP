@@ -12,6 +12,7 @@ from src.holiday_group.schemas import (
     HolidayGroupBase,
     HolidayGroupExtended,
 )
+from src.employee.schemas import EmployeeExtended
 
 router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
 
@@ -116,6 +117,28 @@ def get_holiday_group_by_id(id: int, db: Session = Depends(get_db)):
     holiday_services.validate_holiday_group_exists(holiday_group)
 
     return holiday_group
+
+
+@router.get(
+    "/{id}/employees",
+    status_code=status.HTTP_200_OK,
+    response_model=list[EmployeeExtended],
+)
+def get_employees_by_holiday_group(id: int, db: Session = Depends(get_db)):
+    """Retrieve employees for holiday group with provided id.
+
+    Args:
+        id (int): The holiday group's unique identifier.
+        db (Session): Database session for current request.
+
+    Returns:
+        list[EmployeeExtended]: The retrieved employees.
+
+    """
+    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    holiday_services.validate_holiday_group_exists(holiday_group)
+
+    return holiday_group.employees
 
 
 @router.put(

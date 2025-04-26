@@ -37,7 +37,7 @@ class AuthRolePermission(Base):
         http_method (str): The HTTP method of the permission.
         resource (str): The resource of the permission.
         restrict_to_self (bool): Whether the permission is restricted to the
-            employee.
+            calling employee.
 
     """
 
@@ -94,7 +94,7 @@ class AuthRole(Base):
         cascade="all, delete",
     )
     permissions: Mapped[list[AuthRolePermission]] = relationship(
-        MEMBERSHIP_IDENTIFIER,
+        AuthRolePermission,
         cascade="all, delete",
     )
 
