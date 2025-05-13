@@ -249,3 +249,4 @@ data_postgres
 .vscode
 *.sqlite
 .env-test
+*.pem
