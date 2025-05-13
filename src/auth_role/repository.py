@@ -112,13 +112,29 @@ def update_auth_role(
     Returns:
         Auth: The updated auth.
     """
-    auth_role_update = AuthRole(
-        **request.model_dump(exclude={"permissions"}),
-        permissions=[
-            AuthRolePermission(**p.model_dump(), auth_role_id=auth_role.id)
-            for p in request.permissions
-        ],
+    auth_role_update = AuthRole(**request.model_dump(exclude={"permissions"}))
+    update_permission_resources = set(
+        permission.resource for permission in request.permissions
     )
+    existing_permission_resources = set(
+        permission.resource for permission in auth_role.permissions
+    )
+    added_permissions = (
+        update_permission_resources - existing_permission_resources
+    )
+    removed_permissions = (
+        existing_permission_resources - update_permission_resources
+    )
+    for permission in auth_role.permissions:
+        if permission.resource in removed_permissions:
+            db.delete(permission)
+    for permission in request.permissions:
+        if permission.resource in added_permissions:
+            permission = AuthRolePermission(
+                resource=permission.resource, auth_role_id=auth_role.id
+            )
+            db.add(permission)
+
     db.merge(auth_role_update)
     db.commit()
     db.refresh(auth_role)
@@ -159,6 +175,4 @@ def delete_membership(
     ).first()
     db.delete(membership)
     db.commit()
-    auth_role = get_auth_role_by_id(auth_role_id, db)
-    db.refresh(auth_role)
-    return auth_role
+    return get_auth_role_by_id(auth_role_id, db)

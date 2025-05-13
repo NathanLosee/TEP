@@ -2,6 +2,7 @@
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from src.login.services import hash_password
 from src.employee.models import Employee
 from src.employee.schemas import (
     EmployeeBase,
@@ -21,6 +22,8 @@ def create_employee(request: EmployeeBase, db: Session) -> Employee:
 
     """
     employee = Employee(**request.model_dump())
+    if request.password:
+        employee.password = hash_password(request.password)
     db.add(employee)
     db.commit()
     db.refresh(employee)
@@ -70,6 +73,8 @@ def update_employee_by_id(
 
     """
     employee_update = Employee(**request.model_dump())
+    if request.password:
+        employee_update.password = hash_password(request.password)
     db.merge(employee_update)
     db.commit()
     db.refresh(employee)

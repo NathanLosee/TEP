@@ -5,21 +5,17 @@ Classes:
 
 """
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
-class Login(BaseModel):
+class Token(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        login_id (int): Unique identifier of the login.
-        name (str): Name of the login.
+        access_token (str): The access token for the user.
+        token_type (str): The type of the token (e.g., "bearer").
 
     """
 
-    id: int
-    password: str
-
-    model_config = ConfigDict(
-        str_strip_whitespace=True, str_min_length=1, populate_by_name=True
-    )
+    access_token: str
+    token_type: str

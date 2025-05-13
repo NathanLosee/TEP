@@ -60,7 +60,7 @@ def get_org_units(db: Session = Depends(get_db)):
 @router.get(
     "/{id}",
     status_code=status.HTTP_200_OK,
-    response_model=list[OrgUnitExtended],
+    response_model=OrgUnitExtended,
 )
 def get_org_unit(id: int, db: Session = Depends(get_db)):
     """Retrieve data for org unit with provided id.

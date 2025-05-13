@@ -18,7 +18,6 @@ from src.auth_role.constants import (
     PERMISSION_IDENTIFIER,
 )
 from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
-from src.constants import HTTPMethod, ResourceType
 from typing import TYPE_CHECKING
 
 
@@ -32,25 +31,16 @@ class AuthRolePermission(Base):
     """SQLAlchemy model for AuthRolePermission data.
 
     Attributes:
+        resource (str): The resource of the permission.
         auth_role_id (int): Unique identifier of the auth role in the
             membership.
-        http_method (str): The HTTP method of the permission.
-        resource (str): The resource of the permission.
-        restrict_to_self (bool): Whether the permission is restricted to the
-            calling employee.
 
     """
 
+    resource: Mapped[str] = mapped_column(primary_key=True, nullable=False)
     auth_role_id: Mapped[int] = mapped_column(
         ForeignKey(IDENTIFIER + ".id"), primary_key=True, nullable=False
     )
-    http_method: Mapped[HTTPMethod] = mapped_column(
-        primary_key=True, nullable=False
-    )
-    resource: Mapped[ResourceType] = mapped_column(
-        primary_key=True, nullable=False
-    )
-    restrict_to_self: Mapped[bool] = mapped_column(nullable=False)
 
     __tablename__ = PERMISSION_IDENTIFIER
 

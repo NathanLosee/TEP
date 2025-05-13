@@ -8,8 +8,14 @@ Classes:
 
 """
 
-from pydantic import BaseModel, ConfigDict, Field
-from src.auth_role.constants import NAME_MAX_LENGTH, NAME_REGEX
+from fastapi import HTTPException, status
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from src.auth_role.constants import (
+    NAME_MAX_LENGTH,
+    NAME_REGEX,
+    EXC_MSG_INVALID_RESOURCE,
+)
+from src.constants import RESOURCE_SCOPES
 
 
 class PermissionBase(BaseModel):
@@ -17,19 +23,23 @@ class PermissionBase(BaseModel):
 
     Attributes:
         resource (str): The resource of the permission.
-        http_method (str): The HTTP method of the permission.
-        restrict_to_self (bool): Whether the permission is restricted to the
-            employee.
 
     """
 
     resource: str
-    http_method: str
-    restrict_to_self: bool = False
 
     model_config = ConfigDict(
         str_strip_whitespace=True, str_min_length=1, populate_by_name=True
     )
+
+    @model_validator(mode="after")
+    def check_values(self):
+        if self.resource not in RESOURCE_SCOPES.keys():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=EXC_MSG_INVALID_RESOURCE,
+            )
+        return self
 
 
 class AuthRoleBase(BaseModel):

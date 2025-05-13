@@ -7,11 +7,7 @@ import src.services as common_services
 from src.holiday_group.constants import BASE_URL
 import src.holiday_group.repository as holiday_repository
 import src.holiday_group.services as holiday_services
-from src.holiday_group.schemas import (
-    HolidayBase,
-    HolidayGroupBase,
-    HolidayGroupExtended,
-)
+from src.holiday_group.schemas import HolidayGroupBase, HolidayGroupExtended
 from src.employee.schemas import EmployeeExtended
 
 router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
@@ -44,39 +40,6 @@ def create_holiday_group(
     )
 
     return holiday_repository.create_holiday_group(request, db)
-
-
-@router.post(
-    "{id}/holidays",
-    status_code=status.HTTP_201_CREATED,
-    response_model=HolidayGroupExtended,
-)
-def create_holiday(
-    id: int, request: HolidayBase, db: Session = Depends(get_db)
-):
-    """Insert new holiday data.
-
-    Args:
-        id (int): The holiday group's unique identifier.
-        request (HolidayBase): Request data for new holiday.
-        db (Session): Database session for current request.
-
-    Returns:
-        HolidayExtended: Response containing newly created holiday data.
-
-    """
-    holiday_services.validate_holiday_group_exists(
-        holiday_repository.get_holiday_group_by_id(id, db)
-    )
-
-    holiday_with_same_date = holiday_repository.get_holiday_by_name_and_group(
-        request.name, id
-    )
-    holiday_services.validate_holiday_name_is_unique_within_group(
-        holiday_with_same_date, None
-    )
-
-    return holiday_repository.create_holiday(request, db)
 
 
 @router.get(
@@ -176,36 +139,6 @@ def update_holiday_group_by_id(
     )
 
 
-@router.put(
-    "/{id}/holidays",
-    status_code=status.HTTP_200_OK,
-    response_model=HolidayGroupExtended,
-)
-def update_holiday(
-    id: int, request: HolidayBase, db: Session = Depends(get_db)
-):
-    """Update data for holiday with provided id.
-
-    Args:
-        id (int): The holiday group's unique identifier.
-        request (HolidayBase): Request data to update holiday.
-        db (Session): Database session for current request.
-
-    Returns:
-        HolidayGroupExtended: The updated holiday group.
-
-    """
-    holiday_services.validate_holiday_group_exists(
-        holiday_repository.get_holiday_group_by_id(id, db)
-    )
-    holiday = holiday_repository.get_holiday_by_name_and_group(
-        request.name, id, db
-    )
-    holiday_services.validate_holiday_exists(holiday)
-
-    return holiday_repository.update_holiday_by_name_and_group(request, id, db)
-
-
 @router.delete(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -222,23 +155,3 @@ def delete_holiday_group_by_id(id: int, db: Session = Depends(get_db)):
     holiday_services.validate_holiday_group_exists(holiday_group)
 
     holiday_repository.delete_holiday_group(holiday_group, db)
-
-
-@router.delete("/{id}/holidays", status_code=status.HTTP_204_NO_CONTENT)
-def delete_holiday(id: int, name: str, db: Session = Depends(get_db)):
-    """Delete holiday data with provided id.
-
-    Args:
-        id (int): The holiday's unique identifier.
-        name (str): The holiday's name.
-        db (Session): Database session for current request.
-
-    """
-    holiday_services.validate_holiday_group_exists(
-        holiday_repository.get_holiday_group_by_id(id, db)
-    )
-
-    holiday = holiday_repository.get_holiday_by_name_and_group(name, id, db)
-    holiday_services.validate_holiday_exists(holiday)
-
-    holiday_repository.delete_holiday_by_name_and_group(name, id, db)

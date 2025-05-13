@@ -8,8 +8,14 @@ Classes:
 """
 
 from datetime import date
+from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from src.holiday_group.constants import NAME_MAX_LENGTH, NAME_REGEX
+from src.holiday_group.constants import (
+    NAME_MAX_LENGTH,
+    NAME_REGEX,
+    EXC_MSG_END_DATE_BEFORE_START_DATE,
+    EXC_MSG_DUPLICATE_HOLIDAY_NAME,
+)
 
 
 class HolidayBase(BaseModel):
@@ -23,15 +29,18 @@ class HolidayBase(BaseModel):
     """
 
     name: str = Field(pattern=NAME_REGEX, max_length=NAME_MAX_LENGTH)
-    start_date: date = Field(alias="startDate")
-    end_date: date = Field(alias="endDate")
+    start_date: date
+    end_date: date
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
 
     @model_validator(mode="after")
     def check_values(self):
         if self.end_date < self.start_date:
-            raise ValueError("endDate must be greater than startDate.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=EXC_MSG_END_DATE_BEFORE_START_DATE,
+            )
         return self
 
 
@@ -44,8 +53,20 @@ class HolidayGroupBase(BaseModel):
     """
 
     name: str = Field(pattern=NAME_REGEX, max_length=NAME_MAX_LENGTH)
+    holidays: list[HolidayBase]
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
+
+    @model_validator(mode="after")
+    def check_values(self):
+        holiday_names = [holiday.name for holiday in self.holidays]
+        for holiday_name in set(holiday.name for holiday in self.holidays):
+            if holiday_names.count(holiday_name) > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=EXC_MSG_DUPLICATE_HOLIDAY_NAME,
+                )
+        return self
 
 
 class HolidayGroupExtended(HolidayGroupBase):
@@ -58,6 +79,5 @@ class HolidayGroupExtended(HolidayGroupBase):
     """
 
     id: int
-    holidays: list[HolidayBase]
 
     model_config = ConfigDict(from_attributes=True)

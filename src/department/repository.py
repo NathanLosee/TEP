@@ -1,5 +1,4 @@
-"""Module providing database interactivity for department-related operations.
-"""
+"""Module providing database interactions for department-related operations."""
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -139,10 +138,11 @@ def delete_membership(
         Department: The department with updated membership.
 
     """
-    db.delete(
+    membership = db.scalars(
         select(DepartmentMembership)
         .where(DepartmentMembership.department_id == department_id)
         .where(DepartmentMembership.employee_id == employee_id)
-    )
+    ).first()
+    db.delete(membership)
     db.commit()
     return get_department_by_id(department_id, db)

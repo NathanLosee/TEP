@@ -2,26 +2,37 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from src.auth_role.constants import (
     BASE_URL,
+    EXC_MSG_INVALID_RESOURCE,
     EXC_MSG_AUTH_ROLE_NOT_FOUND,
     EXC_MSG_NAME_ALREADY_EXISTS,
     EXC_MSG_EMPLOYEE_IS_MEMBER,
     EXC_MSG_EMPLOYEE_NOT_MEMBER,
 )
-from src.auth_role.schemas import AuthRoleExtended
 from src.employee.constants import BASE_URL as EMPLOYEE_URL
-from src.employee.schemas import EmployeeExtended
 from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 
 
 def test_create_auth_role_201(
     auth_role_data: dict,
-    auth_role_extended: AuthRoleExtended,
     test_client: TestClient,
 ):
     response = test_client.post(url=BASE_URL, json=auth_role_data)
 
+    auth_role_data["id"] = response.json()["id"]
+
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == auth_role_extended.model_dump(by_alias=True)
+    assert response.json() == auth_role_data
+
+
+def test_create_auth_role_400_invalid_resource(
+    auth_role_data: dict,
+    test_client: TestClient,
+):
+    auth_role_data["permissions"].append({"resource": "invalid.resource"})
+    response = test_client.post(url=BASE_URL, json=auth_role_data)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == EXC_MSG_INVALID_RESOURCE
 
 
 def test_create_auth_role_409_name_already_exists(
@@ -39,7 +50,6 @@ def test_give_employee_auth_role_201(
     auth_role_data: dict,
     employee_data: dict,
     org_unit_data: dict,
-    employee_extended: EmployeeExtended,
     test_client: TestClient,
 ):
     org_unit_id = test_client.post(
@@ -53,13 +63,14 @@ def test_give_employee_auth_role_201(
     auth_role_id = test_client.post(url=BASE_URL, json=auth_role_data).json()[
         "id"
     ]
+    employee_data["id"] = employee_id
 
     response = test_client.post(
         url=f"{BASE_URL}/{auth_role_id}/employees/{employee_id}",
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == [employee_extended.model_dump(mode="json")]
+    assert response.json() == [employee_data]
 
 
 def test_give_employee_auth_role_404_auth_role_not_found(
@@ -114,30 +125,33 @@ def test_get_auth_roles_200_empty_list(test_client: TestClient):
 
 def test_get_auth_roles_200_nonempty_list(
     auth_role_data: dict,
-    auth_role_extended: AuthRoleExtended,
     test_client: TestClient,
 ):
-    test_client.post(url=BASE_URL, json=auth_role_data)
+    auth_role_id = test_client.post(
+        url=BASE_URL,
+        json=auth_role_data,
+    ).json()["id"]
 
+    auth_role_data["id"] = auth_role_id
     response = test_client.get(url=BASE_URL)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [auth_role_extended.model_dump()]
+    assert response.json() == [auth_role_data]
 
 
 def test_get_auth_role_200(
     auth_role_data: dict,
-    auth_role_extended: AuthRoleExtended,
     test_client: TestClient,
 ):
     auth_role_id = test_client.post(url=BASE_URL, json=auth_role_data).json()[
         "id"
     ]
 
+    auth_role_data["id"] = auth_role_id
     response = test_client.get(url=f"{BASE_URL}/{auth_role_id}")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == auth_role_extended.model_dump()
+    assert response.json() == auth_role_data
 
 
 def test_get_auth_role_404_not_found(test_client: TestClient):
@@ -199,18 +213,6 @@ def test_update_auth_role_200(
 
     auth_role_data["id"] = auth_role_id
     auth_role_data["name"] = "Updated Auth Role"
-    auth_role_data["permissions"] = [
-        {
-            "http_method": "READ",
-            "resource": "EMPLOYEE",
-            "restrict_to_self": True,
-        },
-        {
-            "http_method": "CREATE",
-            "resource": "EMPLOYEE",
-            "restrict_to_self": False,
-        },
-    ]
 
     response = test_client.put(
         url=f"{BASE_URL}/{auth_role_id}",
@@ -218,10 +220,53 @@ def test_update_auth_role_200(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["name"] == "Updated Auth Role"
-    assert response.json()["permissions"].sort(
-        key=lambda x: x["http_method"]
-    ) == auth_role_data["permissions"].sort(key=lambda x: x["http_method"])
+    assert response.json() == auth_role_data
+
+
+def test_update_auth_role_200_add_permission(
+    auth_role_data: dict,
+    test_client: TestClient,
+):
+    auth_role_id = test_client.post(url=BASE_URL, json=auth_role_data).json()[
+        "id"
+    ]
+
+    auth_role_data["id"] = auth_role_id
+    auth_role_data["permissions"].append({"resource": "employee.create"})
+
+    response = test_client.put(
+        url=f"{BASE_URL}/{auth_role_id}",
+        json=auth_role_data,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    response_permissions = sorted(
+        response.json()["permissions"], key=lambda x: x["resource"]
+    )
+    data_permissions = sorted(
+        auth_role_data["permissions"], key=lambda x: x["resource"]
+    )
+    assert response_permissions == data_permissions
+
+
+def test_update_auth_role_200_remove_permission(
+    auth_role_data: dict,
+    test_client: TestClient,
+):
+    auth_role_id = test_client.post(url=BASE_URL, json=auth_role_data).json()[
+        "id"
+    ]
+
+    auth_role_data["id"] = auth_role_id
+    auth_role_data["permissions"].pop(0)
+
+    response = test_client.put(
+        url=f"{BASE_URL}/{auth_role_id}",
+        json=auth_role_data,
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == auth_role_data
 
 
 def test_update_auth_role_404_not_found(

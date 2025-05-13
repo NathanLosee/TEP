@@ -35,7 +35,7 @@ def create_department(request: DepartmentBase, db: Session = Depends(get_db)):
         request.name, db
     )
     department_services.validate_department_name_is_unique(
-        department_with_same_name
+        department_with_same_name, None
     )
 
     return department_repository.create_department(request, db)
@@ -95,7 +95,7 @@ def get_departments(
 @router.get(
     "/{id}",
     status_code=status.HTTP_200_OK,
-    response_model=list[DepartmentExtended],
+    response_model=DepartmentExtended,
 )
 def get_department(id: int, db: Session = Depends(get_db)):
     """Retrieve data for department with provided id.
@@ -161,14 +161,14 @@ def update_department(
         DepartmentExtended: The updated department.
 
     """
-    common_services.validate_ids_match(request.department_id, id)
+    common_services.validate_ids_match(request.id, id)
     department = department_repository.get_department_by_id(id, db)
     department_services.validate_department_exists(department)
     department_with_same_name = department_repository.get_department_by_name(
         request.name, db
     )
     department_services.validate_department_name_is_unique(
-        department_with_same_name, id, db
+        department_with_same_name, id
     )
 
     return department_repository.update_department(department, request, db)
@@ -193,7 +193,7 @@ def delete_department(id: int, db: Session = Depends(get_db)):
 @router.delete(
     "/{department_id}/employees/{employee_id}",
     status_code=status.HTTP_200_OK,
-    response_model=DepartmentExtended,
+    response_model=list[EmployeeExtended],
 )
 def delete_department_membership(
     department_id: int, employee_id: int, db: Session = Depends(get_db)
@@ -206,7 +206,8 @@ def delete_department_membership(
         db (Session): Database session for current request.
 
     Returns:
-        DepartmentExtended: The department data without removed employee.
+        list[EmployeeExtended]: The updated list of employees in the
+            department.
 
     """
     department = department_repository.get_department_by_id(department_id, db)
@@ -216,6 +217,7 @@ def delete_department_membership(
         department, employee, True
     )
 
-    return department_repository.delete_membership(
+    department = department_repository.delete_membership(
         department_id, employee_id, db
     )
+    return department.employees

@@ -73,20 +73,23 @@ def validate_department_should_have_employee(
     Args:
         department (Department): The department to validate.
         employee (Employee): The employee to validate.
+        should_have (bool): Whether the department should have the
+            employee.
 
     Raises:
         HTTPException (409): If department does have employee and shouldn't.
         HTTPException (404): If department does not have employee and should.
 
     Returns:
-        bool: True if department has employee and should, or if it doesn't
-            have employee and shouldn't.
+        bool: True if department has the employee and should_have is True, or
+            if the department does not have the employee and should_have is
+            False.
 
     """
     for emp in department.employees:
         if employee.id == emp.id:
             if not should_have:
-                HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=EXC_MSG_EMPLOYEE_IS_MEMBER,
                 )

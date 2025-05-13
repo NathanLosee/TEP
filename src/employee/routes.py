@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
-import src.auth as auth
 from src.database import get_db
 import src.services as common_services
 from src.employee.constants import BASE_URL
@@ -34,7 +33,9 @@ def create_employee(request: EmployeeBase, db: Session = Depends(get_db)):
         EmployeeExtended: Response containing newly created employee data.
 
     """
-    return employee_repository.create_employee(request, db)
+    employee = employee_repository.create_employee(request, db)
+    employee.password = None  # Remove password from response
+    return employee
 
 
 @router.get(
@@ -188,8 +189,9 @@ def update_employee_by_id(
     employee = employee_repository.get_employee_by_id(id, db)
     employee_services.validate_employee_exists(employee)
 
-    request.password = auth.hash_value(request.password)
-    return employee_repository.update_employee_by_id(employee, request, db)
+    employee = employee_repository.update_employee_by_id(employee, request, db)
+    employee.password = None  # Remove password from response
+    return employee
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

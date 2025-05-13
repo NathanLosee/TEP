@@ -1,13 +1,14 @@
 """Module defining API for login-related operations."""
 
-from fastapi import APIRouter, status, Depends, Request
+from typing import Annotated
+from fastapi import APIRouter, Request, Response, status, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from src.database import get_db
-import src.auth as auth
-from src.login.constants import MSG_LOGIN_SUCCESS, MSG_LOGOUT_SUCCESS
+from src.login.constants import MSG_LOGOUT_SUCCESS
 import src.login.services as login_services
-import src.login.repository as login_repository
-from src.login.schemas import Login
+import src.employee.routes as employee_routes
+from src.login.schemas import Token
 
 router = APIRouter(tags=["login"])
 
@@ -15,48 +16,87 @@ router = APIRouter(tags=["login"])
 @router.post(
     "/login",
     status_code=status.HTTP_200_OK,
+    response_model=Token,
 )
 def login(
-    login_data: Login,
-    req: Request,
+    response: Response,
+    login_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
 ):
     """Handle user login.
 
     Args:
         login_data (LoginBase): The login data provided by the user.
-        request (Request): The HTTP request object.
         db (Session, optional): Database session. Defaults to Depends(get_db).
 
     """
-    employee = login_repository.get_employee_by_id_and_password(
-        login_data.id, auth.hash_value(login_data.password), db
+    employee = employee_routes.get_employee_by_id(int(login_data.username), db)
+    login_services.validate_login(
+        login_services.verify_password(login_data.password, employee.password)
     )
-    login_services.validate_login(employee)
-    req.session["auth_token"] = auth.encode_jwt_token(
+    access_token = login_services.encode_jwt_token(
         {
-            "employee_id": employee.id,
-            "auth_role_ids": [
-                auth_role.id for auth_role in employee.auth_roles
-            ],
-            "permissions": login_services.generate_permission_list(employee),
+            "sub": str(employee.id),
+            "scopes": login_services.generate_permission_list(employee),
+            "exp": login_services.get_expiration_time(True),
+        },
+    )
+    refresh_token = login_services.encode_jwt_token(
+        {
+            "sub": str(employee.id),
+            "exp": login_services.get_expiration_time(False),
         }
     )
-    return {"message": MSG_LOGIN_SUCCESS}
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+
+@router.post(
+    "/refresh",
+    status_code=status.HTTP_200_OK,
+)
+def refresh_token(request: Request, db: Session = Depends(get_db)):
+    """Handle token refresh.
+
+    Args:
+        request (Request): The request object containing the refresh token.
+        db (Session, optional): Database session. Defaults to Depends(get_db).
+
+    """
+    refresh_token = request.cookies.get("refresh_token")
+    login_services.verify_refresh_token_exists(refresh_token)
+    payload = login_services.decode_jwt_token(refresh_token)
+    username = payload.get("sub")
+    login_services.verify_username_exists(username)
+
+    employee = employee_routes.get_employee_by_id(int(username), db)
+    new_access_token = login_services.encode_jwt_token(
+        {
+            "sub": str(employee.id),
+            "scopes": login_services.generate_permission_list(employee),
+            "exp": login_services.get_expiration_time(True),
+        },
+    )
+    return {"access_token": new_access_token, "token_type": "bearer"}
 
 
 @router.post(
     "/logout",
     status_code=status.HTTP_200_OK,
 )
-def logout(
-    req: Request,
-):
+def logout(response: Response):
     """Handle user logout.
 
     Args:
-        request (Request): The HTTP request object.
+        token (str): The JWT token to be invalidated.
 
     """
-    req.session.clear()
+    response.delete_cookie(key="refresh_token")
     return {"message": MSG_LOGOUT_SUCCESS}

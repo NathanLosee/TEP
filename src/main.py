@@ -12,9 +12,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTask
-from starlette.middleware.sessions import SessionMiddleware
 from starlette.types import Message
-from src.auth import load_keys
+from src.login.services import load_keys
 from src.config import Settings, get_settings
 from src.database import cleanup_tables, get_db
 from src.logger.app_logger import get_logger
@@ -37,8 +36,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
-app.add_middleware(SessionMiddleware, secret_key="secret")
 
 
 AppSettings = Annotated[Settings, Depends(get_settings)]
@@ -86,6 +83,16 @@ def get_extra_info(
         dict: The extra info gathered.
 
     """
+    content_type = request.headers.get("content-type")
+    request_body = {}
+    if content_type and ("application/json" in content_type):
+        try:
+            request_body = json.loads(req_body.decode())
+        except json.JSONDecodeError:
+            request_body = {}
+    elif content_type and "application/x-www-form-urlencoded" in content_type:
+        request_body = dict(request.query_params._dict)
+
     req_obj = {
         "method": request.method,
         "path": request.url.path,
@@ -94,7 +101,7 @@ def get_extra_info(
             if len(request.query_params._list) > 0
             else {}
         ),
-        "body": json.loads(req_body.decode()) if req_body != b"" else {},
+        "body": request_body,
     }
 
     if (
@@ -217,7 +224,7 @@ def root() -> dict:
         dict: The JSON welcome message for the application.
 
     """
-    return {"message": "Welcome to the Python Super Health API project!"}
+    return {"message": "Welcome to Timeclock and Employee Payroll!"}
 
 
 import_routers()
