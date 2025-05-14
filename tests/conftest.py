@@ -54,7 +54,6 @@ def test_client():
     yield test_app
 
 
-# --- AuthRole Fixtures ---
 @pytest.fixture
 def auth_role_data() -> dict:
     return {
@@ -63,7 +62,6 @@ def auth_role_data() -> dict:
     }
 
 
-# --- Department Fixtures ---
 @pytest.fixture
 def department_data() -> dict:
     return {
@@ -71,7 +69,6 @@ def department_data() -> dict:
     }
 
 
-# --- Employee Fixtures ---
 @pytest.fixture
 def employee_data() -> dict:
     return {
@@ -90,7 +87,14 @@ def employee_data() -> dict:
     }
 
 
-# --- Holiday Fixtures ---
+@pytest.fixture
+def event_log_data() -> dict:
+    return {
+        "log": "Test event log",
+        "employee_id": 1,
+    }
+
+
 @pytest.fixture
 def holiday_group_data() -> dict:
     return {
@@ -110,7 +114,6 @@ def holiday_group_data() -> dict:
     }
 
 
-# --- OrgUnit Fixtures ---
 @pytest.fixture
 def org_unit_data() -> dict:
     return {
@@ -118,7 +121,6 @@ def org_unit_data() -> dict:
     }
 
 
-# --- TimeClock Fixtures ---
 @pytest.fixture
 def timeclock_data() -> dict:
     return {

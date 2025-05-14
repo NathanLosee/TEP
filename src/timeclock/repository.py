@@ -34,21 +34,6 @@ def timeclock(employee_id: int, db: Session) -> bool:
         return True
 
 
-def get_timeclock_entry_by_id(id: int, db: Session) -> TimeclockEntry | None:
-    """Retrieve timeclock entry by ID.
-
-    Args:
-        id (int): The unique identifier of the timeclock entry.
-        db (Session): Database session for the current request.
-
-    Returns:
-        TimeclockEntry | None: The retrieved timeclock entry or None if not
-            found.
-
-    """
-    return db.get(TimeclockEntry, id)
-
-
 def get_timeclock_entries(
     start_timestamp: datetime, end_timestamp: datetime, db: Session
 ) -> list[TimeclockEntry]:
@@ -69,6 +54,21 @@ def get_timeclock_entries(
             TimeclockEntry.clock_in <= end_timestamp,
         )
     ).all()
+
+
+def get_timeclock_entry_by_id(id: int, db: Session) -> TimeclockEntry | None:
+    """Retrieve timeclock entry by ID.
+
+    Args:
+        id (int): The unique identifier of the timeclock entry.
+        db (Session): Database session for the current request.
+
+    Returns:
+        TimeclockEntry | None: The retrieved timeclock entry or None if not
+            found.
+
+    """
+    return db.get(TimeclockEntry, id)
 
 
 def update_timeclock_entry_by_id(

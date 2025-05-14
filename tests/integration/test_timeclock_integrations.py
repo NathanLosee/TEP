@@ -223,7 +223,7 @@ def test_update_timeclock_entry_404_not_found(
     }
 
 
-def test_delete_timeclock_entry_200(
+def test_delete_timeclock_entry_204(
     employee_data: dict,
     org_unit_data: dict,
     test_client: TestClient,
