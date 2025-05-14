@@ -1,0 +1,109 @@
+"""Module providing database interactivity for timeclock-related operations."""
+
+from datetime import datetime, timezone
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from src.timeclock.models import TimeclockEntry
+from src.timeclock.schemas import TimeclockEntryBase
+
+
+def timeclock(employee_id: int, db: Session) -> bool:
+    """Clock in/out an employee.
+
+    Args:
+        employee_id (int): The employee's unique identifier.
+        db (Session): Database session for the current request.
+
+    Returns:
+        bool: True if clocked in, False if clocked out.
+
+    """
+    timeclock = db.scalars(
+        select(TimeclockEntry)
+        .where(TimeclockEntry.employee_id == employee_id)
+        .order_by(TimeclockEntry.id.desc())
+    ).first()
+    if timeclock and not timeclock.clock_out:
+        timeclock.clock_out = datetime.now(timezone.utc)
+        db.commit()
+        return False
+    else:
+        new_timeclock = TimeclockEntry(employee_id=employee_id)
+        db.add(new_timeclock)
+        db.commit()
+        return True
+
+
+def get_timeclock_entry_by_id(id: int, db: Session) -> TimeclockEntry | None:
+    """Retrieve timeclock entry by ID.
+
+    Args:
+        id (int): The unique identifier of the timeclock entry.
+        db (Session): Database session for the current request.
+
+    Returns:
+        TimeclockEntry | None: The retrieved timeclock entry or None if not
+            found.
+
+    """
+    return db.get(TimeclockEntry, id)
+
+
+def get_timeclock_entries(
+    start_timestamp: datetime, end_timestamp: datetime, db: Session
+) -> list[TimeclockEntry]:
+    """Retrieve all timeclocks with given time period.
+
+    Args:
+        start_timestamp (datetime): The start timestamp for the time period.
+        end_timestamp (datetime): The end timestamp for the time period.
+        db (Session): Database session for the current request.
+
+    Returns:
+        list[TimeclockEntry]: The retrieved timeclock entries.
+
+    """
+    return db.scalars(
+        select(TimeclockEntry).where(
+            TimeclockEntry.clock_in >= start_timestamp,
+            TimeclockEntry.clock_in <= end_timestamp,
+        )
+    ).all()
+
+
+def update_timeclock_entry_by_id(
+    timeclock_entry: TimeclockEntry,
+    request: TimeclockEntryBase,
+    db: Session,
+) -> TimeclockEntry:
+    """Update a timeclock entry's existing data.
+
+    Args:
+        timeclock_entry (TimeclockEntry): The timeclock data to be updated.
+        request (TimeclockEntryBase): Request data for updating timeclock
+            entry.
+        db (Session): Database session for the current request.
+
+    Returns:
+        TimeclockEntry: The updated timeclock entry.
+
+    """
+    timeclock_entry.employee_id = request.employee_id
+    timeclock_entry.clock_in = request.clock_in
+    timeclock_entry.clock_out = request.clock_out
+    db.commit()
+    return timeclock_entry
+
+
+def delete_timeclock_entry(
+    timeclock_entry: TimeclockEntry, db: Session
+) -> None:
+    """Delete timeclock entry.
+
+    Args:
+        timeclock_entry (TimeclockEntry): The timeclock data to be deleted.
+        db (Session): Database session for the current request.
+
+    """
+    db.delete(timeclock_entry)
+    db.commit()

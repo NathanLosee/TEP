@@ -116,3 +116,14 @@ def org_unit_data() -> dict:
     return {
         "name": "Head Office",
     }
+
+
+# --- TimeClock Fixtures ---
+@pytest.fixture
+def timeclock_data() -> dict:
+    return {
+        "id": 1,
+        "employee_id": 1,
+        "clock_in": date.today().isoformat(),
+        "clock_out": None,
+    }
