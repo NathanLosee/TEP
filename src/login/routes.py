@@ -4,11 +4,18 @@ from typing import Annotated
 from fastapi import APIRouter, Request, Response, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from src.main import settings
 from src.database import get_db
 from src.login.constants import MSG_LOGOUT_SUCCESS
 import src.login.services as login_services
-import src.employee.routes as employee_routes
+import src.employee.repository as employee_repository
+import src.employee.services as employee_services
 from src.login.schemas import Token
+from src.event_log.constants import EVENT_LOG_MSGS
+import src.event_log.routes as event_log_routes
+from src.event_log.schemas import EventLogBase
+
+IDENTIFIER = "login"
 
 router = APIRouter(tags=["login"])
 
@@ -30,10 +37,15 @@ def login(
         db (Session, optional): Database session. Defaults to Depends(get_db).
 
     """
-    employee = employee_routes.get_employee_by_id(int(login_data.username), db)
+    employee = employee_repository.get_employee_by_id(
+        int(login_data.username), db
+    )
+    print(employee.__dict__)
+    employee_services.validate_employee_exists(employee)
     login_services.validate_login(
         login_services.verify_password(login_data.password, employee.password)
     )
+
     access_token = login_services.encode_jwt_token(
         {
             "sub": str(employee.id),
@@ -52,8 +64,17 @@ def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
+        secure=settings.ENVIRONMENT == "production",
         samesite="lax",
+    )
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["LOGIN"].format(
+                employee_id=employee.id
+            ),
+            employee_id=employee.id,
+        ),
+        db,
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -62,7 +83,10 @@ def login(
     "/refresh",
     status_code=status.HTTP_200_OK,
 )
-def refresh_token(request: Request, db: Session = Depends(get_db)):
+def refresh_token(
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Handle token refresh.
 
     Args:
@@ -76,7 +100,8 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
     username = payload.get("sub")
     login_services.verify_username_exists(username)
 
-    employee = employee_routes.get_employee_by_id(int(username), db)
+    employee = employee_repository.get_employee_by_id(int(username), db)
+    employee_services.validate_employee_exists(employee)
     new_access_token = login_services.encode_jwt_token(
         {
             "sub": str(employee.id),

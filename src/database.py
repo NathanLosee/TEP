@@ -9,11 +9,9 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 from typing import Annotated
-from src.config import get_settings
 
 Base: DeclarativeBase = declarative_base()
 
-settings = get_settings()
 SQL_ALCHEMY_DATABASE_URL = "sqlite:///tep.sqlite"
 
 engine = create_engine(SQL_ALCHEMY_DATABASE_URL)

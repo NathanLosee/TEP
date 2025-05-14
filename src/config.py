@@ -1,6 +1,5 @@
 """Module providing application configuration settings."""
 
-from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,20 +8,11 @@ class Settings(BaseSettings):
 
     Attributes:
         LOG_LEVEL (str): The log level.
+        ENVIRONMENT (str): The environment in which the application is running.
 
     """
 
     LOG_LEVEL: str
+    ENVIRONMENT: str
 
     model_config = SettingsConfigDict(env_file="../.env")
-
-
-@lru_cache()
-def get_settings() -> Settings:
-    """Return the application settings.
-
-    Returns:
-        Settings: The application settings.
-
-    """
-    return Settings()

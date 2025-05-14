@@ -29,15 +29,6 @@ def test_create_employee_201(
     assert response.json() == employee_data
 
 
-def test_get_employees_200_empty_list(
-    test_client: TestClient,
-):
-    response = test_client.get(BASE_URL)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-
 def test_get_employees_200_nonempty_list(
     employee_data: dict,
     org_unit_data: dict,
@@ -58,7 +49,7 @@ def test_get_employees_200_nonempty_list(
     response = test_client.get(BASE_URL)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [employee_data]
+    assert employee_data in response.json()
 
 
 def test_get_employee_200(

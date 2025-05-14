@@ -1,14 +1,18 @@
 """Module defining API for org unit-related operations."""
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Security, status, Depends
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.employee.schemas import EmployeeExtended
+from src.login.services import requires_permission
 import src.services as common_services
-from src.org_unit.constants import BASE_URL
+from src.org_unit.constants import BASE_URL, IDENTIFIER
 import src.org_unit.repository as org_unit_repository
 import src.org_unit.services as org_unit_services
 from src.org_unit.schemas import OrgUnitBase, OrgUnitExtended
+from src.event_log.constants import EVENT_LOG_MSGS
+import src.event_log.routes as event_log_routes
+from src.event_log.schemas import EventLogBase
 
 router = APIRouter(prefix=BASE_URL, tags=["org_unit"])
 
@@ -18,7 +22,11 @@ router = APIRouter(prefix=BASE_URL, tags=["org_unit"])
     status_code=status.HTTP_201_CREATED,
     response_model=OrgUnitExtended,
 )
-def create_org_unit(request: OrgUnitBase, db: Session = Depends(get_db)):
+def create_org_unit(
+    request: OrgUnitBase,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["org_unit.create"]),
+):
     """Insert new org unit.
 
     Args:
@@ -36,7 +44,17 @@ def create_org_unit(request: OrgUnitBase, db: Session = Depends(get_db)):
         org_unit_with_same_name, None
     )
 
-    return org_unit_repository.create_org_unit(request, db)
+    org_unit = org_unit_repository.create_org_unit(request, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["CREATE"].format(
+                org_unit_id=org_unit.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return org_unit
 
 
 @router.get(
@@ -44,7 +62,10 @@ def create_org_unit(request: OrgUnitBase, db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
     response_model=list[OrgUnitExtended],
 )
-def get_org_units(db: Session = Depends(get_db)):
+def get_org_units(
+    db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["org_unit.read"]),
+):
     """Retrieve all org units.
 
     Args:
@@ -62,7 +83,11 @@ def get_org_units(db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
     response_model=OrgUnitExtended,
 )
-def get_org_unit(id: int, db: Session = Depends(get_db)):
+def get_org_unit(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["org_unit.read"]),
+):
     """Retrieve data for org unit with provided id.
 
     Args:
@@ -87,6 +112,9 @@ def get_org_unit(id: int, db: Session = Depends(get_db)):
 def get_employees_by_org_unit(
     id: int,
     db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["org_unit.read", "employee.read"]
+    ),
 ):
     """Retrieve all employees for a given org unit.
 
@@ -113,6 +141,7 @@ def update_org_unit(
     id: int,
     request: OrgUnitExtended,
     db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["org_unit.update"]),
 ):
     """Update data for org unit with provided id.
 
@@ -135,11 +164,25 @@ def update_org_unit(
         org_unit_with_same_name, id
     )
 
-    return org_unit_repository.update_org_unit(org_unit, request, db)
+    org_unit = org_unit_repository.update_org_unit(org_unit, request, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["UPDATE"].format(
+                org_unit_id=org_unit.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return org_unit
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_org_unit(id: int, db: Session = Depends(get_db)):
+def delete_org_unit(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["org_unit.delete"]),
+):
     """Delete org unit with provided id.
 
     Args:
@@ -152,3 +195,12 @@ def delete_org_unit(id: int, db: Session = Depends(get_db)):
     org_unit_services.validate_org_unit_employees_list_is_empty(org_unit)
 
     org_unit_repository.delete_org_unit(org_unit, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["DELETE"].format(
+                org_unit_id=org_unit.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )

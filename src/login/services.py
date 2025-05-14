@@ -9,7 +9,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 import jwt
 import bcrypt
-import pydantic
 from src.constants import RESOURCE_SCOPES
 from src.employee.models import Employee
 from src.login.constants import (
@@ -78,7 +77,7 @@ def hash_password(password: str) -> str:
     """
     password_bytes = password.encode("utf-8")
     salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password_bytes, salt)
+    hashed_password = bcrypt.hashpw(password_bytes, salt).decode("utf-8")
     return hashed_password
 
 
@@ -93,7 +92,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         bool: True if the passwords match, False otherwise.
 
     """
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+    )
 
 
 def get_expiration_time(access_exp: bool) -> datetime:
@@ -148,7 +149,7 @@ def decode_jwt_token(token: str) -> dict:
 def requires_permission(
     security_scopes: SecurityScopes,
     token: Annotated[str, Depends(oauth2_scheme)],
-) -> bool:
+) -> int:
     """Check if the user has the required permission.
 
     Args:
@@ -156,24 +157,18 @@ def requires_permission(
         resource (str): The resource to check.
 
     Returns:
-        bool: True if the JWT token has the required permission.
+        int: The employee ID if the permission is granted.
 
     """
-    try:
-        payload = decode_jwt_token(token)
-        token_scopes = payload.get("scopes", [])
-        for scope in security_scopes.scopes:
-            if scope not in token_scopes:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=EXC_MSG_MISSING_PERMISSION,
-                )
-        return True
-    except (jwt.InvalidTokenError, pydantic.ValidationError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=EXC_MSG_REFRESH_TOKEN_INVALID,
-        )
+    payload = decode_jwt_token(token)
+    token_scopes = payload.get("scopes", [])
+    for scope in security_scopes.scopes:
+        if scope not in token_scopes:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=EXC_MSG_MISSING_PERMISSION,
+            )
+    return int(payload.get("sub"))
 
 
 def validate_login(

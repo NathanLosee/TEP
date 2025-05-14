@@ -1,14 +1,18 @@
 """Module defining API for holiday-related operations."""
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Security, status, Depends
 from sqlalchemy.orm import Session
 from src.database import get_db
+from src.login.services import requires_permission
 import src.services as common_services
-from src.holiday_group.constants import BASE_URL
+from src.holiday_group.constants import BASE_URL, IDENTIFIER
 import src.holiday_group.repository as holiday_repository
 import src.holiday_group.services as holiday_services
 from src.holiday_group.schemas import HolidayGroupBase, HolidayGroupExtended
 from src.employee.schemas import EmployeeExtended
+from src.event_log.constants import EVENT_LOG_MSGS
+import src.event_log.routes as event_log_routes
+from src.event_log.schemas import EventLogBase
 
 router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
 
@@ -19,7 +23,11 @@ router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
     response_model=HolidayGroupExtended,
 )
 def create_holiday_group(
-    request: HolidayGroupBase, db: Session = Depends(get_db)
+    request: HolidayGroupBase,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["holiday_group.create"]
+    ),
 ):
     """Insert new holiday group data.
 
@@ -39,7 +47,17 @@ def create_holiday_group(
         holiday_group_with_same_name, None
     )
 
-    return holiday_repository.create_holiday_group(request, db)
+    holiday_group = holiday_repository.create_holiday_group(request, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["CREATE"].format(
+                holiday_group_id=holiday_group.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return holiday_group
 
 
 @router.get(
@@ -47,7 +65,12 @@ def create_holiday_group(
     status_code=status.HTTP_200_OK,
     response_model=list[HolidayGroupExtended],
 )
-def get_holiday_groups(db: Session = Depends(get_db)):
+def get_holiday_groups(
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["holiday_group.read"]
+    ),
+):
     """Retrieve all holiday group data.
 
     Args:
@@ -65,7 +88,13 @@ def get_holiday_groups(db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
     response_model=HolidayGroupExtended,
 )
-def get_holiday_group_by_id(id: int, db: Session = Depends(get_db)):
+def get_holiday_group_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["holiday_group.read"]
+    ),
+):
     """Retrieve data for holiday group with provided id.
 
     Args:
@@ -87,7 +116,13 @@ def get_holiday_group_by_id(id: int, db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
     response_model=list[EmployeeExtended],
 )
-def get_employees_by_holiday_group(id: int, db: Session = Depends(get_db)):
+def get_employees_by_holiday_group(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["holiday_group.read", "employee.read"]
+    ),
+):
     """Retrieve employees for holiday group with provided id.
 
     Args:
@@ -110,7 +145,12 @@ def get_employees_by_holiday_group(id: int, db: Session = Depends(get_db)):
     response_model=HolidayGroupExtended,
 )
 def update_holiday_group_by_id(
-    id: int, request: HolidayGroupExtended, db: Session = Depends(get_db)
+    id: int,
+    request: HolidayGroupExtended,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["holiday_group.update"]
+    ),
 ):
     """Update data for holiday group with provided id.
 
@@ -134,16 +174,32 @@ def update_holiday_group_by_id(
         holiday_group_with_same_name, id
     )
 
-    return holiday_repository.update_holiday_group_by_id(
+    holiday_group = holiday_repository.update_holiday_group_by_id(
         holiday_group, request, db
     )
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["UPDATE"].format(
+                holiday_group_id=holiday_group.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return holiday_group
 
 
 @router.delete(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_holiday_group_by_id(id: int, db: Session = Depends(get_db)):
+def delete_holiday_group_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["holiday_group.delete"]
+    ),
+):
     """Delete holiday group data with provided id.
 
     Args:
@@ -155,3 +211,12 @@ def delete_holiday_group_by_id(id: int, db: Session = Depends(get_db)):
     holiday_services.validate_holiday_group_exists(holiday_group)
 
     holiday_repository.delete_holiday_group(holiday_group, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["DELETE"].format(
+                holiday_group_id=holiday_group.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )

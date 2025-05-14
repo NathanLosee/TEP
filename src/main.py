@@ -4,17 +4,14 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 from importlib import import_module
 from pathlib import Path
-import json
-from sys import gettrace
-from typing import Annotated
 
 from fastapi.exceptions import RequestValidationError
-from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTask
 from starlette.types import Message
 from src.login.services import load_keys
-from src.config import Settings, get_settings
+from src.config import Settings
 from src.database import cleanup_tables, get_db
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
@@ -36,21 +33,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-AppSettings = Annotated[Settings, Depends(get_settings)]
-
+settings = Settings()
 formatter = CustomFormatter("%(asctime)s")
-logger = get_logger(__name__, formatter, log_level=AppSettings().LOG_LEVEL)
+logger = get_logger(__name__, formatter, log_level=settings.LOG_LEVEL)
 status_reasons = {x.value: x.name for x in list(HTTPStatus)}
 ignored_endpoints = ["/docs", "/redoc", "/openapi.json"]
-
-
-async def set_request_body(request: Request, body: bytes):
-    async def receive() -> Message:
-        return {"type": "http.request", "body": body}
-
-    request._receive = receive
 
 
 def import_routers():
@@ -68,74 +55,30 @@ def import_routers():
             app.include_router(router)
 
 
-def get_extra_info(
-    request: Request, req_body, response: Response, res_body
-) -> dict:
-    """Produce and return extra information about a given request and response.
-
-    Args:
-        request (Request): The incoming request.
-        req_body: Body of the incoming request.
-        response (Response): The outgoing response.
-        res_body: Body of the outgoing response.
-
-    Returns:
-        dict: The extra info gathered.
-
-    """
-    content_type = request.headers.get("content-type")
-    request_body = {}
-    if content_type and ("application/json" in content_type):
-        try:
-            request_body = json.loads(req_body.decode())
-        except json.JSONDecodeError:
-            request_body = {}
-    elif content_type and "application/x-www-form-urlencoded" in content_type:
-        request_body = dict(request.query_params._dict)
-
-    req_obj = {
-        "method": request.method,
-        "path": request.url.path,
-        "query_params": (
-            request.query_params._dict
-            if len(request.query_params._list) > 0
-            else {}
-        ),
-        "body": request_body,
-    }
-
-    if (
-        response.status_code >= 400 or gettrace()
-    ) and response.status_code != 204:
-        res_obj = {
-            "status_code": response.status_code,
-            "status": status_reasons[response.status_code],
-            "data": json.loads(res_body.decode()),
-        }
-    else:
-        res_obj = {
-            "status_code": response.status_code,
-            "status": status_reasons[response.status_code],
-        }
-
-    return {"request": req_obj, "response": res_obj}
-
-
-def write_log_data(request: Request, req_body, response: Response, res_body):
+def write_log_data(request: Request, response: Response):
     """The log for an incoming request.
 
     Args:
         request (Request): The incoming request
-        req_body: Body of the request.
         response (Response): The outgoing response.
-        res_body: Body of the response.
 
     """
-    extra_info = get_extra_info(request, req_body, response, res_body)
     logger.info(
         request.method + " " + request.url.path,
-        extra={"extra_info": extra_info},
+        extra={
+            "extra_info": {
+                "status_code": response.status_code,
+                "status": status_reasons[response.status_code],
+            }
+        },
     )
+
+
+async def set_request_body(request: Request, body: bytes):
+    async def receive() -> Message:
+        return {"type": "http.request", "body": body}
+
+    request._receive = receive
 
 
 @app.middleware("http")
@@ -161,9 +104,7 @@ async def log_requests(request: Request, call_next) -> Response:
     async for chunk in response.body_iterator:
         res_body += chunk
 
-    task = BackgroundTask(
-        write_log_data, request, req_body, response, res_body
-    )
+    task = BackgroundTask(write_log_data, request, response)
 
     return Response(
         content=res_body,

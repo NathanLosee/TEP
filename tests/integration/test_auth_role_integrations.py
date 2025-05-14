@@ -60,9 +60,10 @@ def test_give_employee_auth_role_201(
     employee_id = test_client.post(
         url=EMPLOYEE_URL, json=employee_data
     ).json()["id"]
-    auth_role_id = test_client.post(url=BASE_URL, json=auth_role_data).json()[
-        "id"
-    ]
+    auth_role_id = test_client.post(
+        url=BASE_URL,
+        json=auth_role_data,
+    ).json()["id"]
     employee_data["id"] = employee_id
 
     response = test_client.post(
@@ -116,14 +117,7 @@ def test_give_employee_auth_role_409_employee_already_has_auth_role(
     assert response.json()["detail"] == EXC_MSG_EMPLOYEE_IS_MEMBER
 
 
-def test_get_auth_roles_200_empty_list(test_client: TestClient):
-    response = test_client.get(url=BASE_URL)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-
-def test_get_auth_roles_200_nonempty_list(
+def test_get_auth_roles_200(
     auth_role_data: dict,
     test_client: TestClient,
 ):
@@ -136,7 +130,7 @@ def test_get_auth_roles_200_nonempty_list(
     response = test_client.get(url=BASE_URL)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [auth_role_data]
+    assert auth_role_data in response.json()
 
 
 def test_get_auth_role_200(
@@ -155,7 +149,7 @@ def test_get_auth_role_200(
 
 
 def test_get_auth_role_404_not_found(test_client: TestClient):
-    auth_role_id = 1
+    auth_role_id = 999
 
     response = test_client.get(url=f"{BASE_URL}/{auth_role_id}")
 

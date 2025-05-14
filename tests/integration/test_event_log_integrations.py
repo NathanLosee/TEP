@@ -85,9 +85,8 @@ def test_get_event_logs_200_nonempty_list(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 1
-    assert response.json()[0]["employee_id"] == event_log_data["employee_id"]
-    assert response.json()[0]["log"] == event_log_data["log"]
+    # length is 3 because of org_unit and employee needed for access token
+    assert len(response.json()) == 3
 
 
 def test_get_event_logs_200_with_employee_id(

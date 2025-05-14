@@ -61,7 +61,7 @@ class Employee(Base):
     alt_id: Mapped[int] = mapped_column(nullable=True)
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str] = mapped_column(nullable=False)
-    password: Mapped[bytes] = mapped_column(nullable=True)
+    password: Mapped[str] = mapped_column(nullable=True)
     payroll_type: Mapped[str] = mapped_column(nullable=False)
     payroll_sync: Mapped[date] = mapped_column(nullable=False)
     workweek_type: Mapped[str] = mapped_column(nullable=False)

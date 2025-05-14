@@ -1,15 +1,23 @@
 """Module defining API for department-related operations."""
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Security, status, Depends
 from sqlalchemy.orm import Session
 from src.database import get_db
-import src.employee.routes as employee_routes
-from src.employee.schemas import EmployeeExtended
+from src.login.services import requires_permission
 import src.services as common_services
-from src.department.constants import BASE_URL
+from src.department.constants import (
+    BASE_URL,
+    IDENTIFIER,
+    MEMBERSHIP_IDENTIFIER,
+)
 import src.department.repository as department_repository
 import src.department.services as department_services
 from src.department.schemas import DepartmentBase, DepartmentExtended
+import src.employee.routes as employee_routes
+from src.employee.schemas import EmployeeExtended
+from src.event_log.constants import EVENT_LOG_MSGS
+import src.event_log.routes as event_log_routes
+from src.event_log.schemas import EventLogBase
 
 router = APIRouter(prefix=BASE_URL, tags=["department"])
 
@@ -19,7 +27,13 @@ router = APIRouter(prefix=BASE_URL, tags=["department"])
     status_code=status.HTTP_201_CREATED,
     response_model=DepartmentExtended,
 )
-def create_department(request: DepartmentBase, db: Session = Depends(get_db)):
+def create_department(
+    request: DepartmentBase,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["department.create"]
+    ),
+):
     """Insert new department.
 
     Args:
@@ -38,16 +52,31 @@ def create_department(request: DepartmentBase, db: Session = Depends(get_db)):
         department_with_same_name, None
     )
 
-    return department_repository.create_department(request, db)
+    department = department_repository.create_department(request, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["CREATE"].format(
+                department_id=department.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return department
 
 
 @router.post(
     "/{department_id}/employees/{employee_id}",
     status_code=status.HTTP_201_CREATED,
-    response_model=DepartmentExtended,
+    response_model=list[EmployeeExtended],
 )
 def create_department_membership(
-    department_id: int, employee_id: int, db: Session = Depends(get_db)
+    department_id: int,
+    employee_id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["department.assign", "employee.read"]
+    ),
 ):
     """Insert new membership.
 
@@ -57,7 +86,8 @@ def create_department_membership(
         db (Session): Database session for current request.
 
     Returns:
-        DepartmentExtended: The department data with new employee.
+        list[EmployeeExtended]: The updated list of employees in the
+            department.
 
     """
     department = department_repository.get_department_by_id(department_id, db)
@@ -67,9 +97,19 @@ def create_department_membership(
         department, employee, False
     )
 
-    return department_repository.create_membership(
+    department = department_repository.create_membership(
         department_id, employee_id, db
     )
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[MEMBERSHIP_IDENTIFIER]["CREATE"].format(
+                department_id=department.id, employee_id=employee.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return department.employees
 
 
 @router.get(
@@ -79,6 +119,7 @@ def create_department_membership(
 )
 def get_departments(
     db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["department.read"]),
 ):
     """Retrieve all departments.
 
@@ -97,7 +138,11 @@ def get_departments(
     status_code=status.HTTP_200_OK,
     response_model=DepartmentExtended,
 )
-def get_department(id: int, db: Session = Depends(get_db)):
+def get_department(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["department.read"]),
+):
     """Retrieve data for department with provided id.
 
     Args:
@@ -122,6 +167,9 @@ def get_department(id: int, db: Session = Depends(get_db)):
 def get_employees_by_department(
     id: int,
     db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["department.read", "employee.read"]
+    ),
 ):
     """Retrieve all employees for a given department.
 
@@ -149,6 +197,9 @@ def update_department(
     id: int,
     request: DepartmentExtended,
     db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["department.update"]
+    ),
 ):
     """Update data for department with provided id.
 
@@ -171,11 +222,32 @@ def update_department(
         department_with_same_name, id
     )
 
-    return department_repository.update_department(department, request, db)
+    department = department_repository.update_department(
+        department, request, db
+    )
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["UPDATE"].format(
+                department_id=department.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
+    return department
 
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_department(id: int, db: Session = Depends(get_db)):
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_department(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["department.delete"]
+    ),
+):
     """Delete department with provided id.
 
     Args:
@@ -188,6 +260,15 @@ def delete_department(id: int, db: Session = Depends(get_db)):
     department_services.validate_department_employees_list_is_empty(department)
 
     department_repository.delete_department(department, db)
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[IDENTIFIER]["DELETE"].format(
+                department_id=department.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
+    )
 
 
 @router.delete(
@@ -196,7 +277,13 @@ def delete_department(id: int, db: Session = Depends(get_db)):
     response_model=list[EmployeeExtended],
 )
 def delete_department_membership(
-    department_id: int, employee_id: int, db: Session = Depends(get_db)
+    department_id: int,
+    employee_id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission,
+        scopes=["department.unassign", "employee.read"],
+    ),
 ):
     """Delete membership.
 
@@ -219,5 +306,14 @@ def delete_department_membership(
 
     department = department_repository.delete_membership(
         department_id, employee_id, db
+    )
+    event_log_routes.create_event_log(
+        EventLogBase(
+            log=EVENT_LOG_MSGS[MEMBERSHIP_IDENTIFIER]["DELETE"].format(
+                department_id=department.id, employee_id=employee.id
+            ),
+            employee_id=caller_id,
+        ),
+        db,
     )
     return department.employees

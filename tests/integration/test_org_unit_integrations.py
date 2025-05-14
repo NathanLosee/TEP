@@ -39,13 +39,6 @@ def test_create_org_unit_409_name_already_exists(
     assert response.json() == {"detail": EXC_MSG_NAME_ALREADY_EXISTS}
 
 
-def test_get_org_units_200_empty_list(test_client: TestClient):
-    response = test_client.get(BASE_URL)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-
 def test_get_org_units_200_nonempty_list(
     org_unit_data: dict,
     test_client: TestClient,
@@ -59,7 +52,7 @@ def test_get_org_units_200_nonempty_list(
     response = test_client.get(BASE_URL)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [org_unit_data]
+    assert org_unit_data in response.json()
 
 
 def test_get_org_unit_200(

@@ -40,8 +40,10 @@ def get_access_log(record):
             "timestamp": record.asctime,
             "message": record.message,
         },
-        "request": record.extra_info["request"],
-        "response": record.extra_info["response"],
+        "response": {
+            "status_code": record.extra_info["status_code"],
+            "status": record.extra_info["status"],
+        },
     }
 
 

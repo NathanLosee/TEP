@@ -1,7 +1,7 @@
 """Module defining API for event log-related operations."""
 
 from datetime import datetime
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Security, status, Depends
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.event_log.constants import BASE_URL
@@ -9,6 +9,7 @@ import src.event_log.repository as event_log_repository
 import src.event_log.services as event_log_services
 from src.event_log.schemas import EventLogBase, EventLogExtended
 import src.employee.routes as employee_routes
+from src.login.services import requires_permission
 
 router = APIRouter(prefix=BASE_URL, tags=["event_log"])
 
@@ -18,7 +19,13 @@ router = APIRouter(prefix=BASE_URL, tags=["event_log"])
     status_code=status.HTTP_201_CREATED,
     response_model=EventLogExtended,
 )
-def create_event_log(request: EventLogBase, db: Session = Depends(get_db)):
+def create_event_log(
+    request: EventLogBase,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["event_log.create"]
+    ),
+):
     """Insert new event log data.
 
     Args:
@@ -44,6 +51,7 @@ def get_event_log_entries(
     employee_id: int = None,
     log_filter: str = None,
     db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["event_log.read"]),
 ):
     """Retrieve all event logs with given time period.
     If employee_id is provided, it will be used to filter the logs to those
@@ -73,7 +81,11 @@ def get_event_log_entries(
     status_code=status.HTTP_200_OK,
     response_model=EventLogExtended,
 )
-def get_event_log_by_id(id: int, db: Session = Depends(get_db)):
+def get_event_log_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["event_log.read"]),
+):
     """Retrieve event log data with provided id.
 
     Args:
@@ -94,7 +106,13 @@ def get_event_log_by_id(id: int, db: Session = Depends(get_db)):
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_event_log_by_id(id: int, db: Session = Depends(get_db)):
+def delete_event_log_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_id: int = Security(
+        requires_permission, scopes=["event_log.delete"]
+    ),
+):
     """Delete event_log data with provided id.
 
     Args:
