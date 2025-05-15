@@ -140,6 +140,50 @@ def test_get_timeclock_entry_200(
     ]
 
 
+def test_get_timeclock_entry_200_with_employee_id(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_data,
+    ).json()["id"]
+    employee_data["org_unit_id"] = org_unit_id
+    employee_id = test_client.post(
+        EMPLOYEE_URL,
+        json=employee_data,
+    ).json()["id"]
+
+    test_client.post(
+        BASE_URL,
+        params={"employee_id": employee_id},
+    )
+
+    response = test_client.get(
+        BASE_URL,
+        params={
+            "start_timestamp": (
+                datetime.now(timezone.utc) - timedelta(days=1)
+            ).isoformat(),
+            "end_timestamp": (
+                datetime.now(timezone.utc) + timedelta(days=1)
+            ).isoformat(),
+            "employee_id": employee_id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": 1,
+            "employee_id": employee_id,
+            "clock_in": response.json()[0]["clock_in"],
+            "clock_out": None,
+        }
+    ]
+
+
 def test_update_timeclock_entry_200(
     employee_data: dict,
     org_unit_data: dict,

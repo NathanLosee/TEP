@@ -1,8 +1,8 @@
 """initialize database
 
-Revision ID: 505e24a154d7
+Revision ID: 5362b620d2b9
 Revises:
-Create Date: 2025-03-30 19:15:18.383359
+Create Date: 2025-05-14 21:27:45.264089
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "505e24a154d7"
+revision: str = "5362b620d2b9"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,9 +37,32 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
     )
     op.create_table(
+        "holiday_groups",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "org_units",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
+    )
+    op.create_table(
+        "auth_role_permissions",
+        sa.Column("resource", sa.String(), nullable=False),
+        sa.Column("auth_role_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["auth_role_id"],
+            ["auth_roles.id"],
+        ),
+        sa.PrimaryKeyConstraint("resource", "auth_role_id"),
+    )
+    op.create_table(
         "employees",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("alt_id", sa.Integer(), nullable=False),
+        sa.Column("alt_id", sa.Integer(), nullable=True),
         sa.Column("first_name", sa.String(), nullable=False),
         sa.Column("last_name", sa.String(), nullable=False),
         sa.Column("password", sa.String(), nullable=True),
@@ -49,16 +72,34 @@ def upgrade() -> None:
         sa.Column("time_type", sa.Boolean(), nullable=False),
         sa.Column("allow_clocking", sa.Boolean(), nullable=False),
         sa.Column("allow_delete", sa.Boolean(), nullable=False),
+        sa.Column("holiday_group_id", sa.Integer(), nullable=True),
         sa.Column("org_unit_id", sa.Integer(), nullable=False),
         sa.Column("manager_id", sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["holiday_group_id"],
+            ["holiday_groups.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["manager_id"],
+            ["employees.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["org_unit_id"],
+            ["org_units.id"],
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "org_units",
-        sa.Column("id", sa.Integer(), nullable=False),
+        "holidays",
         sa.Column("name", sa.String(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
+        sa.Column("start_date", sa.Date(), nullable=False),
+        sa.Column("end_date", sa.Date(), nullable=False),
+        sa.Column("holiday_group_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["holiday_group_id"],
+            ["holiday_groups.id"],
+        ),
+        sa.PrimaryKeyConstraint("name", "holiday_group_id"),
     )
     op.create_table(
         "auth_role_memberships",
@@ -75,36 +116,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("auth_role_id", "employee_id"),
     )
     op.create_table(
-        "auth_role_permissions",
-        sa.Column("auth_role_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "http_method",
-            sa.Enum("GET", "POST", "PUT", "DELETE", name="httpmethod"),
-            nullable=False,
-        ),
-        sa.Column(
-            "resource",
-            sa.Enum(
-                "EMPLOYEE",
-                "DEPARTMENT",
-                "HOLIDAY",
-                "JOB",
-                "ORG_UNIT",
-                "AUTH_ROLE",
-                "AUTH_ROLE_PERMISSION",
-                "AUTH_ROLE_MEMBERSHIP",
-                name="resourcetype",
-            ),
-            nullable=False,
-        ),
-        sa.Column("restrict_to_self", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["auth_role_id"],
-            ["auth_roles.id"],
-        ),
-        sa.PrimaryKeyConstraint("auth_role_id", "http_method", "resource"),
-    )
-    op.create_table(
         "department_memberships",
         sa.Column("department_id", sa.Integer(), nullable=False),
         sa.Column("employee_id", sa.Integer(), nullable=False),
@@ -119,26 +130,26 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("department_id", "employee_id"),
     )
     op.create_table(
-        "holidays",
+        "event_log",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("start_date", sa.Date(), nullable=False),
-        sa.Column("end_date", sa.Date(), nullable=False),
-        sa.Column("org_unit_id", sa.Integer(), nullable=False),
+        sa.Column("log", sa.String(), nullable=False),
+        sa.Column("timestamp", sa.DateTime(), nullable=False),
+        sa.Column("employee_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["org_unit_id"],
-            ["org_units.id"],
+            ["employee_id"],
+            ["employees.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "jobs",
+        "timeclock",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("department_id", sa.Integer(), nullable=False),
+        sa.Column("clock_in", sa.DateTime(), nullable=False),
+        sa.Column("clock_out", sa.DateTime(), nullable=True),
+        sa.Column("employee_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["department_id"],
-            ["departments.id"],
+            ["employee_id"],
+            ["employees.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -148,13 +159,15 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table("jobs")
-    op.drop_table("holidays")
+    op.drop_table("timeclock")
+    op.drop_table("event_log")
     op.drop_table("department_memberships")
-    op.drop_table("auth_role_permissions")
     op.drop_table("auth_role_memberships")
-    op.drop_table("org_units")
+    op.drop_table("holidays")
     op.drop_table("employees")
+    op.drop_table("auth_role_permissions")
+    op.drop_table("org_units")
+    op.drop_table("holiday_groups")
     op.drop_table("departments")
     op.drop_table("auth_roles")
     # ### end Alembic commands ###

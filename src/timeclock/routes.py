@@ -68,6 +68,7 @@ def timeclock(employee_id: int, db: Session = Depends(get_db)):
 def get_timeclock_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
+    employee_id: int = None,
     db: Session = Depends(get_db),
 ):
     """Retrieve all timeclock entries with given time period.
@@ -75,6 +76,7 @@ def get_timeclock_entries(
     Args:
         start_timestamp (datetime): The start timestamp for the time period.
         end_timestamp (datetime): The end timestamp for the time period.
+        employee_id (int, optional): The employee's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
@@ -82,7 +84,7 @@ def get_timeclock_entries(
 
     """
     return timeclock_repository.get_timeclock_entries(
-        start_timestamp, end_timestamp, db
+        start_timestamp, end_timestamp, employee_id, db
     )
 
 

@@ -35,25 +35,31 @@ def timeclock(employee_id: int, db: Session) -> bool:
 
 
 def get_timeclock_entries(
-    start_timestamp: datetime, end_timestamp: datetime, db: Session
+    start_timestamp: datetime,
+    end_timestamp: datetime,
+    employee_id: int | None,
+    db: Session,
 ) -> list[TimeclockEntry]:
     """Retrieve all timeclocks with given time period.
 
     Args:
         start_timestamp (datetime): The start timestamp for the time period.
         end_timestamp (datetime): The end timestamp for the time period.
+        employee_id (int | None): The employee's unique identifier or None to
+            retrieve all employees.
         db (Session): Database session for the current request.
 
     Returns:
         list[TimeclockEntry]: The retrieved timeclock entries.
 
     """
-    return db.scalars(
-        select(TimeclockEntry).where(
-            TimeclockEntry.clock_in >= start_timestamp,
-            TimeclockEntry.clock_in <= end_timestamp,
-        )
-    ).all()
+    query = select(TimeclockEntry).where(
+        TimeclockEntry.clock_in >= start_timestamp,
+        TimeclockEntry.clock_in <= end_timestamp,
+    )
+    if employee_id:
+        query = query.where(TimeclockEntry.employee_id == employee_id)
+    return db.scalars(query).all()
 
 
 def get_timeclock_entry_by_id(id: int, db: Session) -> TimeclockEntry | None:
