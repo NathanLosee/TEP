@@ -10,18 +10,17 @@ import { ClockerService } from './clocker.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-clocker',
-  standalone: true,
-  imports: [
-    DatePipe,
-    MatFormFieldModule,
-    MatInputModule,
-    FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-  ],
-  template: `
+    selector: 'app-clocker',
+    imports: [
+        DatePipe,
+        MatFormFieldModule,
+        MatInputModule,
+        FormsModule,
+        MatButtonModule,
+        MatCardModule,
+        MatIconModule,
+    ],
+    template: `
     <div class="clocker-container">
       <mat-card class="clocker-card">
         <mat-card class="title-card">
@@ -71,7 +70,7 @@ import { interval, Subscription } from 'rxjs';
       </mat-card>
     </div>
   `,
-  styles: `
+    styles: `
     :host {
       background: var(--mat-sys-background);
       background-color: var(--mat-sys-surface);
@@ -115,7 +114,7 @@ import { interval, Subscription } from 'rxjs';
       -webkit-appearance: none;
       margin: 0;
     }
-  `,
+  `
 })
 export class ClockerComponent implements OnInit, OnDestroy {
   private clockerService = inject(ClockerService);
