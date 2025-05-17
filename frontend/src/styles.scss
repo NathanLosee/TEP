@@ -17,11 +17,11 @@ $tep-frontend-theme: mat.define-theme(
       primary: mat.$green-palette,
       tertiary: mat.$yellow-palette,
       use-system-variables: true,
-    system-variables-prefix: sys,
+      system-variables-prefix: sys,
     ),
     typography: (
       use-system-variables: true,
-    system-variables-prefix: sys,
+      system-variables-prefix: sys,
     ),
     density: (
       scale: 0,
@@ -50,11 +50,13 @@ html,
 body {
   height: 100%;
 }
-.full-width {
-  width: 100%;
-  margin-bottom: 1rem;
-}
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: var(--sys-background);
+  color: var(--sys-on-surface);
+}
+.full-width {
+  width: 100%;
+  margin-bottom: 1rem;
 }

@@ -117,6 +117,17 @@
             ],
             "scripts": []
           }
+        },
+        "e2e": {
+          "builder": "playwright-ng-schematics:playwright",
+          "options": {
+            "devServerTarget": "tep-frontend:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "tep-frontend:serve:production"
+            }
+          }
         }
       }
     }

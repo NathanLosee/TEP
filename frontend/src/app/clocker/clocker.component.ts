@@ -3,37 +3,38 @@ import { DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { FormGroup, FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ClockerService } from './clocker.service';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-clocker',
-    imports: [
-        DatePipe,
-        MatFormFieldModule,
-        MatInputModule,
-        FormsModule,
-        MatButtonModule,
-        MatCardModule,
-        MatIconModule,
-    ],
-    template: `
+  selector: 'app-clocker',
+  imports: [
+    DatePipe,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+  ],
+  template: `
     <div class="clocker-container">
-      <mat-card class="clocker-card">
-        <mat-card class="title-card">
-          <mat-card class="time-card">
+      <mat-card>
+        <mat-card-title-group>
+          <mat-card-title>Timeclock</mat-card-title>
+          <mat-card-subtitle>
             <mat-icon>access_time</mat-icon>
             <mat-label>
               {{ currentDateAndTime | date : 'EEEE, MMMM d, yyyy HH:mmaa' }}
             </mat-label>
-          </mat-card>
-          <h1 class="mat-h1">Timeclock</h1>
-        </mat-card>
-        <form>
-          <mat-form-field class="full-width">
+          </mat-card-subtitle>
+        </mat-card-title-group>
+
+        <mat-card-content>
+          <mat-form-field>
             <mat-label>Employee ID</mat-label>
             <input
               matInput
@@ -53,9 +54,10 @@ import { interval, Subscription } from 'rxjs';
             </button>
             }
           </mat-form-field>
+        </mat-card-content>
 
+        <mat-card-actions>
           <button
-            class="full-width"
             mat-raised-button
             (click)="clockInOut()"
             [disabled]="!employeeId"
@@ -63,50 +65,52 @@ import { interval, Subscription } from 'rxjs';
             Clock In/Out
           </button>
 
-          <button class="full-width" mat-raised-button [disabled]="!employeeId">
+          <button
+            mat-raised-button
+            (click)="checkStatus()"
+            [disabled]="!employeeId"
+          >
             Check Status
           </button>
-        </form>
+        </mat-card-actions>
+
+        <img mat-card-image src="monteVista.png" />
       </mat-card>
     </div>
   `,
-    styles: `
-    :host {
-      background: var(--mat-sys-background);
-      background-color: var(--mat-sys-surface);
-      color: #000000;
-    }
-
-    .clocker-container {
-      display: flex;
-      background-color: var(--mat-sys-surface);
-      color: #000000;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      width: 100%;
-    }
-
-    .clocker-card {
+  styles: `
+    mat-card {
       width: 100%;
       max-width: 400px;
-      padding: 2rem;
+      padding: 1rem 1rem 0 1rem;
     }
 
-    .time-card {
-      width: 100%;
+    mat-card > * {
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column;
+      width: 100%;
+      padding: 0;
     }
 
-    .title-card {
+    mat-card-title,
+    mat-card-subtitle {
+      background-color: var(--sys-tertiary-container);
+      color: var(--sys-on-tertiary-container);
+      border-radius: 0.5rem;
+    }
+
+    mat-card-title,
+    mat-card-subtitle,
+    mat-card-form-field,
+    button {
       width: 100%;
       margin-bottom: 1rem;
-      background-color: var(--mat-sys-surface-container-highest);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      text-align: center;
+    }
+
+    mat-icon,
+    mat-card-subtitle > mat-label {
+      vertical-align: middle;
     }
 
     input::-webkit-outer-spin-button,
@@ -114,12 +118,20 @@ import { interval, Subscription } from 'rxjs';
       -webkit-appearance: none;
       margin: 0;
     }
-  `
+
+    .mat-mdc-button-base {
+      background-color: var(--sys-tertiary-container);
+      color: var(--sys-on-tertiary-container);
+    }
+    .mat-mdc-button-disabled {
+      background-color: var(--sys-surface-container);
+      color: var(--sys-on-surface-container);
+    }
+  `,
 })
 export class ClockerComponent implements OnInit, OnDestroy {
   private clockerService = inject(ClockerService);
   private subscription?: Subscription;
-  clockerForm!: FormGroup;
 
   currentDateAndTime = Date.now();
   employeeId: number | null = null;
@@ -157,6 +169,28 @@ export class ClockerComponent implements OnInit, OnDestroy {
             }`
           );
           this.employeeId = null; // Clear the input field
+        } else {
+          alert(`Error: ${response.message}`);
+        }
+      });
+    } else {
+      alert('Please enter a valid employee ID');
+    }
+  }
+
+  /**
+   * Check the status of the employee ID
+   */
+  checkStatus() {
+    if (this.employeeId) {
+      this.clockerService.checkStatus(this.employeeId).subscribe((response) => {
+        console.log(response);
+        if (response.status === 'success') {
+          alert(
+            `Employee ID ${this.employeeId} is currently ${
+              response.message ? 'clocked in' : 'clocked out'
+            }`
+          );
         } else {
           alert(`Error: ${response.message}`);
         }

@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-timeclock',
   standalone: true,
   imports: [],
-  template: ``,
+  template: ` <h1>Timeclock</h1> `,
   styles: ``,
 })
 export class TimeclockComponent {}

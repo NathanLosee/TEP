@@ -19,24 +19,24 @@ router = APIRouter(prefix=BASE_URL, tags=["timeclock"])
 
 
 @router.post(
-    "",
+    "/{id}",
     status_code=status.HTTP_201_CREATED,
 )
-def timeclock(employee_id: int, db: Session = Depends(get_db)):
+def timeclock(id: int, db: Session = Depends(get_db)):
     """Clock in/out an employee.
 
     Args:
-        employee_id (int): The employee's unique identifier.
+        id (int): The employee's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
         dict: Json response with clock in/out status.
 
     """
-    employee = employee_routes.get_employee_by_id(employee_id, db)
+    employee = employee_routes.get_employee_by_id(id, db)
     timeclock_services.validate_employee_allowed(employee.allow_clocking)
 
-    if timeclock_repository.timeclock(employee_id, db):
+    if timeclock_repository.timeclock(id, db):
         event_log_routes.create_event_log(
             EventLogBase(
                 log=EVENT_LOG_MSGS[IDENTIFIER]["CLOCK_IN"].format(
@@ -57,6 +57,30 @@ def timeclock(employee_id: int, db: Session = Depends(get_db)):
             ),
             db,
         )
+        return {"status": "success", "message": "Clocked out"}
+
+
+@router.get(
+    "/{id}/status",
+    status_code=status.HTTP_200_OK,
+)
+def check_status(id: int, db: Session = Depends(get_db)):
+    """Check the clock status of an employee.
+
+    Args:
+        id (int): The employee's unique identifier.
+        db (Session): Database session for current request.
+
+    Returns:
+        dict: Json response with clock status.
+
+    """
+    employee = employee_routes.get_employee_by_id(id, db)
+    timeclock_services.validate_employee_allowed(employee.allow_clocking)
+
+    if timeclock_repository.check_status(id, db):
+        return {"status": "success", "message": "Clocked in"}
+    else:
         return {"status": "success", "message": "Clocked out"}
 
 

@@ -26,10 +26,7 @@ def test_clock_in_201(
         json=employee_data,
     ).json()["id"]
 
-    response = test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    response = test_client.post(f"{BASE_URL}/{employee_id}")
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
@@ -53,15 +50,9 @@ def test_clock_out_201(
         json=employee_data,
     ).json()["id"]
 
-    test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    test_client.post(f"{BASE_URL}/{employee_id}")
 
-    response = test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    response = test_client.post(f"{BASE_URL}/{employee_id}")
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
@@ -86,9 +77,83 @@ def test_clock_in_403_employee_not_allowed(
         json=employee_data,
     ).json()["id"]
 
-    response = test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
+    response = test_client.post(f"{BASE_URL}/{employee_id}")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {
+        "detail": EXC_MSG_EMPLOYEE_NOT_ALLOWED,
+    }
+
+
+def test_check_status_200_clocked_in(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_data,
+    ).json()["id"]
+    employee_data["org_unit_id"] = org_unit_id
+    employee_id = test_client.post(
+        EMPLOYEE_URL,
+        json=employee_data,
+    ).json()["id"]
+
+    test_client.post(f"{BASE_URL}/{employee_id}")
+
+    response = test_client.get(
+        f"{BASE_URL}/{employee_id}/status",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"status": "success", "message": "Clocked in"}
+
+
+def test_check_status_200_clocked_out(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_data,
+    ).json()["id"]
+    employee_data["org_unit_id"] = org_unit_id
+    employee_id = test_client.post(
+        EMPLOYEE_URL,
+        json=employee_data,
+    ).json()["id"]
+
+    test_client.post(f"{BASE_URL}/{employee_id}")
+    test_client.post(f"{BASE_URL}/{employee_id}")
+
+    response = test_client.get(
+        f"{BASE_URL}/{employee_id}/status",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"status": "success", "message": "Clocked out"}
+
+
+def test_check_status_403_not_allowed(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit_id = test_client.post(
+        ORG_UNIT_URL,
+        json=org_unit_data,
+    ).json()["id"]
+    employee_data["org_unit_id"] = org_unit_id
+    employee_data["allow_clocking"] = False
+    employee_id = test_client.post(
+        EMPLOYEE_URL,
+        json=employee_data,
+    ).json()["id"]
+
+    response = test_client.get(
+        f"{BASE_URL}/{employee_id}/status",
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -112,10 +177,7 @@ def test_get_timeclock_entry_200(
         json=employee_data,
     ).json()["id"]
 
-    test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    test_client.post(f"{BASE_URL}/{employee_id}")
 
     response = test_client.get(
         BASE_URL,
@@ -155,10 +217,7 @@ def test_get_timeclock_entry_200_with_employee_id(
         json=employee_data,
     ).json()["id"]
 
-    test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    test_client.post(f"{BASE_URL}/{employee_id}")
 
     response = test_client.get(
         BASE_URL,
@@ -200,10 +259,7 @@ def test_update_timeclock_entry_200(
         json=employee_data,
     ).json()["id"]
 
-    test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    test_client.post(f"{BASE_URL}/{employee_id}")
     timeclock_id = test_client.get(
         BASE_URL,
         params={
@@ -282,10 +338,7 @@ def test_delete_timeclock_entry_204(
         json=employee_data,
     ).json()["id"]
 
-    test_client.post(
-        BASE_URL,
-        params={"employee_id": employee_id},
-    )
+    test_client.post(f"{BASE_URL}/{employee_id}")
     timeclock_id = test_client.get(
         BASE_URL,
         params={

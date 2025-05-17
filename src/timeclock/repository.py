@@ -34,6 +34,28 @@ def timeclock(employee_id: int, db: Session) -> bool:
         return True
 
 
+def check_status(
+    employee_id: int,
+    db: Session,
+) -> bool:
+    """Check if an employee is clocked in.
+
+    Args:
+        employee_id (int): The employee's unique identifier.
+        db (Session): Database session for the current request.
+
+    Returns:
+        bool: True if clocked in, False if clocked out.
+
+    """
+    timeclock = db.scalars(
+        select(TimeclockEntry)
+        .where(TimeclockEntry.employee_id == employee_id)
+        .order_by(TimeclockEntry.id.desc())
+    ).first()
+    return timeclock is not None and not timeclock.clock_out
+
+
 def get_timeclock_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,

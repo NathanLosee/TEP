@@ -18,9 +18,21 @@ export class ClockerService {
    * @returns Whether the ID was clocked in or out
    */
   timeclock(employee_id: number): Observable<ClockResponse> {
-    return this.http.post<ClockResponse>(`${this.base_url}`, null, {
-      params: { employee_id: employee_id },
-    });
+    return this.http.post<ClockResponse>(
+      `${this.base_url}/${employee_id}`,
+      null
+    );
+  }
+
+  /**
+   * Check the status of an employee (clocked in or out)
+   * @param employee_id The employee ID to check the status of
+   * @returns The status of the employee (clocked in or out)
+   */
+  checkStatus(employee_id: number): Observable<ClockResponse> {
+    return this.http.get<ClockResponse>(
+      `${this.base_url}/status/${employee_id}`
+    );
   }
 
   constructor() {}

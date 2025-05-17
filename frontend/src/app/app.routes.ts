@@ -1,10 +1,24 @@
 import { Routes } from '@angular/router';
-import { ClockerComponent } from './clocker/clocker.component';
+import { NavTabComponent } from './navtab/navtab.component';
+import { NavPanelComponent } from './navpanel/navpanel.component';
+import { TimeclockComponent } from './timeclock/timeclock.component';
 
 export const routes: Routes = [
   {
+    title: 'Login',
     path: '',
-    component: ClockerComponent,
-    title: 'Timeclock',
+    component: NavTabComponent,
+  },
+  {
+    title: 'Admin',
+    path: 'admin',
+    component: NavPanelComponent,
+    children: [
+      {
+        title: 'Timeclock',
+        path: 'timeclock',
+        component: TimeclockComponent,
+      },
+    ],
   },
 ];
