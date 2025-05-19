@@ -74,7 +74,7 @@ def get_event_log_entries(
         .where(EventLog.timestamp >= start_timestamp)
         .where(EventLog.timestamp <= end_timestamp)
     )
-    if user_id:
+    if user_id is not None:
         query = query.where(EventLog.user_id == user_id)
     if log_filter:
         query = query.where(EventLog.log.ilike(f"%{log_filter}%"))

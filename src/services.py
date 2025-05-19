@@ -17,6 +17,7 @@ from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+import src.user.repository as user_repository
 from src.auth_role.models import AuthRole, AuthRolePermission
 from src.constants import RESOURCE_SCOPES
 from src.database import SessionLocal, get_db
@@ -28,7 +29,6 @@ from src.user.constants import (
     EXC_MSG_TOKEN_EXPIRED,
 )
 from src.user.models import User
-from src.user.repository import get_invalidated_tokens
 
 rsa_private_key: rsa.RSAPrivateKey
 rsa_public_key: rsa.RSAPublicKey
@@ -101,6 +101,8 @@ def create_root_user_if_not_exists():
         root_user.auth_roles.append(root_auth_role)
         db.commit()
 
+    db.close()
+
 
 def create_timeclock_user_if_not_exists():
     """Create a timeclock user if it does not exist.
@@ -117,6 +119,8 @@ def create_timeclock_user_if_not_exists():
         db.add(timeclock_user)
         db.commit()
         db.refresh(timeclock_user)
+
+    db.close()
 
 
 def load_keys():
@@ -252,7 +256,7 @@ def requires_permission(
 
     """
     validate(
-        token not in get_invalidated_tokens(db),
+        token not in user_repository.get_invalidated_tokens(db),
         EXC_MSG_ACCESS_TOKEN_INVALID,
         status.HTTP_401_UNAUTHORIZED,
     )

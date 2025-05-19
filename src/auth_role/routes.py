@@ -8,10 +8,10 @@ import src.user.routes as user_routes
 from src.auth_role.constants import (
     BASE_URL,
     EXC_MSG_AUTH_ROLE_NOT_FOUND,
-    EXC_MSG_EMPLOYEE_IS_MEMBER,
-    EXC_MSG_EMPLOYEE_NOT_MEMBER,
-    EXC_MSG_EMPLOYEES_ASSIGNED,
     EXC_MSG_NAME_ALREADY_EXISTS,
+    EXC_MSG_USER_IS_MEMBER,
+    EXC_MSG_USER_NOT_MEMBER,
+    EXC_MSG_USERS_ASSIGNED,
     IDENTIFIER,
     MEMBERSHIP_IDENTIFIER,
 )
@@ -94,8 +94,8 @@ def create_auth_role_membership(
 
     user = user_routes.get_user_by_id(user_id, db)
     validate(
-        auth_role not in user.auth_roles,
-        EXC_MSG_EMPLOYEE_IS_MEMBER,
+        user not in auth_role.users,
+        EXC_MSG_USER_IS_MEMBER,
         status.HTTP_409_CONFLICT,
     )
 
@@ -265,7 +265,7 @@ def delete_auth_role(
     )
     validate(
         len(auth_role.users) == 0,
-        EXC_MSG_EMPLOYEES_ASSIGNED,
+        EXC_MSG_USERS_ASSIGNED,
         status.HTTP_409_CONFLICT,
     )
 
@@ -308,7 +308,7 @@ def delete_auth_role_membership(
     user = user_routes.get_user_by_id(user_id, db)
     validate(
         auth_role in user.auth_roles,
-        EXC_MSG_EMPLOYEE_NOT_MEMBER,
+        EXC_MSG_USER_NOT_MEMBER,
         status.HTTP_404_NOT_FOUND,
     )
 

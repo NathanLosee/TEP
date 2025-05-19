@@ -43,7 +43,7 @@ def create_user(
 
     Args:
         request (UserBase): Request data for new user.
-        db (Session, optional): Database session. Defaults to Depends(get_db).
+        db (Session, optional): Database session for current request.
 
     Returns:
         UserResponse: The created user.
@@ -299,6 +299,8 @@ def login(
         status.HTTP_401_UNAUTHORIZED,
     )
 
+    user_repository.clean_invalidated_tokens(db)
+
     access_token = services.encode_jwt_token(
         {
             "sub": str(user.id),
@@ -401,7 +403,6 @@ def logout(request: Request, db: Session = Depends(get_db)):
         EXC_MSG_ACCESS_TOKEN_NOT_FOUND,
         status.HTTP_401_UNAUTHORIZED,
     )
-    user_repository.invalidate_token(access_token.split(" ")[1], db)
 
     refresh_token = request.cookies.get("refresh_token")
     services.validate(
@@ -409,6 +410,8 @@ def logout(request: Request, db: Session = Depends(get_db)):
         EXC_MSG_REFRESH_TOKEN_NOT_FOUND,
         status.HTTP_401_UNAUTHORIZED,
     )
+
+    user_repository.invalidate_token(access_token.split(" ")[1], db)
     user_repository.invalidate_token(refresh_token, db)
 
     return {"message": MSG_LOGOUT_SUCCESS}
