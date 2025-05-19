@@ -119,11 +119,11 @@ import { interval, Subscription } from 'rxjs';
       margin: 0;
     }
 
-    .mat-mdc-button-base {
+    mat-card-actions > .mat-mdc-button-base {
       background-color: var(--sys-tertiary-container);
       color: var(--sys-on-tertiary-container);
     }
-    .mat-mdc-button-disabled {
+    mat-card-actions > .mat-mdc-button-disabled {
       background-color: var(--sys-surface-container);
       color: var(--sys-on-surface-container);
     }
@@ -163,11 +163,7 @@ export class ClockerComponent implements OnInit, OnDestroy {
       this.clockerService.timeclock(this.employeeId).subscribe((response) => {
         console.log(response);
         if (response.status === 'success') {
-          alert(
-            `Employee ID ${this.employeeId} has been ${
-              response.message ? 'clocked in' : 'clocked out'
-            }`
-          );
+          alert(`Employee ID ${this.employeeId} has been ${response.message}`);
           this.employeeId = null; // Clear the input field
         } else {
           alert(`Error: ${response.message}`);

@@ -21,6 +21,7 @@ RESOURCE_SCOPES = {
     "employee.create": "Create Employee",
     "employee.read": "Read Employee",
     "employee.update": "Update Employee",
+    "employee.update.id": "Update Employee's ID",
     "employee.delete": "Delete Employee",
     "event_log.create": "Create Event Log",
     "event_log.read": "Read Event Log",
@@ -34,5 +35,10 @@ RESOURCE_SCOPES = {
     "org_unit.update": "Update Org Unit",
     "org_unit.delete": "Delete Org Unit",
     "timeclock.update": "Update Timeclock entry",
+    "timeclock.read": "Read Timeclock entry",
     "timeclock.delete": "Delete Timeclock entry",
+    "user.create": "Create User",
+    "user.read": "Read User",
+    "user.update": "Update User",
+    "user.delete": "Delete User",
 }

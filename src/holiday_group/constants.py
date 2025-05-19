@@ -15,3 +15,4 @@ EXC_MSG_HOLIDAY_GROUP_NOT_FOUND = "Holiday group does not exist."
 EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS = (
     "Holiday group with name already exists within this group."
 )
+EXC_MSG_EMPLOYEES_ASSIGNED = "Employees are assigned to this holiday group."

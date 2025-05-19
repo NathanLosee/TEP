@@ -6,21 +6,23 @@ Classes:
 """
 
 from datetime import datetime, timezone
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+
 from src.database import Base
-from src.timeclock.constants import IDENTIFIER
 from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
+from src.timeclock.constants import IDENTIFIER
 
 
 class TimeclockEntry(Base):
     """SQLAlchemy model for timeclock data.
 
     Attributes:
-        id (int): Unique identifier of the timeclock entry in the database.
-        clock_in (datetime): Timestamp of when the employee clocked in.
-        clock_out (datetime): Timestamp of when the employee clocked out.
-        employee_id (int): The employee associated with this timeclock entry.
+        id (int): Timeclock entry's unique identifier.
+        clock_in (datetime): Employee's clock-in timestamp.
+        clock_out (datetime): Employee's clock-out timestamp.
+        employee_id (int): Employee's unique identifier.
 
     """
 

@@ -8,12 +8,13 @@ Classes:
 """
 
 from datetime import date
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.database import Base
-from src.holiday_group.constants import IDENTIFIER, HOLIDAY_IDENTIFIER
 from typing import TYPE_CHECKING
 
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.database import Base
+from src.holiday_group.constants import HOLIDAY_IDENTIFIER, IDENTIFIER
 
 if TYPE_CHECKING:
     from src.employee.models import Employee
@@ -25,10 +26,10 @@ class Holiday(Base):
     """SQLAlchemy model for holiday data.
 
     Attributes:
-        name (str): Name of the holiday.
-        start_date (date): Start date of the holiday.
-        end_date (date): End date of the holiday.
-        holiday_group_id (int): Foreign key referencing the holiday group.
+        name (str): Holiday's name.
+        start_date (date): Holiday's start date.
+        end_date (date): Holiday's end date.
+        holiday_group_id (int): Holiday group the holiday belongs to.
 
     """
 
@@ -46,8 +47,8 @@ class HolidayGroup(Base):
     """SQLAlchemy model for holiday group data.
 
     Attributes:
-        id (int): Unique identifier of the holiday group in the database.
-        name (str): Name of the holiday group.
+        id (int): Holiday group's unique identifier.
+        name (str): Holiday group's name.
 
     """
 

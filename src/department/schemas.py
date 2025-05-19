@@ -7,6 +7,7 @@ Classes:
 """
 
 from pydantic import BaseModel, ConfigDict, Field
+
 from src.department.constants import NAME_MAX_LENGTH, NAME_REGEX
 
 
@@ -14,7 +15,7 @@ class DepartmentBase(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        name (str): Name of the department.
+        name (str): Department's name.
 
     """
 
@@ -29,7 +30,7 @@ class DepartmentExtended(DepartmentBase):
     """Base Pydantic schema extended with id field.
 
     Attributes:
-        id (int): Unique identifier of the department's data in the database.
+        id (int): Department's unique identifier.
 
     """
 

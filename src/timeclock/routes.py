@@ -1,19 +1,22 @@
 """Module defining API for timeclock-related operations."""
 
 from datetime import datetime
-from fastapi import APIRouter, Security, status, Depends
+
+from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
-from src.database import get_db
-from src.login.services import requires_permission
-import src.services as common_services
-from src.timeclock.constants import BASE_URL, IDENTIFIER
-import src.timeclock.repository as timeclock_repository
-import src.timeclock.services as timeclock_services
-from src.timeclock.schemas import TimeclockEntryBase
+
 import src.employee.routes as employee_routes
-from src.event_log.constants import EVENT_LOG_MSGS
-import src.event_log.routes as event_log_routes
-from src.event_log.schemas import EventLogBase
+import src.timeclock.repository as timeclock_repository
+from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
+from src.database import get_db
+from src.services import create_event_log, requires_permission, validate
+from src.timeclock.constants import (
+    BASE_URL,
+    EXC_MSG_EMPLOYEE_NOT_ALLOWED,
+    EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
+    IDENTIFIER,
+)
+from src.timeclock.schemas import TimeclockEntryBase
 
 router = APIRouter(prefix=BASE_URL, tags=["timeclock"])
 
@@ -26,37 +29,26 @@ def timeclock(id: int, db: Session = Depends(get_db)):
     """Clock in/out an employee.
 
     Args:
-        id (int): The employee's unique identifier.
+        id (int): Employee's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
-        dict: Json response with clock in/out status.
+        dict: Clock in/out status.
 
     """
     employee = employee_routes.get_employee_by_id(id, db)
-    timeclock_services.validate_employee_allowed(employee.allow_clocking)
+    validate(
+        employee.allow_clocking,
+        EXC_MSG_EMPLOYEE_NOT_ALLOWED,
+        status.HTTP_403_FORBIDDEN,
+    )
 
+    log_args = {"id": employee.id}
     if timeclock_repository.timeclock(id, db):
-        event_log_routes.create_event_log(
-            EventLogBase(
-                log=EVENT_LOG_MSGS[IDENTIFIER]["CLOCK_IN"].format(
-                    employee_id=employee.id
-                ),
-                employee_id=employee.id,
-            ),
-            db,
-        )
+        create_event_log(IDENTIFIER, "CLOCK_IN", log_args, 1, db)
         return {"status": "success", "message": "Clocked in"}
     else:
-        event_log_routes.create_event_log(
-            EventLogBase(
-                log=EVENT_LOG_MSGS[IDENTIFIER]["CLOCK_OUT"].format(
-                    employee_id=employee.id
-                ),
-                employee_id=employee.id,
-            ),
-            db,
-        )
+        create_event_log(IDENTIFIER, "CLOCK_OUT", log_args, 1, db)
         return {"status": "success", "message": "Clocked out"}
 
 
@@ -68,15 +60,19 @@ def check_status(id: int, db: Session = Depends(get_db)):
     """Check the clock status of an employee.
 
     Args:
-        id (int): The employee's unique identifier.
+        id (int): Employee's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
-        dict: Json response with clock status.
+        dict: Clock in/out status.
 
     """
     employee = employee_routes.get_employee_by_id(id, db)
-    timeclock_services.validate_employee_allowed(employee.allow_clocking)
+    validate(
+        employee.allow_clocking,
+        EXC_MSG_EMPLOYEE_NOT_ALLOWED,
+        status.HTTP_403_FORBIDDEN,
+    )
 
     if timeclock_repository.check_status(id, db):
         return {"status": "success", "message": "Clocked in"}
@@ -94,13 +90,17 @@ def get_timeclock_entries(
     end_timestamp: datetime,
     employee_id: int = None,
     db: Session = Depends(get_db),
+    caller_id: int = Security(requires_permission, scopes=["timeclock.read"]),
 ):
     """Retrieve all timeclock entries with given time period.
+    If employee_id is provided, it will be used to filter the entries to
+        those associated with the id.
 
     Args:
-        start_timestamp (datetime): The start timestamp for the time period.
-        end_timestamp (datetime): The end timestamp for the time period.
-        employee_id (int, optional): The employee's unique identifier.
+        start_timestamp (datetime): Start timestamp for the time period.
+        end_timestamp (datetime): End timestamp for the time period.
+        employee_id (int, optional): Employee's unique identifier.
+            Defaults to None.
         db (Session): Database session for current request.
 
     Returns:
@@ -128,7 +128,7 @@ def update_timeclock_by_id(
     """Update data for timeclock entry with provided id.
 
     Args:
-        id (int): The timeclock's unique identifier.
+        id (int): Timeclock entry's unique identifier.
         request (TimeclockGroupBase): Request data to update timeclock entry.
         db (Session): Database session for current request.
 
@@ -136,22 +136,24 @@ def update_timeclock_by_id(
         TimeclockEntryBase: The updated timeclock entry.
 
     """
-    common_services.validate_ids_match(request.id, id)
+    validate(
+        request.id == id,
+        EXC_MSG_IDS_DO_NOT_MATCH,
+        status.HTTP_400_BAD_REQUEST,
+    )
+
     timeclock = timeclock_repository.get_timeclock_entry_by_id(id, db)
-    timeclock_services.validate_timeclock_entry_exists(timeclock)
+    validate(
+        timeclock,
+        EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
 
     timeclock_entry = timeclock_repository.update_timeclock_entry_by_id(
         timeclock, request, db
     )
-    event_log_routes.create_event_log(
-        EventLogBase(
-            log=EVENT_LOG_MSGS[IDENTIFIER]["UPDATE"].format(
-                timeclock_entry_id=timeclock_entry.id,
-            ),
-            employee_id=caller_id,
-        ),
-        db,
-    )
+    log_args = {"timeclock_entry_id": timeclock_entry.id}
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
     return timeclock_entry
 
 
@@ -169,20 +171,17 @@ def delete_timeclock_by_id(
     """Delete timeclock data with provided id.
 
     Args:
-        id (int): The timeclock's unique identifier.
+        id (int): Timeclock entry's unique identifier.
         db (Session): Database session for current request.
 
     """
     timeclock_entry = timeclock_repository.get_timeclock_entry_by_id(id, db)
-    timeclock_services.validate_timeclock_entry_exists(timeclock_entry)
+    validate(
+        timeclock_entry,
+        EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
 
     timeclock_repository.delete_timeclock_entry(timeclock_entry, db)
-    event_log_routes.create_event_log(
-        EventLogBase(
-            log=EVENT_LOG_MSGS[IDENTIFIER]["DELETE"].format(
-                timeclock_entry_id=timeclock_entry.id,
-            ),
-            employee_id=caller_id,
-        ),
-        db,
-    )
+    log_args = {"timeclock_entry_id": timeclock_entry.id}
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)

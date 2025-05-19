@@ -2,10 +2,11 @@
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from src.auth_role.models import (
-    AuthRolePermission,
     AuthRole,
     AuthRoleMembership,
+    AuthRolePermission,
 )
 from src.auth_role.schemas import AuthRoleBase, AuthRoleExtended
 
@@ -18,7 +19,7 @@ def create_auth_role(request: AuthRoleBase, db: Session) -> AuthRole:
         db (Session): Database session for the current request.
 
     Returns:
-        Org_unit: The created auth.
+        AuthRole: The created auth role.
 
     """
     auth_role = AuthRole(
@@ -33,27 +34,24 @@ def create_auth_role(request: AuthRoleBase, db: Session) -> AuthRole:
 
 
 def create_membership(
-    auth_role_id: int, employee_id: int, db: Session
+    auth_role_id: int, user_id: int, db: Session
 ) -> AuthRole:
-    """Insert new membership data.
+    """Insert new auth role membership data.
 
     Args:
-        auth_role_id (int): The id of the auth role in the membership.
-        employee_id (int): The id of the employee in the membership.
+        auth_role_id (int): Auth role in the membership.
+        user_id (int): User in the membership.
         db (Session): Database session for the current request.
 
     Returns:
         AuthRole: The auth role with updated membership.
 
     """
-    membership = AuthRoleMembership(
-        auth_role_id=auth_role_id, employee_id=employee_id
-    )
+    membership = AuthRoleMembership(auth_role_id=auth_role_id, user_id=user_id)
     db.add(membership)
     db.commit()
-    auth_role = get_auth_role_by_id(auth_role_id, db)
-    db.refresh(auth_role)
-    return auth_role
+    db.refresh(membership)
+    return get_auth_role_by_id(auth_role_id, db)
 
 
 def get_auth_roles(db: Session) -> list[AuthRole]:
@@ -73,7 +71,7 @@ def get_auth_role_by_id(id: int, db: Session) -> AuthRole | None:
     """Retrieve an auth role by a provided id.
 
     Args:
-        id (int): The id of the auth role to look for.
+        id (int): Auth role's unique identifier.
         db (Session): Database session for the current request.
 
     Returns:
@@ -88,7 +86,7 @@ def get_auth_role_by_name(name: str, db: Session) -> AuthRole | None:
     """Retrieve an auth role by a provided name.
 
     Args:
-        name (str): The name of the auth role to look for.
+        name (str): Auth role's name.
         db (Session): Database session for the current request.
 
     Returns:
@@ -105,26 +103,20 @@ def update_auth_role(
     """Update an auth's existing data.
 
     Args:
-        auth (Auth): The auth data to be updated.
-        request (AuthRoleExtended): Request data for updating auth.
+        auth_role (AuthRole): Auth role data to be updated.
+        request (AuthRoleExtended): Request data for updating auth role.
         db (Session): Database session for the current request.
 
     Returns:
-        Auth: The updated auth.
+        AuthRole: The updated auth role.
+
     """
-    auth_role_update = AuthRole(**request.model_dump(exclude={"permissions"}))
-    update_permission_resources = set(
-        permission.resource for permission in request.permissions
-    )
-    existing_permission_resources = set(
-        permission.resource for permission in auth_role.permissions
-    )
-    added_permissions = (
-        update_permission_resources - existing_permission_resources
-    )
-    removed_permissions = (
-        existing_permission_resources - update_permission_resources
-    )
+    auth_role.name = request.name
+
+    request_permissions = set(p.resource for p in request.permissions)
+    auth_role_permissions = set(p.resource for p in auth_role.permissions)
+    added_permissions = request_permissions - auth_role_permissions
+    removed_permissions = auth_role_permissions - request_permissions
     for permission in auth_role.permissions:
         if permission.resource in removed_permissions:
             db.delete(permission)
@@ -135,7 +127,7 @@ def update_auth_role(
             )
             db.add(permission)
 
-    db.merge(auth_role_update)
+    db.add(auth_role)
     db.commit()
     db.refresh(auth_role)
     return auth_role
@@ -145,7 +137,7 @@ def delete_auth_role(auth_role: AuthRole, db: Session):
     """Delete an auth's data.
 
     Args:
-        auth_role (AuthRole): The auth role data to be deleted.
+        auth_role (AuthRole): Auth role data to be deleted.
         db (Session): Database session for the current request.
 
     """
@@ -154,13 +146,13 @@ def delete_auth_role(auth_role: AuthRole, db: Session):
 
 
 def delete_membership(
-    auth_role_id: int, employee_id: int, db: Session
+    auth_role_id: int, user_id: int, db: Session
 ) -> AuthRole:
     """Delete a membership's data.
 
     Args:
-        auth_role_id (int): The id of the auth role in the membership.
-        employee_id (int): The id of the employee in the membership.
+        auth_role_id (int): Auth role in the membership.
+        user_id (int): User in the membership.
         db (Session): Database session for the current request.
 
     Returns:
@@ -170,7 +162,7 @@ def delete_membership(
     membership = db.scalars(
         select(AuthRoleMembership).where(
             AuthRoleMembership.auth_role_id == auth_role_id,
-            AuthRoleMembership.employee_id == employee_id,
+            AuthRoleMembership.user_id == user_id,
         )
     ).first()
     db.delete(membership)

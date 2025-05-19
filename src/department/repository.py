@@ -2,6 +2,7 @@
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from src.department.models import Department, DepartmentMembership
 from src.department.schemas import DepartmentBase, DepartmentExtended
 
@@ -30,8 +31,8 @@ def create_membership(
     """Insert new membership data.
 
     Args:
-        department_id (int): The id of the department in the membership.
-        employee_id (int): The id of the employee in the membership.
+        department_id (int): Department in the membership.
+        employee_id (int): Employee in the membership.
         db (Session): Database session for the current request.
 
     Returns:
@@ -39,11 +40,11 @@ def create_membership(
 
     """
     membership = DepartmentMembership(
-        department_id=department_id, employee_id=employee_id
+        department_id=department_id,
+        employee_id=employee_id,
     )
     db.add(membership)
     db.commit()
-    db.refresh(membership)
     return get_department_by_id(department_id, db)
 
 
@@ -64,7 +65,7 @@ def get_department_by_id(id: int, db: Session) -> Department | None:
     """Retrieve an department by a provided id.
 
     Args:
-        id (int): The id of the department to look for.
+        id (int): Department's unique identifier.
         db (Session): Database session for the current request.
 
     Returns:
@@ -79,7 +80,7 @@ def get_department_by_name(name: str, db: Session) -> Department | None:
     """Retrieve an department by a provided name.
 
     Args:
-        name (str): The name of the department to look for.
+        name (str): Department's name.
         db (Session): Database session for the current request.
 
     Returns:
@@ -98,17 +99,17 @@ def update_department(
     """Update an department's existing data.
 
     Args:
-        department (Department): The department data to be updated.
+        department (Department): Department data to be updated.
         request (DepartmentExtended): Request data for updating department.
         db (Session): Database session for the current request.
 
     Returns:
         Department: The updated department.
+
     """
-    department_update = Department(**request.model_dump())
-    db.merge(department_update)
+    department.name = request.name
+    db.add(department)
     db.commit()
-    db.refresh(department)
     return department
 
 
@@ -116,7 +117,7 @@ def delete_department(department: Department, db: Session):
     """Delete an department's data.
 
     Args:
-        department (Department): The department data to be deleted.
+        department (Department): Department data to be deleted.
         db (Session): Database session for the current request.
 
     """
@@ -130,8 +131,8 @@ def delete_membership(
     """Delete a membership's data.
 
     Args:
-        department_id (int): The id of the department in the membership.
-        employee_id (int): The id of the employee in the membership.
+        department_id (int): Department in the membership.
+        employee_id (int): Employee in the membership.
         db (Session): Database session for the current request.
 
     Returns:

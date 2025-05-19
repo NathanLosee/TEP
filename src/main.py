@@ -5,16 +5,18 @@ from http import HTTPStatus
 from importlib import import_module
 from pathlib import Path
 
-from fastapi.exceptions import RequestValidationError
 from fastapi import FastAPI, Request, Response, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTask
 from starlette.types import Message
-from src.login.services import load_keys
+
 from src.config import Settings
 from src.database import cleanup_tables, get_db
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
+from src.services import create_root_user_if_not_exists, load_keys
 
 
 @asynccontextmanager
@@ -79,6 +81,15 @@ async def set_request_body(request: Request, body: bytes):
         return {"type": "http.request", "body": body}
 
     request._receive = receive
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.middleware("http")
@@ -170,3 +181,4 @@ def root() -> dict:
 
 import_routers()
 load_keys()
+create_root_user_if_not_exists()

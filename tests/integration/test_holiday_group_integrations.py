@@ -1,13 +1,14 @@
 from fastapi import status
 from fastapi.testclient import TestClient
+
+from src.employee.constants import BASE_URL as EMPLOYEE_URL
 from src.holiday_group.constants import (
     BASE_URL,
-    EXC_MSG_END_DATE_BEFORE_START_DATE,
     EXC_MSG_DUPLICATE_HOLIDAY_NAME,
-    EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
+    EXC_MSG_END_DATE_BEFORE_START_DATE,
     EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS,
+    EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
 )
-from src.employee.constants import BASE_URL as EMPLOYEE_URL
 from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 
 
@@ -96,10 +97,10 @@ def test_get_holiday_groups_200_nonempty_list(
         BASE_URL,
         json=holiday_group_data,
     ).json()["id"]
-    holiday_group_data["id"] = holiday_group_id
 
     response = test_client.get(BASE_URL)
 
+    holiday_group_data["id"] = holiday_group_id
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == [holiday_group_data]
 
@@ -112,10 +113,10 @@ def test_get_holiday_group_200(
         BASE_URL,
         json=holiday_group_data,
     ).json()["id"]
-    holiday_group_data["id"] = holiday_group_id
 
     response = test_client.get(f"{BASE_URL}/{holiday_group_id}")
 
+    holiday_group_data["id"] = holiday_group_id
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == holiday_group_data
 
@@ -141,10 +142,12 @@ def test_get_employees_by_holiday_group_200(
         BASE_URL,
         json=holiday_group_data,
     ).json()["id"]
+
     org_unit_id = test_client.post(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_data["holiday_group_id"] = holiday_group_id
     employee_id = test_client.post(
@@ -180,7 +183,6 @@ def test_update_holiday_group_200(
 
     holiday_group_data["id"] = holiday_group_id
     holiday_group_data["name"] = "Updated Holiday Group Name"
-
     response = test_client.put(
         f"{BASE_URL}/{holiday_group_id}",
         json=holiday_group_data,
@@ -207,7 +209,6 @@ def test_update_holiday_group_200_add_holiday(
             "end_date": "2023-12-25",
         }
     )
-
     response = test_client.put(
         f"{BASE_URL}/{holiday_group_id}",
         json=holiday_group_data,
@@ -228,7 +229,6 @@ def test_update_holiday_group_200_remove_holiday(
 
     holiday_group_data["id"] = holiday_group_id
     holiday_group_data["holidays"].pop(0)
-
     response = test_client.put(
         f"{BASE_URL}/{holiday_group_id}",
         json=holiday_group_data,

@@ -109,11 +109,11 @@ import { FormsModule } from '@angular/forms';
       margin: 0;
     }
 
-    .mat-mdc-button-base {
+    mat-card-actions > .mat-mdc-button-base {
       background-color: var(--sys-tertiary-container);
       color: var(--sys-on-tertiary-container);
     }
-    .mat-mdc-button-disabled {
+    mat-card-actions > .mat-mdc-button-disabled {
       background-color: var(--sys-surface-container);
       color: var(--sys-on-surface-container);
     }

@@ -2,13 +2,14 @@
 
 Classes:
     - EmployeeBase: Pydantic schema for request/response data.
-    - EmployeeExtended: Base Pydantic schema extended with id field.
 
 """
 
 from datetime import date
 from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from src.employee.constants import NAME_REGEX
 
 
@@ -16,28 +17,25 @@ class EmployeeBase(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        alt_id (int): Alternate identifier of the employee's data in the
-            database.
-        first_name (str): First name of the employee.
-        last_name (str): Last name of the employee.
-        payroll_type (str): Payroll type of the employee.
-        payroll_sync (date): Date of the payroll time sync for the employee.
-        workweek_type (str): Workweek type of the employee.
-        time_type (bool): Whether the employee is full-time or part-time.
+        id (int): Employee's unique identifier.
+        first_name (str): Employee's first name.
+        last_name (str): Employee's last name.
+        payroll_type (str): Employee's payroll type.
+        payroll_sync (date): Employee's payroll sync date.
+        workweek_type (str): Employee's workweek type.
+        time_type (bool): Employee's time type.
+            (True for full-time, False for part-time)
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
         allow_delete (bool): Whether the employee is allowed to be deleted.
-        org_unit_id (int): Unique identifier of the org unit the employee
-            belongs to.
-        manager_id (int): Unique identifier of the employee's manager.
-        holiday_group_id (int): Unique identifier of the holiday group the
-            employee belongs to.
+        org_unit_id (int): Org unit's unique identifier.
+        manager_id (int): Manager's unique identifier.
+        holiday_group_id (int): Holiday group's unique identifier.
 
     """
 
-    alt_id: int
+    id: int
     first_name: str = Field(pattern=NAME_REGEX)
     last_name: str = Field(pattern=NAME_REGEX)
-    password: Optional[str] = Field(exclude=True, default=None)
     payroll_type: str
     payroll_sync: date
     workweek_type: str
@@ -49,16 +47,3 @@ class EmployeeBase(BaseModel):
     holiday_group_id: Optional[int] = Field(default=None)
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
-
-
-class EmployeeExtended(EmployeeBase):
-    """Base Pydantic schema extended with id field.
-
-    Attributes:
-        id (int): Unique identifier of the employee's data in the database.
-
-    """
-
-    id: int
-
-    model_config = ConfigDict(from_attributes=True)

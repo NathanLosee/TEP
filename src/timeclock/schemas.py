@@ -6,8 +6,11 @@ Classes:
 """
 
 from datetime import datetime
-from fastapi import HTTPException, status
+
+from fastapi import status
 from pydantic import BaseModel, Field, model_validator
+
+from src.services import validate
 from src.timeclock.constants import EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN
 
 
@@ -15,11 +18,10 @@ class TimeclockEntryBase(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        id (int): Unique identifier of the timeclock entry in the database.
-        employee_id (int): The employee associated with this timeclock entry.
-        clock_in (datetime): Timestamp of when the employee clocked in.
-        clock_out (datetime | None): Timestamp of when the employee clocked
-            out.
+        id (int): Timeclock entry's unique identifier.
+        employee_id (int): Employee's unique identifier.
+        clock_in (datetime): Employee's clock-in timestamp.
+        clock_out (datetime | None): Employee's clock-out timestamp.
 
     """
 
@@ -30,9 +32,9 @@ class TimeclockEntryBase(BaseModel):
 
     @model_validator(mode="after")
     def check_datetimes(self):
-        if self.clock_out and self.clock_out < self.clock_in:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN,
-            )
+        validate(
+            not self.clock_out or self.clock_out >= self.clock_in,
+            EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN,
+            status.HTTP_400_BAD_REQUEST,
+        )
         return self

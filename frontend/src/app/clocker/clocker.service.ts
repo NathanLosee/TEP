@@ -10,7 +10,7 @@ import { ClockResponse } from './clocker.interfaces';
 @Injectable({ providedIn: 'root' })
 export class ClockerService {
   private http = inject(HttpClient);
-  base_url = 'http://localhost:8080/timeclock';
+  base_url = 'http://localhost:8000/timeclock';
 
   /**
    * Clock in/out for an employee

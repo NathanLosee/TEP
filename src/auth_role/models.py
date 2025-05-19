@@ -9,31 +9,31 @@ Classes:
 
 """
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.database import Base
+
 from src.auth_role.constants import (
     IDENTIFIER,
     MEMBERSHIP_IDENTIFIER,
     PERMISSION_IDENTIFIER,
 )
-from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
-from typing import TYPE_CHECKING
-
+from src.database import Base
+from src.user.constants import IDENTIFIER as USER_IDENTIFIER
 
 if TYPE_CHECKING:
-    from src.employee.models import Employee
+    from src.user.models import User
 else:
-    Employee = "Employee"
+    User = "User"
 
 
 class AuthRolePermission(Base):
     """SQLAlchemy model for AuthRolePermission data.
 
     Attributes:
-        resource (str): The resource of the permission.
-        auth_role_id (int): Unique identifier of the auth role in the
-            membership.
+        resource (str): Permission's resource name.
+        auth_role_id (int): Auth role permission is associated with.
 
     """
 
@@ -49,17 +49,16 @@ class AuthRoleMembership(Base):
     """SQLAlchemy model for AuthRoleMembership data.
 
     Attributes:
-        auth_role_id (int): Unique identifier of the auth role in the
-            membership.
-        employee_id (int): Unique identifier of the employee in the membership.
+        auth_role_id (int): Auth role in the membership.
+        user_id (int): User in the membership.
 
     """
 
     auth_role_id: Mapped[int] = mapped_column(
         ForeignKey(IDENTIFIER + ".id"), primary_key=True, nullable=False
     )
-    employee_id: Mapped[int] = mapped_column(
-        ForeignKey(EMPLOYEE_IDENTIFIER + ".id"),
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(USER_IDENTIFIER + ".id"),
         primary_key=True,
         nullable=False,
     )
@@ -71,17 +70,16 @@ class AuthRole(Base):
     """SQLAlchemy model for AuthRole data.
 
     Attributes:
-        id (int): Unique identifier of the auth role's data in the database.
-        name (str): Name of the auth role.
+        id (int): Auth role's unique identifier.
+        name (str): Auth role's name.
 
     """
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    employees: Mapped[list["Employee"]] = relationship(
+    users: Mapped[list[User]] = relationship(
         secondary=MEMBERSHIP_IDENTIFIER,
         back_populates="auth_roles",
-        cascade="all, delete",
     )
     permissions: Mapped[list[AuthRolePermission]] = relationship(
         AuthRolePermission,

@@ -7,6 +7,7 @@ Classes:
 """
 
 from pydantic import BaseModel, ConfigDict, Field
+
 from src.org_unit.constants import NAME_MAX_LENGTH, NAME_REGEX
 
 
@@ -14,7 +15,7 @@ class OrgUnitBase(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        name (str): Name of the org unit.
+        name (str): Org unit's name.
 
     """
 
@@ -29,7 +30,7 @@ class OrgUnitExtended(OrgUnitBase):
     """Base Pydantic schema extended with id field.
 
     Attributes:
-        id (int): Unique identifier of the org unit's data in the database.
+        id (int): Org unit's unique identifier.
 
     """
 

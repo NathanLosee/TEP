@@ -1,18 +1,21 @@
 """Module defining API for org unit-related operations."""
 
-from fastapi import APIRouter, Security, status, Depends
+from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
-from src.database import get_db
-from src.employee.schemas import EmployeeExtended
-from src.login.services import requires_permission
-import src.services as common_services
-from src.org_unit.constants import BASE_URL, IDENTIFIER
+
 import src.org_unit.repository as org_unit_repository
-import src.org_unit.services as org_unit_services
+from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
+from src.database import get_db
+from src.employee.schemas import EmployeeBase
+from src.org_unit.constants import (
+    BASE_URL,
+    EXC_MSG_EMPLOYEES_ASSIGNED,
+    EXC_MSG_NAME_ALREADY_EXISTS,
+    EXC_MSG_ORG_NOT_FOUND,
+    IDENTIFIER,
+)
 from src.org_unit.schemas import OrgUnitBase, OrgUnitExtended
-from src.event_log.constants import EVENT_LOG_MSGS
-import src.event_log.routes as event_log_routes
-from src.event_log.schemas import EventLogBase
+from src.services import create_event_log, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["org_unit"])
 
@@ -34,26 +37,21 @@ def create_org_unit(
         db (Session): Database session for current request.
 
     Returns:
-        OrgUnitExtended: Response containing newly created org unit data.
+        OrgUnitExtended: The created org unit.
 
     """
-    org_unit_with_same_name = org_unit_repository.get_org_unit_by_name(
+    duplicate_org_unit = org_unit_repository.get_org_unit_by_name(
         request.name, db
     )
-    org_unit_services.validate_org_unit_name_is_unique(
-        org_unit_with_same_name, None
+    validate(
+        duplicate_org_unit is None,
+        EXC_MSG_NAME_ALREADY_EXISTS,
+        status.HTTP_409_CONFLICT,
     )
 
     org_unit = org_unit_repository.create_org_unit(request, db)
-    event_log_routes.create_event_log(
-        EventLogBase(
-            log=EVENT_LOG_MSGS[IDENTIFIER]["CREATE"].format(
-                org_unit_id=org_unit.id
-            ),
-            employee_id=caller_id,
-        ),
-        db,
-    )
+    log_args = {"org_unit_id": org_unit.id}
+    create_event_log(IDENTIFIER, "CREATE", log_args, caller_id, db)
     return org_unit
 
 
@@ -91,7 +89,7 @@ def get_org_unit(
     """Retrieve data for org unit with provided id.
 
     Args:
-        id (int): The org unit's unique identifier.
+        id (int): Org unit's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
@@ -99,7 +97,11 @@ def get_org_unit(
 
     """
     org_unit = org_unit_repository.get_org_unit_by_id(id, db)
-    org_unit_services.validate_org_unit_exists(org_unit)
+    validate(
+        org_unit,
+        EXC_MSG_ORG_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
 
     return org_unit
 
@@ -107,7 +109,7 @@ def get_org_unit(
 @router.get(
     "/{id}/employees",
     status_code=status.HTTP_200_OK,
-    response_model=list[EmployeeExtended],
+    response_model=list[EmployeeBase],
 )
 def get_employees_by_org_unit(
     id: int,
@@ -119,15 +121,19 @@ def get_employees_by_org_unit(
     """Retrieve all employees for a given org unit.
 
     Args:
-        id (int): The org unit's unique identifier.
+        id (int): Org unit's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeExtended]: The retrieved employees for the given org unit.
+        list[EmployeeBase]: The retrieved employees for the given org unit.
 
     """
     org_unit = get_org_unit(id, db)
-    org_unit_services.validate_org_unit_exists(org_unit)
+    validate(
+        org_unit,
+        EXC_MSG_ORG_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
 
     return org_unit.employees
 
@@ -146,7 +152,7 @@ def update_org_unit(
     """Update data for org unit with provided id.
 
     Args:
-        id (int): The org unit's unique identifier.
+        id (int): Org unit's unique identifier.
         request (OrgUnitBase): Request data to update org_unit.
         db (Session): Database session for current request.
 
@@ -154,26 +160,31 @@ def update_org_unit(
         OrgUnitExtended: The updated org unit.
 
     """
-    common_services.validate_ids_match(request.id, id)
+    validate(
+        request.id == id,
+        EXC_MSG_IDS_DO_NOT_MATCH,
+        status.HTTP_400_BAD_REQUEST,
+    )
+
     org_unit = org_unit_repository.get_org_unit_by_id(id, db)
-    org_unit_services.validate_org_unit_exists(org_unit)
-    org_unit_with_same_name = org_unit_repository.get_org_unit_by_name(
+    validate(
+        org_unit,
+        EXC_MSG_ORG_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
+
+    duplicate_org_unit = org_unit_repository.get_org_unit_by_name(
         request.name, db
     )
-    org_unit_services.validate_org_unit_name_is_unique(
-        org_unit_with_same_name, id
+    validate(
+        duplicate_org_unit is None or duplicate_org_unit.id == id,
+        EXC_MSG_NAME_ALREADY_EXISTS,
+        status.HTTP_409_CONFLICT,
     )
 
     org_unit = org_unit_repository.update_org_unit(org_unit, request, db)
-    event_log_routes.create_event_log(
-        EventLogBase(
-            log=EVENT_LOG_MSGS[IDENTIFIER]["UPDATE"].format(
-                org_unit_id=org_unit.id
-            ),
-            employee_id=caller_id,
-        ),
-        db,
-    )
+    log_args = {"org_unit_id": org_unit.id}
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
     return org_unit
 
 
@@ -186,21 +197,22 @@ def delete_org_unit(
     """Delete org unit with provided id.
 
     Args:
-        id (int): The org unit's unique identifier.
+        id (int): Org unit's unique identifier.
         db (Session): Database session for current request.
 
     """
     org_unit = org_unit_repository.get_org_unit_by_id(id, db)
-    org_unit_services.validate_org_unit_exists(org_unit)
-    org_unit_services.validate_org_unit_employees_list_is_empty(org_unit)
+    validate(
+        org_unit,
+        EXC_MSG_ORG_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
+    validate(
+        len(org_unit.employees) == 0,
+        EXC_MSG_EMPLOYEES_ASSIGNED,
+        status.HTTP_409_CONFLICT,
+    )
 
     org_unit_repository.delete_org_unit(org_unit, db)
-    event_log_routes.create_event_log(
-        EventLogBase(
-            log=EVENT_LOG_MSGS[IDENTIFIER]["DELETE"].format(
-                org_unit_id=org_unit.id
-            ),
-            employee_id=caller_id,
-        ),
-        db,
-    )
+    log_args = {"org_unit_id": org_unit.id}
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)

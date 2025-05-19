@@ -2,7 +2,6 @@
 
 Classes:
     - PermissionBase: Pydantic schema for request/response data.
-    - PermissionExtended: Base Pydantic schema extended with id field.
     - AuthRoleBase: Pydantic schema for request/response data.
     - AuthRoleExtended: Base Pydantic schema extended with additional fields.
 
@@ -10,10 +9,11 @@ Classes:
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
 from src.auth_role.constants import (
+    EXC_MSG_INVALID_RESOURCE,
     NAME_MAX_LENGTH,
     NAME_REGEX,
-    EXC_MSG_INVALID_RESOURCE,
 )
 from src.constants import RESOURCE_SCOPES
 
@@ -22,7 +22,7 @@ class PermissionBase(BaseModel):
     """Base Pydantic schema extended with id field.
 
     Attributes:
-        resource (str): The resource of the permission.
+        resource (str): Permission's resource name.
 
     """
 
@@ -46,7 +46,7 @@ class AuthRoleBase(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        name (str): Name of the auth role.
+        name (str): Auth role's name.
         permissions (list[PermissionBase]): List of permissions associated
             with this auth role.
 
@@ -64,7 +64,7 @@ class AuthRoleExtended(AuthRoleBase):
     """Base Pydantic schema extended with id field.
 
     Attributes:
-        id (int): Unique identifier of the auth's data in the database.
+        id (int): Auth role's unique identifier.
 
     """
 

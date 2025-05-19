@@ -1,8 +1,10 @@
 """Module providing database interactivity for event log-related operations."""
 
 from datetime import datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from src.event_log.models import EventLog
 from src.event_log.schemas import EventLogBase
 
@@ -28,10 +30,10 @@ def create_event_log(request: EventLogBase, db: Session) -> EventLog:
 
 
 def get_event_log_by_id(id: int, db: Session) -> EventLog | None:
-    """Retrieve event_log entry by ID.
+    """Retrieve event log entry by ID.
 
     Args:
-        id (int): The unique identifier of the event log.
+        id (int): Event log's unique identifier.
         db (Session): Database session for the current request.
 
     Returns:
@@ -44,26 +46,27 @@ def get_event_log_by_id(id: int, db: Session) -> EventLog | None:
 def get_event_log_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    employee_id: int | None,
+    user_id: int | None,
     log_filter: str | None,
     db: Session,
 ) -> list[EventLog]:
     """Retrieve all event logs with given time period.
-    If employee_id is provided, it will be used to filter the logs to those
-        associated with the ID.
+    If user_id is provided, it will be used to filter the logs to
+        those associated with the id.
     If log_filter is provided, it will be used to filter the logs to those
         containing the filter text.
 
     Args:
-        start_timestamp (datetime): The start timestamp for the time period.
-        end_timestamp (datetime): The end timestamp for the time period.
-        employee_id (int, optional): ID of the employee associated with the
-            event. Defaults to None.
-        log_filter (str, optional): Filter for log messages. Defaults to None.
+        start_timestamp (datetime): Start timestamp for the time period.
+        end_timestamp (datetime): End timestamp for the time period.
+        user_id (int, optional): User's unique identifier.
+            Defaults to None.
+        log_filter (str, optional): Filter for log messages.
+            Defaults to None.
         db (Session): Database session for the current request.
 
     Returns:
-        list[Event_logEntry]: The retrieved event logs.
+        list[EventLog]: The retrieved event logs.
 
     """
     query = (
@@ -71,8 +74,8 @@ def get_event_log_entries(
         .where(EventLog.timestamp >= start_timestamp)
         .where(EventLog.timestamp <= end_timestamp)
     )
-    if employee_id:
-        query = query.where(EventLog.employee_id == employee_id)
+    if user_id:
+        query = query.where(EventLog.user_id == user_id)
     if log_filter:
         query = query.where(EventLog.log.ilike(f"%{log_filter}%"))
     return db.scalars(query).all()
@@ -82,7 +85,7 @@ def delete_event_log_entry(event_log: EventLog, db: Session) -> None:
     """Delete event log.
 
     Args:
-        event_log (EventLog): The event log data to be deleted.
+        event_log (EventLog): Event log data to be deleted.
         db (Session): Database session for the current request.
 
     """

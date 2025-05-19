@@ -5,11 +5,12 @@ Classes:
 
 """
 
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.database import Base
-from src.org_unit.constants import IDENTIFIER
 from typing import TYPE_CHECKING
 
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.database import Base
+from src.org_unit.constants import IDENTIFIER
 
 if TYPE_CHECKING:
     from src.employee.models import Employee
@@ -21,8 +22,8 @@ class OrgUnit(Base):
     """SQLAlchemy model for Org Unit data.
 
     Attributes:
-        id (int): Unique identifier of the org units's data in the database.
-        name (str): Name of the org unit.
+        id (int): Org unit's unique identifier.
+        name (str): Org unit's name.
 
     """
 

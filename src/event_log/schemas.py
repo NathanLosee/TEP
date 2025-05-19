@@ -7,6 +7,7 @@ Classes:
 """
 
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -14,13 +15,13 @@ class EventLogBase(BaseModel):
     """Pydantic schema for request/response data.
 
     Attributes:
-        log (str): Log message associated with the event.
-        employee_id (int): ID of the employee associated with the event.
+        log (str): Event log's message.
+        user_id (int): User's unique identifier.
 
     """
 
     log: str
-    employee_id: int
+    user_id: int
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
 
@@ -29,8 +30,8 @@ class EventLogExtended(EventLogBase):
     """Pydantic schema for request/response data with id.
 
     Attributes:
-        id (int): Unique identifier of the event log in the database.
-        timestamp (datetime): Timestamp of when the event occurred.
+        id (int): Event log's unique identifier.
+        timestamp (datetime): Event log's timestamp when the event ocurred.
 
     """
 

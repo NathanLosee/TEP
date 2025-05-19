@@ -9,7 +9,7 @@ import { LoginComponent } from '../login/login.component';
   standalone: true,
   imports: [MatTabsModule, MatIconModule, ClockerComponent, LoginComponent],
   template: `
-    <mat-tab-group mat-stretch-tabs>
+    <mat-tab-group dynamicHeight animationDuration="200ms">
       <mat-tab
         ><ng-template mat-tab-label>
           <mat-icon>alarm_on</mat-icon>

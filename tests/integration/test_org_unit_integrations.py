@@ -1,11 +1,12 @@
 from fastapi import status
 from fastapi.testclient import TestClient
+
 from src.employee.constants import BASE_URL as EMPLOYEE_URL
 from src.org_unit.constants import (
     BASE_URL,
-    EXC_MSG_ORG_NOT_FOUND,
-    EXC_MSG_NAME_ALREADY_EXISTS,
     EXC_MSG_EMPLOYEES_ASSIGNED,
+    EXC_MSG_NAME_ALREADY_EXISTS,
+    EXC_MSG_ORG_NOT_FOUND,
 )
 
 
@@ -43,14 +44,11 @@ def test_get_org_units_200_nonempty_list(
     org_unit_data: dict,
     test_client: TestClient,
 ):
-    org_unit_id = test_client.post(
-        BASE_URL,
-        json=org_unit_data,
-    ).json()["id"]
-    org_unit_data["id"] = org_unit_id
+    org_unit_id = test_client.post(BASE_URL, json=org_unit_data).json()["id"]
 
     response = test_client.get(BASE_URL)
 
+    org_unit_data["id"] = org_unit_id
     assert response.status_code == status.HTTP_200_OK
     assert org_unit_data in response.json()
 
@@ -60,10 +58,10 @@ def test_get_org_unit_200(
     test_client: TestClient,
 ):
     org_unit_id = test_client.post(BASE_URL, json=org_unit_data).json()["id"]
-    org_unit_data["id"] = org_unit_id
 
     response = test_client.get(f"{BASE_URL}/{org_unit_id}")
 
+    org_unit_data["id"] = org_unit_id
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == org_unit_data
 
@@ -96,19 +94,17 @@ def test_get_employees_by_org_unit_200_nonempty_list(
     employee_data: dict,
     test_client: TestClient,
 ):
-    org_unit_id = test_client.post(
-        BASE_URL,
-        json=org_unit_data,
-    ).json()["id"]
+    org_unit_id = test_client.post(BASE_URL, json=org_unit_data).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
         json=employee_data,
     ).json()["id"]
-    employee_data["id"] = employee_id
 
     response = test_client.get(f"{BASE_URL}/{org_unit_id}/employees")
 
+    employee_data["id"] = employee_id
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == [employee_data]
 
@@ -129,9 +125,9 @@ def test_update_org_unit_200(
     test_client: TestClient,
 ):
     org_unit_id = test_client.post(BASE_URL, json=org_unit_data).json()["id"]
+
     org_unit_data["name"] = "Updated Org Unit Name"
     org_unit_data["id"] = org_unit_id
-
     response = test_client.put(
         f"{BASE_URL}/{org_unit_id}",
         json=org_unit_data,
@@ -147,7 +143,6 @@ def test_update_org_unit_404_not_found(
 ):
     org_unit_id = 999
     org_unit_data["id"] = org_unit_id
-
     response = test_client.put(
         f"{BASE_URL}/{org_unit_id}",
         json=org_unit_data,
@@ -162,6 +157,7 @@ def test_update_org_unit_409_name_already_exists(
     test_client: TestClient,
 ):
     org_unit_id = test_client.post(BASE_URL, json=org_unit_data).json()["id"]
+
     org_unit_data["id"] = org_unit_id
     org_unit_data["name"] = "Updated Org Unit Name"
     test_client.post(BASE_URL, json=org_unit_data)
@@ -203,6 +199,7 @@ def test_delete_org_unit_409_employees_assigned(
     test_client: TestClient,
 ):
     org_unit_id = test_client.post(BASE_URL, json=org_unit_data).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     test_client.post(EMPLOYEE_URL, json=employee_data)
 

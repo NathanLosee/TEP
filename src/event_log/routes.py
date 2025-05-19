@@ -1,15 +1,16 @@
 """Module defining API for event log-related operations."""
 
 from datetime import datetime
-from fastapi import APIRouter, Security, status, Depends
+
+from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
-from src.database import get_db
-from src.event_log.constants import BASE_URL
+
 import src.event_log.repository as event_log_repository
-import src.event_log.services as event_log_services
+import src.user.routes as user_routes
+from src.database import get_db
+from src.event_log.constants import BASE_URL, EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND
 from src.event_log.schemas import EventLogBase, EventLogExtended
-import src.employee.routes as employee_routes
-from src.login.services import requires_permission
+from src.services import requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["event_log"])
 
@@ -33,10 +34,10 @@ def create_event_log(
         db (Session): Database session for current request.
 
     Returns:
-        EventLogExtended: Response containing newly created event log data.
+        EventLogExtended: The created event log entry.
 
     """
-    employee_routes.get_employee_by_id(request.employee_id, db)
+    user_routes.get_user_by_id(request.user_id, db)
     return event_log_repository.create_event_log(request, db)
 
 
@@ -48,23 +49,24 @@ def create_event_log(
 def get_event_log_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    employee_id: int = None,
+    user_id: int = None,
     log_filter: str = None,
     db: Session = Depends(get_db),
     caller_id: int = Security(requires_permission, scopes=["event_log.read"]),
 ):
     """Retrieve all event logs with given time period.
-    If employee_id is provided, it will be used to filter the logs to those
-        associated with the ID.
+    If user_id is provided, it will be used to filter the logs to
+        those associated with the id.
     If log_filter is provided, it will be used to filter the logs to those
         containing the filter text.
 
     Args:
         start_timestamp (datetime): The start timestamp for the time period.
         end_timestamp (datetime): The end timestamp for the time period.
-        employee_id (int, optional): ID of the employee associated with the
-            event. Defaults to None.
-        log_filter (str, optional): Filter for log messages. Defaults to None.
+        user_id (int, optional): User's unique identifier.
+            Defaults to None.
+        log_filter (str, optional): Filter for log messages.
+            Defaults to None.
         db (Session): Database session for current request.
 
     Returns:
@@ -72,7 +74,7 @@ def get_event_log_entries(
 
     """
     return event_log_repository.get_event_log_entries(
-        start_timestamp, end_timestamp, employee_id, log_filter, db
+        start_timestamp, end_timestamp, user_id, log_filter, db
     )
 
 
@@ -89,7 +91,7 @@ def get_event_log_by_id(
     """Retrieve event log data with provided id.
 
     Args:
-        id (int): The event_log's unique identifier.
+        id (int): Event log's unique identifier.
         db (Session): Database session for current request.
 
     Returns:
@@ -97,7 +99,11 @@ def get_event_log_by_id(
 
     """
     event_log = event_log_repository.get_event_log_by_id(id, db)
-    event_log_services.validate_event_log_exists(event_log)
+    validate(
+        event_log,
+        EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
 
     return event_log
 
@@ -113,14 +119,18 @@ def delete_event_log_by_id(
         requires_permission, scopes=["event_log.delete"]
     ),
 ):
-    """Delete event_log data with provided id.
+    """Delete event log data with provided id.
 
     Args:
-        id (int): The event_log's unique identifier.
+        id (int): Event log's unique identifier.
         db (Session): Database session for current request.
 
     """
     event_log = event_log_repository.get_event_log_by_id(id, db)
-    event_log_services.validate_event_log_exists(event_log)
+    validate(
+        event_log,
+        EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
 
     event_log_repository.delete_event_log_entry(event_log, db)

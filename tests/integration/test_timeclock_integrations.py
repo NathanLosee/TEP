@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta, timezone
+
 from fastapi import status
 from fastapi.testclient import TestClient
+
+from src.employee.constants import BASE_URL as EMPLOYEE_URL
+from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 from src.timeclock.constants import (
     BASE_URL,
     EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN,
     EXC_MSG_EMPLOYEE_NOT_ALLOWED,
     EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
 )
-from src.employee.constants import BASE_URL as EMPLOYEE_URL
-from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 
 
 def test_clock_in_201(
@@ -20,6 +22,7 @@ def test_clock_in_201(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -44,6 +47,7 @@ def test_clock_out_201(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -70,6 +74,7 @@ def test_clock_in_403_employee_not_allowed(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_data["allow_clocking"] = False
     employee_id = test_client.post(
@@ -94,6 +99,7 @@ def test_check_status_200_clocked_in(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -119,6 +125,7 @@ def test_check_status_200_clocked_out(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -126,6 +133,7 @@ def test_check_status_200_clocked_out(
     ).json()["id"]
 
     test_client.post(f"{BASE_URL}/{employee_id}")
+
     test_client.post(f"{BASE_URL}/{employee_id}")
 
     response = test_client.get(
@@ -145,6 +153,7 @@ def test_check_status_403_not_allowed(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_data["allow_clocking"] = False
     employee_id = test_client.post(
@@ -171,6 +180,7 @@ def test_get_timeclock_entry_200(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -179,15 +189,13 @@ def test_get_timeclock_entry_200(
 
     test_client.post(f"{BASE_URL}/{employee_id}")
 
+    start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
+    end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
     response = test_client.get(
         BASE_URL,
         params={
-            "start_timestamp": (
-                datetime.now(timezone.utc) - timedelta(days=1)
-            ).isoformat(),
-            "end_timestamp": (
-                datetime.now(timezone.utc) + timedelta(days=1)
-            ).isoformat(),
+            "start_timestamp": start_timestamp.isoformat(),
+            "end_timestamp": end_timestamp.isoformat(),
         },
     )
 
@@ -211,6 +219,7 @@ def test_get_timeclock_entry_200_with_employee_id(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -219,15 +228,13 @@ def test_get_timeclock_entry_200_with_employee_id(
 
     test_client.post(f"{BASE_URL}/{employee_id}")
 
+    start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
+    end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
     response = test_client.get(
         BASE_URL,
         params={
-            "start_timestamp": (
-                datetime.now(timezone.utc) - timedelta(days=1)
-            ).isoformat(),
-            "end_timestamp": (
-                datetime.now(timezone.utc) + timedelta(days=1)
-            ).isoformat(),
+            "start_timestamp": start_timestamp.isoformat(),
+            "end_timestamp": end_timestamp.isoformat(),
             "employee_id": employee_id,
         },
     )
@@ -253,6 +260,7 @@ def test_update_timeclock_entry_200(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -260,15 +268,14 @@ def test_update_timeclock_entry_200(
     ).json()["id"]
 
     test_client.post(f"{BASE_URL}/{employee_id}")
+
+    start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
+    end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
     timeclock_id = test_client.get(
         BASE_URL,
         params={
-            "start_timestamp": (
-                datetime.now(timezone.utc) - timedelta(days=1)
-            ).isoformat(),
-            "end_timestamp": (
-                datetime.now(timezone.utc) + timedelta(days=1)
-            ).isoformat(),
+            "start_timestamp": start_timestamp.isoformat(),
+            "end_timestamp": end_timestamp.isoformat(),
         },
     ).json()[0]["id"]
 
@@ -293,7 +300,6 @@ def test_update_timeclock_entry_400_clock_out_before_clock_in(
     timeclock_data["clock_out"] = (
         datetime.now(timezone.utc) - timedelta(days=1)
     ).isoformat()
-
     response = test_client.put(
         f"{BASE_URL}/1",
         json=timeclock_data,
@@ -332,6 +338,7 @@ def test_delete_timeclock_entry_204(
         ORG_UNIT_URL,
         json=org_unit_data,
     ).json()["id"]
+
     employee_data["org_unit_id"] = org_unit_id
     employee_id = test_client.post(
         EMPLOYEE_URL,
@@ -339,18 +346,16 @@ def test_delete_timeclock_entry_204(
     ).json()["id"]
 
     test_client.post(f"{BASE_URL}/{employee_id}")
+
+    start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
+    end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
     timeclock_id = test_client.get(
         BASE_URL,
         params={
-            "start_timestamp": (
-                datetime.now(timezone.utc) - timedelta(days=1)
-            ).isoformat(),
-            "end_timestamp": (
-                datetime.now(timezone.utc) + timedelta(days=1)
-            ).isoformat(),
+            "start_timestamp": start_timestamp.isoformat(),
+            "end_timestamp": end_timestamp.isoformat(),
         },
     ).json()[0]["id"]
-
     response = test_client.delete(
         f"{BASE_URL}/{timeclock_id}",
     )
