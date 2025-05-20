@@ -1,6 +1,5 @@
 """Primary driver for application."""
 
-from contextlib import asynccontextmanager
 from http import HTTPStatus
 from importlib import import_module
 from pathlib import Path
@@ -13,28 +12,11 @@ from starlette.background import BackgroundTask
 from starlette.types import Message
 
 from src.config import Settings
-from src.database import cleanup_tables, get_db
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
 from src.services import create_root_user_if_not_exists, load_keys
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Define actions to take in initializing and closing of application.
-
-    Args:
-        app (FastAPI): The FastAPI application object.
-
-    """
-    try:
-        yield
-    finally:
-        db = next(get_db())
-        cleanup_tables(db)
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 settings = Settings()
 formatter = CustomFormatter("%(asctime)s")
 logger = get_logger(__name__, formatter, log_level=settings.LOG_LEVEL)

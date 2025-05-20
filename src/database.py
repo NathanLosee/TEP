@@ -1,18 +1,28 @@
 """Module establishing and providing access to a database connection."""
 
+from typing import Annotated
+
 from fastapi import Depends
-from sqlalchemy import Table, create_engine, text
+from sqlalchemy import Table, create_engine, event, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import (
-    declarative_base,
     DeclarativeBase,
     Session,
+    declarative_base,
     sessionmaker,
 )
-from typing import Annotated
 
 Base: DeclarativeBase = declarative_base()
 
 SQL_ALCHEMY_DATABASE_URL = "sqlite:///tep.sqlite"
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 
 engine = create_engine(SQL_ALCHEMY_DATABASE_URL)
 

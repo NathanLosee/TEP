@@ -21,7 +21,7 @@ def test_clock_in_201(
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
 
-    response = test_client.post(f"{BASE_URL}/{employee["id"]}")
+    response = test_client.post(f"{BASE_URL}/{employee["badge_number"]}")
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"status": "success", "message": "Clocked in"}
@@ -35,9 +35,9 @@ def test_clock_out_201(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
-    response = test_client.post(f"{BASE_URL}/{employee["id"]}")
+    response = test_client.post(f"{BASE_URL}/{employee["badge_number"]}")
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"status": "success", "message": "Clocked out"}
@@ -53,7 +53,7 @@ def test_clock_in_403_employee_not_allowed(
     employee_data["allow_clocking"] = False
     employee = create_employee(employee_data, test_client)
 
-    response = test_client.post(f"{BASE_URL}/{employee["id"]}")
+    response = test_client.post(f"{BASE_URL}/{employee["badge_number"]}")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"detail": EXC_MSG_EMPLOYEE_NOT_ALLOWED}
@@ -67,9 +67,9 @@ def test_check_status_200_clocked_in(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
-    response = test_client.get(f"{BASE_URL}/{employee["id"]}/status")
+    response = test_client.get(f"{BASE_URL}/{employee["badge_number"]}/status")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "success", "message": "Clocked in"}
@@ -83,10 +83,10 @@ def test_check_status_200_clocked_out(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
-    response = test_client.get(f"{BASE_URL}/{employee["id"]}/status")
+    response = test_client.get(f"{BASE_URL}/{employee["badge_number"]}/status")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "success", "message": "Clocked out"}
@@ -102,7 +102,7 @@ def test_check_status_403_not_allowed(
     employee_data["allow_clocking"] = False
     employee = create_employee(employee_data, test_client)
 
-    response = test_client.get(f"{BASE_URL}/{employee["id"]}/status")
+    response = test_client.get(f"{BASE_URL}/{employee["badge_number"]}/status")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json() == {"detail": EXC_MSG_EMPLOYEE_NOT_ALLOWED}
@@ -116,7 +116,7 @@ def test_get_timeclock_entries_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
     start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
     end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
@@ -129,8 +129,8 @@ def test_get_timeclock_entries_200(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    entries = [entry["employee_id"] for entry in response.json()]
-    assert employee["id"] in entries
+    entries = [entry["badge_number"] for entry in response.json()]
+    assert employee["badge_number"] in entries
 
 
 def test_get_timeclock_entries_200_with_employee_id(
@@ -141,7 +141,7 @@ def test_get_timeclock_entries_200_with_employee_id(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
     start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
     end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
@@ -150,12 +150,12 @@ def test_get_timeclock_entries_200_with_employee_id(
         params={
             "start_timestamp": start_timestamp.isoformat(),
             "end_timestamp": end_timestamp.isoformat(),
-            "employee_id": employee["id"],
+            "badge_number": employee["badge_number"],
         },
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()[0]["employee_id"] == employee["id"]
+    assert response.json()[0]["badge_number"] == employee["badge_number"]
 
 
 def test_update_timeclock_entry_by_id_200(
@@ -166,7 +166,7 @@ def test_update_timeclock_entry_by_id_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
     start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
     end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)
@@ -175,12 +175,12 @@ def test_update_timeclock_entry_by_id_200(
         params={
             "start_timestamp": start_timestamp.isoformat(),
             "end_timestamp": end_timestamp.isoformat(),
-            "employee_id": employee["id"],
+            "badge_number": employee["badge_number"],
         },
     ).json()[0]
 
     new_clock_in = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
-    timeclock["employee_id"] = employee["id"]
+    timeclock["badge_number"] = employee["badge_number"]
     timeclock["clock_in"] = new_clock_in
 
     response = test_client.put(
@@ -194,14 +194,16 @@ def test_update_timeclock_entry_by_id_200(
 
 
 def test_update_timeclock_entry_by_id_400_clock_out_before_clock_in(
-    timeclock_data: dict,
     test_client: TestClient,
 ):
-    timeclock_data["employee_id"] = 1
-    timeclock_data["clock_in"] = datetime.now(timezone.utc).isoformat()
-    timeclock_data["clock_out"] = (
-        datetime.now(timezone.utc) - timedelta(days=1)
-    ).isoformat()
+    timeclock_data = {
+        "id": 999,
+        "badge_number": "0",
+        "clock_in": datetime.now(timezone.utc).isoformat(),
+        "clock_out": (
+            datetime.now(timezone.utc) - timedelta(days=1)
+        ).isoformat(),
+    }
 
     response = test_client.put(
         f"{BASE_URL}/1",
@@ -213,15 +215,17 @@ def test_update_timeclock_entry_by_id_400_clock_out_before_clock_in(
 
 
 def test_update_timeclock_entry_by_id_404_not_found(
-    timeclock_data: dict,
     test_client: TestClient,
 ):
-    timeclock_id = 999
-    timeclock_data["id"] = timeclock_id
-    timeclock_data["employee_id"] = 1
+    timeclock_data = {
+        "id": 999,
+        "badge_number": "0",
+        "clock_in": datetime.now(timezone.utc).isoformat(),
+        "clock_out": datetime.now(timezone.utc).isoformat(),
+    }
 
     response = test_client.put(
-        f"{BASE_URL}/{timeclock_id}",
+        f"{BASE_URL}/{timeclock_data["id"]}",
         json=timeclock_data,
     )
 
@@ -237,7 +241,7 @@ def test_delete_timeclock_entry_by_id_204(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
     start_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
     end_timestamp = datetime.now(timezone.utc) + timedelta(days=1)

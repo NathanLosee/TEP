@@ -19,14 +19,14 @@ class TimeclockEntryBase(BaseModel):
 
     Attributes:
         id (int): Timeclock entry's unique identifier.
-        employee_id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
         clock_in (datetime): Employee's clock-in timestamp.
         clock_out (datetime | None): Employee's clock-out timestamp.
 
     """
 
     id: int
-    employee_id: int
+    badge_number: str
     clock_in: datetime
     clock_out: datetime | None = Field(default=None)
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import src.org_unit.repository as org_unit_repository
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
-from src.employee.schemas import EmployeeBase
+from src.employee.schemas import EmployeeExtended
 from src.org_unit.constants import (
     BASE_URL,
     EXC_MSG_EMPLOYEES_ASSIGNED,
@@ -28,7 +28,9 @@ router = APIRouter(prefix=BASE_URL, tags=["org_unit"])
 def create_org_unit(
     request: OrgUnitBase,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["org_unit.create"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["org_unit.create"]
+    ),
 ):
     """Insert new org unit.
 
@@ -51,7 +53,7 @@ def create_org_unit(
 
     org_unit = org_unit_repository.create_org_unit(request, db)
     log_args = {"org_unit_id": org_unit.id}
-    create_event_log(IDENTIFIER, "CREATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return org_unit
 
 
@@ -62,7 +64,9 @@ def create_org_unit(
 )
 def get_org_units(
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["org_unit.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["org_unit.read"]
+    ),
 ):
     """Retrieve all org units.
 
@@ -84,7 +88,9 @@ def get_org_units(
 def get_org_unit(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["org_unit.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["org_unit.read"]
+    ),
 ):
     """Retrieve data for org unit with provided id.
 
@@ -109,12 +115,12 @@ def get_org_unit(
 @router.get(
     "/{id}/employees",
     status_code=status.HTTP_200_OK,
-    response_model=list[EmployeeBase],
+    response_model=list[EmployeeExtended],
 )
 def get_employees_by_org_unit(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["org_unit.read", "employee.read"]
     ),
 ):
@@ -125,7 +131,7 @@ def get_employees_by_org_unit(
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeBase]: The retrieved employees for the given org unit.
+        list[EmployeeExtended]: The retrieved employees for the given org unit.
 
     """
     org_unit = get_org_unit(id, db)
@@ -147,7 +153,9 @@ def update_org_unit(
     id: int,
     request: OrgUnitExtended,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["org_unit.update"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["org_unit.update"]
+    ),
 ):
     """Update data for org unit with provided id.
 
@@ -184,7 +192,7 @@ def update_org_unit(
 
     org_unit = org_unit_repository.update_org_unit(org_unit, request, db)
     log_args = {"org_unit_id": org_unit.id}
-    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return org_unit
 
 
@@ -192,7 +200,9 @@ def update_org_unit(
 def delete_org_unit(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["org_unit.delete"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["org_unit.delete"]
+    ),
 ):
     """Delete org unit with provided id.
 
@@ -215,4 +225,4 @@ def delete_org_unit(
 
     org_unit_repository.delete_org_unit(org_unit, db)
     log_args = {"org_unit_id": org_unit.id}
-    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

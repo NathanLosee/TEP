@@ -3,13 +3,11 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.auth_role.models import AuthRoleMembership
-from src.department.models import DepartmentMembership
+from src.department.models import Department
 from src.employee.models import Employee
 from src.employee.schemas import EmployeeBase
-from src.event_log.models import EventLog
-from src.timeclock.models import TimeclockEntry
-from src.user.models import User
+from src.holiday_group.models import HolidayGroup
+from src.org_unit.models import OrgUnit
 
 
 def create_employee(request: EmployeeBase, db: Session) -> Employee:
@@ -58,6 +56,74 @@ def get_employee_by_id(id: int, db: Session) -> Employee | None:
     return db.get(Employee, id)
 
 
+def get_employee_by_badge_number(
+    badge_number: str, db: Session
+) -> Employee | None:
+    """Retrieve an employee by a provided badge number.
+
+    Args:
+        badge_number (str): Employee's badge number.
+        db (Session): Database session for the current request.
+
+    Returns:
+        (Employee | None): The employee with the provided badge number, or
+            None if not found.
+
+    """
+    return db.scalar(
+        select(Employee).where(Employee.badge_number == badge_number)
+    )
+
+
+def search_for_employees(
+    db: Session,
+    department_name: str | None = None,
+    org_unit_name: str | None = None,
+    holiday_group_name: str | None = None,
+    badge_number: str | None = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+) -> list[Employee]:
+    """Search for employees based on various criteria.
+
+    Args:
+        department_name (str | None): Department name to search for.
+        org_unit_name (str | None): Org unit name to search for.
+        holiday_group_name (str | None): Holiday group name to search for.
+        badge_number (str | None): Badge number to search for.
+        first_name (str | None): First name to search for.
+        last_name (str | None): Last name to search for.
+        db (Session): Database session for the current request.
+
+    Returns:
+        list[Employee]: The retrieved employees.
+
+    """
+    query = db.query(Employee)
+    if department_name:
+        query = query.filter(
+            Employee.departments.has(Department.name.contains(department_name))
+        )
+    if org_unit_name:
+        query = query.filter(
+            Employee.org_unit.has(OrgUnit.name.contains(org_unit_name))
+        )
+    if holiday_group_name:
+        query = query.filter(
+            Employee.holiday_group.has(
+                HolidayGroup.name.contains(holiday_group_name)
+            )
+        )
+    if badge_number:
+        query = query.filter(Employee.badge_number.contains(badge_number))
+    if first_name:
+        query = query.filter(Employee.first_name.contains(first_name))
+    if last_name:
+        query = query.filter(Employee.last_name.contains(last_name))
+
+    return list(query.all())
+
+
 def update_employee_by_id(
     employee: Employee, request: EmployeeBase, db: Session
 ) -> Employee:
@@ -79,59 +145,21 @@ def update_employee_by_id(
     return employee
 
 
-def update_employee_id(
-    employee: Employee, new_id: int, db: Session
+def update_employee_badge_number(
+    employee: Employee, new_number: str, db: Session
 ) -> Employee:
-    """Update an employee's id.
-    This function updates the employee's id and all related
-    records in the database, including department memberships,
-    timeclock entries, user account, event logs, auth role memberships.
+    """Update an employee's badge number.
 
     Args:
         employee (Employee): Employee data to be updated.
-        new_id (int): New id for the employee.
+        new_number (str): New badge number for the employee.
         db (Session): Database session for the current request.
 
     Returns:
         Employee: The updated employee.
 
     """
-    old_id = employee.id
-
-    employee.id = new_id
-
-    department_memberships = db.scalars(
-        select(DepartmentMembership).where(
-            DepartmentMembership.employee_id == old_id
-        )
-    ).all()
-    for membership in department_memberships:
-        membership.employee_id = new_id
-
-    timeclock_entries = db.scalars(
-        select(TimeclockEntry).where(TimeclockEntry.employee_id == old_id)
-    ).all()
-    for entry in timeclock_entries:
-        entry.employee_id = new_id
-
-    user = db.get(User, old_id)
-    if user:
-        user.id = new_id
-
-        auth_role_memberships = db.scalars(
-            select(AuthRoleMembership).where(
-                AuthRoleMembership.user_id == old_id
-            )
-        ).all()
-        for membership in auth_role_memberships:
-            membership.user_id = new_id
-
-        event_logs = db.scalars(
-            select(EventLog).where(EventLog.user_id == old_id)
-        ).all()
-        for log in event_logs:
-            log.user_id = new_id
-
+    employee.badge_number = new_number
     db.commit()
     db.refresh(employee)
     return employee

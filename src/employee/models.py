@@ -34,6 +34,7 @@ class Employee(Base):
 
     Attributes:
         id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
         first_name (str): Employee's first name.
         last_name (str): Employee's last name.
         payroll_type (str): Employee's payroll type.
@@ -49,6 +50,7 @@ class Employee(Base):
     """
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    badge_number: Mapped[str] = mapped_column(unique=True, nullable=False)
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str] = mapped_column(nullable=False)
     payroll_type: Mapped[str] = mapped_column(nullable=False)
@@ -70,7 +72,9 @@ class Employee(Base):
         nullable=True,
     )
     manager: Mapped["Employee"] = relationship(
-        "Employee", lazy="joined", join_depth=1
+        "Employee",
+        lazy="joined",
+        join_depth=1,
     )
     holiday_group: Mapped[HolidayGroup] = relationship(
         HolidayGroup,

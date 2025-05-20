@@ -28,13 +28,15 @@ class User(Base):
 
     Attributes:
         id (int): User's unique identifier.
+        badge_number (str): User's badge number.
         password (str): User's hashed password.
 
     """
 
-    id: Mapped[int] = mapped_column(
-        ForeignKey(EMPLOYEE_IDENTIFIER + ".id"),
-        primary_key=True,
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    badge_number: Mapped[str] = mapped_column(
+        ForeignKey(EMPLOYEE_IDENTIFIER + ".badge_number", onupdate="CASCADE"),
+        unique=True,
         nullable=False,
     )
     password: Mapped[str] = mapped_column(nullable=False)

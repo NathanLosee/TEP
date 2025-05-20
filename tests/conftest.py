@@ -6,21 +6,26 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import src.auth_role.repository as auth_role_repository
-import src.user.repository as user_repository
+from src import services
 from src.auth_role.constants import BASE_URL as AUTH_ROLE_URL
-from src.auth_role.schemas import AuthRoleBase, PermissionBase
+from src.auth_role.models import (
+    AuthRole,
+    AuthRoleMembership,
+    AuthRolePermission,
+)
 from src.constants import RESOURCE_SCOPES
 from src.database import Base, get_db
 from src.department.constants import BASE_URL as DEPARTMENT_URL
 from src.employee.constants import BASE_URL as EMPLOYEE_URL
+from src.employee.models import Employee
 from src.event_log.constants import BASE_URL as EVENT_LOG_URL
 from src.holiday_group.constants import BASE_URL as HOLIDAY_GROUP_URL
 from src.main import app, settings
 from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
+from src.org_unit.models import OrgUnit
 from src.timeclock.constants import BASE_URL as TIMECLOCK_URL
 from src.user.constants import BASE_URL as USER_URL
-from src.user.schemas import UserBase
+from src.user.models import User
 
 test_app = TestClient(app)
 settings.ENVIRONMENT = "test"
@@ -60,20 +65,31 @@ def random_string(length: int) -> str:
 
 chosen_auth_role_names = []
 chosen_department_names = []
-chosen_employee_ids = []
+chosen_badge_numbers = []
 chosen_holiday_group_names = []
 chosen_org_unit_names = []
 
 
+def generate_unique_string(existing_names: list, length: int) -> str:
+    """Generate a unique string that is not in the existing names list.
+
+    Args:
+        existing_names (list): List of existing names to avoid.
+        length (int): Length of the random string.
+
+    Returns:
+        str: A unique random string.
+    """
+    name = random_string(length)
+    while name in existing_names:
+        name = random_string(length)
+    return name
+
+
 @pytest.fixture
 def auth_role_data() -> dict:
-    name = random_string(10)
-    while name in chosen_auth_role_names:
-        name = random_string(10)
-    chosen_auth_role_names.append(name)
-
     return {
-        "name": name,
+        "name": generate_unique_string(chosen_auth_role_names, 10),
         "permissions": [
             {"resource": "employee.read"},
             {"resource": "event_log.create"},
@@ -94,14 +110,7 @@ def create_auth_role_membership(
 
 @pytest.fixture
 def department_data() -> dict:
-    name = random_string(10)
-    while name in chosen_department_names:
-        name = random_string(10)
-    chosen_department_names.append(name)
-
-    return {
-        "name": name,
-    }
+    return {"name": generate_unique_string(chosen_department_names, 10)}
 
 
 def create_department(department_data: dict, test_client: TestClient) -> dict:
@@ -116,13 +125,8 @@ def create_department_membership(
 
 @pytest.fixture
 def employee_data() -> dict:
-    employee_id = random.randint(2, 1000000)
-    while employee_id in chosen_employee_ids:
-        employee_id = random.randint(2, 1000000)
-    chosen_employee_ids.append(employee_id)
-
     return {
-        "id": employee_id,
+        "badge_number": generate_unique_string(chosen_badge_numbers, 10),
         "first_name": random_string(10),
         "last_name": random_string(10),
         "payroll_type": "hourly",
@@ -145,7 +149,7 @@ def create_employee(employee_data: dict, test_client: TestClient) -> dict:
 def event_log_data() -> dict:
     return {
         "log": random_string(10),
-        "user_id": 0,
+        "badge_number": None,
     }
 
 
@@ -155,13 +159,8 @@ def create_event_log(event_log_data: dict, test_client: TestClient) -> dict:
 
 @pytest.fixture
 def holiday_group_data() -> dict:
-    name = random_string(10)
-    while name in chosen_holiday_group_names:
-        name = random_string(10)
-    chosen_holiday_group_names.append(name)
-
     return {
-        "name": name,
+        "name": generate_unique_string(chosen_holiday_group_names, 10),
         "holidays": [
             {
                 "name": random_string(10),
@@ -180,38 +179,21 @@ def create_holiday_group(
 
 @pytest.fixture
 def org_unit_data() -> dict:
-    name = random_string(10)
-    while name in chosen_org_unit_names:
-        name = random_string(10)
-    chosen_org_unit_names.append(name)
-
-    return {
-        "name": name,
-    }
+    return {"name": generate_unique_string(chosen_org_unit_names, 10)}
 
 
 def create_org_unit(org_unit_data: dict, test_client: TestClient) -> dict:
     return test_client.post(ORG_UNIT_URL, json=org_unit_data).json()
 
 
-@pytest.fixture
-def timeclock_data() -> dict:
-    return {
-        "id": 1,
-        "employee_id": None,
-        "clock_in": date.today().isoformat(),
-        "clock_out": None,
-    }
-
-
-def clock_employee(employee_id: int, test_client: TestClient) -> dict:
-    return test_client.post(f"{TIMECLOCK_URL}/{employee_id}").json()
+def clock_employee(badge_number: str, test_client: TestClient) -> dict:
+    return test_client.post(f"{TIMECLOCK_URL}/{badge_number}").json()
 
 
 @pytest.fixture
 def user_data() -> dict:
     return {
-        "id": 2,
+        "badge_number": None,
         "password": random_string(10),
     }
 
@@ -224,7 +206,7 @@ def login_user(user_data: dict, test_client: TestClient) -> dict:
     test_client.cookies.clear()
     test_client.headers.clear()
     login_data = {
-        "username": str(user_data["id"]),
+        "username": user_data["badge_number"],
         "password": user_data["password"],
     }
     response = test_client.post(f"{USER_URL}/login", data=login_data)
@@ -236,30 +218,56 @@ def login_user(user_data: dict, test_client: TestClient) -> dict:
 def create_root_user():
     test_session = TestingSessionLocal()
 
-    user_data = {"id": 0, "password": "password123"}
-    user_repository.create_user(UserBase(**user_data), test_session)
-    auth_role_id = auth_role_repository.create_auth_role(
-        AuthRoleBase(
-            name="Admin",
-            permissions=[
-                PermissionBase(resource=resource)
-                for resource in RESOURCE_SCOPES
-            ],
-        ),
-        test_session,
-    ).id
-    auth_role_repository.create_membership(
-        auth_role_id, user_data["id"], test_session
+    org_unit = OrgUnit(
+        id=0,
+        name="root",
     )
+    test_session.add(org_unit)
+    test_session.commit()
 
-    test_session.close()
+    employee = Employee(
+        id=0,
+        badge_number="0",
+        first_name="root",
+        last_name="root",
+        payroll_type="hourly",
+        payroll_sync=date.today(),
+        workweek_type="standard",
+        time_type=True,
+        allow_clocking=False,
+        allow_delete=False,
+        org_unit_id=org_unit.id,
+        manager_id=None,
+        holiday_group_id=None,
+    )
+    test_session.add(employee)
+    test_session.commit()
 
+    user = User(
+        id=0,
+        badge_number=employee.badge_number,
+        password=services.hash_password("password123"),
+    )
+    test_session.add(user)
+    test_session.commit()
 
-def create_timeclock_user():
-    test_session = TestingSessionLocal()
+    auth_role = AuthRole(
+        id=0,
+        name="root",
+        permissions=[
+            AuthRolePermission(resource=resource)
+            for resource in RESOURCE_SCOPES.keys()
+        ],
+    )
+    test_session.add(auth_role)
+    test_session.commit()
 
-    user_data = {"id": 1, "password": "password123"}
-    user_repository.create_user(UserBase(**user_data), test_session)
+    auth_role_membership = AuthRoleMembership(
+        auth_role_id=auth_role.id,
+        user_id=user.id,
+    )
+    test_session.add(auth_role_membership)
+    test_session.commit()
 
     test_session.close()
 
@@ -270,7 +278,6 @@ def test_client():
     Base.metadata.create_all(bind=engine)
 
     create_root_user()
-    create_timeclock_user()
 
     yield test_app
 

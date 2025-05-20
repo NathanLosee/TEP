@@ -16,12 +16,12 @@ class EventLogBase(BaseModel):
 
     Attributes:
         log (str): Event log's message.
-        user_id (int): User's unique identifier.
+        badge_number (str): User's badge number.
 
     """
 
     log: str
-    user_id: int
+    badge_number: str
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
 

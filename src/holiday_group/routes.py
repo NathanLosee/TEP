@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import src.holiday_group.repository as holiday_repository
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
-from src.employee.schemas import EmployeeBase
+from src.employee.schemas import EmployeeExtended
 from src.holiday_group.constants import (
     BASE_URL,
     EXC_MSG_EMPLOYEES_ASSIGNED,
@@ -28,7 +28,7 @@ router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
 def create_holiday_group(
     request: HolidayGroupBase,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.create"]
     ),
 ):
@@ -53,7 +53,7 @@ def create_holiday_group(
 
     holiday_group = holiday_repository.create_holiday_group(request, db)
     log_args = {"holiday_group_name": holiday_group.name}
-    create_event_log(IDENTIFIER, "CREATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return holiday_group
 
 
@@ -64,7 +64,7 @@ def create_holiday_group(
 )
 def get_holiday_groups(
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.read"]
     ),
 ):
@@ -88,7 +88,7 @@ def get_holiday_groups(
 def get_holiday_group_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.read"]
     ),
 ):
@@ -115,12 +115,12 @@ def get_holiday_group_by_id(
 @router.get(
     "/{id}/employees",
     status_code=status.HTTP_200_OK,
-    response_model=list[EmployeeBase],
+    response_model=list[EmployeeExtended],
 )
 def get_employees_by_holiday_group(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.read", "employee.read"]
     ),
 ):
@@ -131,7 +131,7 @@ def get_employees_by_holiday_group(
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeBase]: The retrieved employees.
+        list[EmployeeExtended]: The retrieved employees.
 
     """
     holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
@@ -153,7 +153,7 @@ def update_holiday_group_by_id(
     id: int,
     request: HolidayGroupExtended,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.update"]
     ),
 ):
@@ -194,7 +194,7 @@ def update_holiday_group_by_id(
         holiday_group, request, db
     )
     log_args = {"holiday_group_name": holiday_group.name}
-    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return holiday_group
 
 
@@ -205,7 +205,7 @@ def update_holiday_group_by_id(
 def delete_holiday_group_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.delete"]
     ),
 ):
@@ -230,4 +230,4 @@ def delete_holiday_group_by_id(
 
     holiday_repository.delete_holiday_group(holiday_group, db)
     log_args = {"holiday_group_name": holiday_group.name}
-    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

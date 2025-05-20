@@ -22,7 +22,7 @@ class TimeclockEntry(Base):
         id (int): Timeclock entry's unique identifier.
         clock_in (datetime): Employee's clock-in timestamp.
         clock_out (datetime): Employee's clock-out timestamp.
-        employee_id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
 
     """
 
@@ -31,8 +31,9 @@ class TimeclockEntry(Base):
         nullable=False, default=datetime.now(timezone.utc)
     )
     clock_out: Mapped[datetime] = mapped_column(nullable=True, default=None)
-    employee_id: Mapped[int] = mapped_column(
-        ForeignKey(EMPLOYEE_IDENTIFIER + ".id"), nullable=False
+    badge_number: Mapped[str] = mapped_column(
+        ForeignKey(EMPLOYEE_IDENTIFIER + ".badge_number", onupdate="CASCADE"),
+        nullable=False,
     )
 
     __tablename__ = IDENTIFIER

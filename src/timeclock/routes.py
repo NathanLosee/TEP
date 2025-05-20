@@ -22,59 +22,63 @@ router = APIRouter(prefix=BASE_URL, tags=["timeclock"])
 
 
 @router.post(
-    "/{id}",
+    "/{badge_number}",
     status_code=status.HTTP_201_CREATED,
 )
-def timeclock(id: int, db: Session = Depends(get_db)):
+def timeclock(badge_number: str, db: Session = Depends(get_db)):
     """Clock in/out an employee.
 
     Args:
-        id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
         db (Session): Database session for current request.
 
     Returns:
         dict: Clock in/out status.
 
     """
-    employee = employee_routes.get_employee_by_id(id, db)
+    employees = employee_routes.search_for_employees(
+        badge_number=badge_number, db=db
+    )
     validate(
-        employee.allow_clocking,
+        len(employees) == 1 and employees[0].allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    log_args = {"id": employee.id}
-    if timeclock_repository.timeclock(id, db):
-        create_event_log(IDENTIFIER, "CLOCK_IN", log_args, 1, db)
+    log_args = {"badge_number": employees[0].badge_number}
+    if timeclock_repository.timeclock(badge_number, db):
+        create_event_log(IDENTIFIER, "CLOCK_IN", log_args, "0", db)
         return {"status": "success", "message": "Clocked in"}
     else:
-        create_event_log(IDENTIFIER, "CLOCK_OUT", log_args, 1, db)
+        create_event_log(IDENTIFIER, "CLOCK_OUT", log_args, "0", db)
         return {"status": "success", "message": "Clocked out"}
 
 
 @router.get(
-    "/{id}/status",
+    "/{badge_number}/status",
     status_code=status.HTTP_200_OK,
 )
-def check_status(id: int, db: Session = Depends(get_db)):
+def check_status(badge_number: str, db: Session = Depends(get_db)):
     """Check the clock status of an employee.
 
     Args:
-        id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
         db (Session): Database session for current request.
 
     Returns:
         dict: Clock in/out status.
 
     """
-    employee = employee_routes.get_employee_by_id(id, db)
+    employees = employee_routes.search_for_employees(
+        badge_number=badge_number, db=db
+    )
     validate(
-        employee.allow_clocking,
+        len(employees) == 1 and employees[0].allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    if timeclock_repository.check_status(id, db):
+    if timeclock_repository.check_status(badge_number, db):
         return {"status": "success", "message": "Clocked in"}
     else:
         return {"status": "success", "message": "Clocked out"}
@@ -88,18 +92,20 @@ def check_status(id: int, db: Session = Depends(get_db)):
 def get_timeclock_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    employee_id: int = None,
+    badge_number: str = None,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["timeclock.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["timeclock.read"]
+    ),
 ):
     """Retrieve all timeclock entries with given time period.
-    If employee_id is provided, it will be used to filter the entries to
-        those associated with the id.
+    If badge_number is provided, it will be used to filter the entries to
+        those associated with the badge_number.
 
     Args:
         start_timestamp (datetime): Start timestamp for the time period.
         end_timestamp (datetime): End timestamp for the time period.
-        employee_id (int, optional): Employee's unique identifier.
+        badge_number (str, optional): Employee's badge number.
             Defaults to None.
         db (Session): Database session for current request.
 
@@ -108,7 +114,7 @@ def get_timeclock_entries(
 
     """
     return timeclock_repository.get_timeclock_entries(
-        start_timestamp, end_timestamp, employee_id, db
+        start_timestamp, end_timestamp, badge_number, db
     )
 
 
@@ -121,7 +127,7 @@ def update_timeclock_by_id(
     id: int,
     request: TimeclockEntryBase,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["timeclock.update"]
     ),
 ):
@@ -153,7 +159,7 @@ def update_timeclock_by_id(
         timeclock, request, db
     )
     log_args = {"timeclock_entry_id": timeclock_entry.id}
-    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return timeclock_entry
 
 
@@ -164,7 +170,7 @@ def update_timeclock_by_id(
 def delete_timeclock_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["timeclock.delete"]
     ),
 ):
@@ -184,4 +190,4 @@ def delete_timeclock_by_id(
 
     timeclock_repository.delete_timeclock_entry(timeclock_entry, db)
     log_args = {"timeclock_entry_id": timeclock_entry.id}
-    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

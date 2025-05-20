@@ -23,7 +23,7 @@ router = APIRouter(prefix=BASE_URL, tags=["event_log"])
 def create_event_log(
     request: EventLogBase,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["event_log.create"]
     ),
 ):
@@ -37,7 +37,7 @@ def create_event_log(
         EventLogExtended: The created event log entry.
 
     """
-    user_routes.get_user_by_id(request.user_id, db)
+    user_routes.get_user_by_id(request.badge_number, db)
     return event_log_repository.create_event_log(request, db)
 
 
@@ -49,21 +49,23 @@ def create_event_log(
 def get_event_log_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    user_id: int = None,
+    badge_number: str = None,
     log_filter: str = None,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["event_log.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["event_log.read"]
+    ),
 ):
     """Retrieve all event logs with given time period.
-    If user_id is provided, it will be used to filter the logs to
-        those associated with the id.
+    If badge_number is provided, it will be used to filter the logs to
+        those associated with the badge number.
     If log_filter is provided, it will be used to filter the logs to those
         containing the filter text.
 
     Args:
         start_timestamp (datetime): The start timestamp for the time period.
         end_timestamp (datetime): The end timestamp for the time period.
-        user_id (int, optional): User's unique identifier.
+        badge_number (int, optional): User's badge number.
             Defaults to None.
         log_filter (str, optional): Filter for log messages.
             Defaults to None.
@@ -74,7 +76,7 @@ def get_event_log_entries(
 
     """
     return event_log_repository.get_event_log_entries(
-        start_timestamp, end_timestamp, user_id, log_filter, db
+        start_timestamp, end_timestamp, badge_number, log_filter, db
     )
 
 
@@ -86,7 +88,9 @@ def get_event_log_entries(
 def get_event_log_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["event_log.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["event_log.read"]
+    ),
 ):
     """Retrieve event log data with provided id.
 
@@ -115,7 +119,7 @@ def get_event_log_by_id(
 def delete_event_log_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["event_log.delete"]
     ),
 ):

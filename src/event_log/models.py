@@ -11,8 +11,8 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database import Base
-from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
 from src.event_log.constants import IDENTIFIER
+from src.user.constants import IDENTIFIER as USER_IDENTIFIER
 
 
 class EventLog(Base):
@@ -22,7 +22,7 @@ class EventLog(Base):
         id (int): Event log's unique identifier.
         log (str): Event log's message.
         timestamp (datetime): Event log's timestamp.
-        user_id (int): User's unique identifier.
+        badge_number (str): User's badge number.
 
     """
 
@@ -31,8 +31,9 @@ class EventLog(Base):
     timestamp: Mapped[datetime] = mapped_column(
         default=datetime.now(timezone.utc), nullable=False
     )
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey(EMPLOYEE_IDENTIFIER + ".id"), nullable=False
+    badge_number: Mapped[str] = mapped_column(
+        ForeignKey(USER_IDENTIFIER + ".badge_number", onupdate="CASCADE"),
+        nullable=False,
     )
 
     __tablename__ = IDENTIFIER

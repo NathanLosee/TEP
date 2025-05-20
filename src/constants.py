@@ -21,7 +21,7 @@ RESOURCE_SCOPES = {
     "employee.create": "Create Employee",
     "employee.read": "Read Employee",
     "employee.update": "Update Employee",
-    "employee.update.id": "Update Employee's ID",
+    "employee.update.badge_number": "Update Employee's Badge Number",
     "employee.delete": "Delete Employee",
     "event_log.create": "Create Event Log",
     "event_log.read": "Read Event Log",

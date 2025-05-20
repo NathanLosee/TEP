@@ -55,7 +55,22 @@ def get_user_by_id(id: int, db: Session) -> User | None:
     return db.get(User, id)
 
 
-def update_user_by_id(user: User, request: UserBase, db: Session) -> User:
+def get_user_by_badge_number(badge_number: str, db: Session) -> User | None:
+    """Retrieve a user by a provided badge number.
+
+    Args:
+        badge_number (str): User's badge number.
+        db (Session): Database session for the current request.
+
+    Returns:
+        (User | None): The user with the provided badge number, or None
+            if not found.
+
+    """
+    return db.scalar(select(User).where(User.badge_number == badge_number))
+
+
+def update_user(user: User, request: UserBase, db: Session) -> User:
     """Update a user's existing data.
 
     Args:

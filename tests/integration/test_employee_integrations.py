@@ -1,11 +1,9 @@
-import random
-
 from fastapi import status
 from fastapi.testclient import TestClient
 
 from src.employee.constants import BASE_URL, EXC_MSG_EMPLOYEE_NOT_FOUND
 from tests.conftest import (
-    chosen_employee_ids,
+    chosen_badge_numbers,
     clock_employee,
     create_auth_role,
     create_auth_role_membership,
@@ -15,6 +13,7 @@ from tests.conftest import (
     create_holiday_group,
     create_org_unit,
     create_user,
+    generate_unique_string,
     login_user,
 )
 
@@ -31,6 +30,8 @@ def test_create_employee_201(
         BASE_URL,
         json=employee_data,
     )
+
+    employee_data["id"] = response.json()["id"]
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == employee_data
@@ -166,17 +167,13 @@ def test_get_employee_manager_200(
     org_unit_data: dict,
     test_client: TestClient,
 ):
-    new_id = random.randint(2, 1000000)
-    while new_id in chosen_employee_ids:
-        new_id = random.randint(2, 1000000)
-    chosen_employee_ids.append(new_id)
-
+    new_badge_number = generate_unique_string(chosen_badge_numbers, 10)
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee_data["first_name"] = "Test"
     employee_data["last_name"] = "Manager"
     manager = create_employee(employee_data, test_client)
-    employee_data["id"] = new_id
+    employee_data["badge_number"] = new_badge_number
     employee_data["first_name"] = "Test"
     employee_data["last_name"] = "Employee"
     employee_data["manager_id"] = manager["id"]
@@ -238,78 +235,75 @@ def test_update_employee_by_id_404_employee_not_found(
     assert response.json()["detail"] == EXC_MSG_EMPLOYEE_NOT_FOUND
 
 
-def test_update_employee_id_200(
+def test_update_employee_badge_number_200(
     department_data: dict,
     employee_data: dict,
     org_unit_data: dict,
     test_client: TestClient,
 ):
-    new_id = random.randint(2, 1000000)
-    while new_id in chosen_employee_ids:
-        new_id = random.randint(2, 1000000)
-    chosen_employee_ids.append(new_id)
-
+    new_badge_number = generate_unique_string(chosen_badge_numbers, 10)
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
     department = create_department(department_data, test_client)
     create_department_membership(department["id"], employee["id"], test_client)
-    clock_employee(employee["id"], test_client)
+    clock_employee(employee["badge_number"], test_client)
 
     response = test_client.put(
-        f"{BASE_URL}/{employee["id"]}/change_id/{new_id}"
+        f"{BASE_URL}/{employee["id"]}/badge_number",
+        params={"badge_number": new_badge_number},
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["id"] == new_id
+    assert response.json()["badge_number"] == new_badge_number
+
+    response = test_client.get(f"{BASE_URL}/{employee["id"]}")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["badge_number"] == new_badge_number
 
 
-def test_update_employee_id_200_with_user(
+def test_update_employee_badge_number_200_with_user(
     auth_role_data: dict,
     org_unit_data: dict,
     employee_data: dict,
     user_data: dict,
     test_client: TestClient,
 ):
-    new_id = random.randint(2, 1000000)
-    while new_id in chosen_employee_ids:
-        new_id = random.randint(2, 1000000)
-    chosen_employee_ids.append(new_id)
-
+    new_badge_number = generate_unique_string(chosen_badge_numbers, 10)
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)
 
     response = test_client.put(
-        f"{BASE_URL}/{employee["id"]}/change_id/{new_id}"
+        f"{BASE_URL}/{employee["id"]}/badge_number",
+        params={"badge_number": new_badge_number},
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["id"] == new_id
+    assert response.json()["badge_number"] == new_badge_number
 
-    user_data["id"] = new_id
+    user_data["badge_number"] = new_badge_number
     login_user(user_data, test_client)
-    response = test_client.get(f"{BASE_URL}/{new_id}")
+    response = test_client.get(f"{BASE_URL}/{employee["id"]}")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["id"] == new_id
+    assert response.json()["badge_number"] == new_badge_number
 
 
-def test_update_employee_id_404_employee_not_found(
-    employee_data: dict,
+def test_update_employee_badge_number_404_employee_not_found(
     test_client: TestClient,
 ):
     employee_id = 999
-    employee_data["id"] = employee_id
-    new_id = 12
+    badge_number = 999
 
     response = test_client.put(
-        f"{BASE_URL}/{employee_id}/change_id/{new_id}",
-        json=employee_data,
+        f"{BASE_URL}/{employee_id}/badge_number",
+        params={"badge_number": badge_number},
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND

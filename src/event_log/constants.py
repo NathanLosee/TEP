@@ -33,14 +33,20 @@ EVENT_LOG_MSGS = {
         "DELETE": "Department {department_name} deleted",
     },
     DEPARTMENT_MEMBERSHIP_IDENTIFIER: {
-        "CREATE": "Employee {id} added to department {department_name}",
-        "DELETE": "Employee {id} removed from department {department_name}",
+        "CREATE": (
+            "Employee {badge_number} added to department {department_name}"
+        ),
+        "DELETE": (
+            "Employee {badge_number} removed from department {department_name}"
+        ),
     },
     EMPLOYEE_IDENTIFIER: {
-        "CREATE": "Employee {id} created",
-        "UPDATE": "Employee {id} updated",
-        "UPDATE_ID": "Employee {id} updated id to {new_id}",
-        "DELETE": "Employee {id} deleted",
+        "CREATE": "Employee {badge_number} created",
+        "UPDATE": "Employee {badge_number} updated",
+        "UPDATE_BADGE": (
+            "Employee {badge_number} updated to {new_badge_number}"
+        ),
+        "DELETE": "Employee {badge_number} deleted",
     },
     HOLIDAY_GROUP_IDENTIFIER: {
         "CREATE": "Holiday {holiday_group_name} created",
@@ -53,15 +59,15 @@ EVENT_LOG_MSGS = {
         "DELETE": "Org unit {org_unit_id} deleted",
     },
     TIMECLOCK_IDENTIFIER: {
-        "CLOCK_IN": "Employee {id} clocked in",
-        "CLOCK_OUT": "Employee {id} clocked out",
+        "CLOCK_IN": "Employee {badge_number} clocked in",
+        "CLOCK_OUT": "Employee {badge_number} clocked out",
         "UPDATE": "Timeclock entry {timeclock_entry_id} updated",
         "DELETE": "Timeclock entry {timeclock_entry_id} deleted",
     },
     USER_IDENTIFIER: {
-        "LOGIN": "User {user_id} logged in",
-        "CREATE": "User account for {user_id} created",
-        "UPDATE": "User account for {user_id} updated",
-        "DELETE": "User account for {user_id} deleted",
+        "LOGIN": "User {badge_number} logged in",
+        "CREATE": "User account for {badge_number} created",
+        "UPDATE": "User account for {badge_number} updated",
+        "DELETE": "User account for {badge_number} deleted",
     },
 }

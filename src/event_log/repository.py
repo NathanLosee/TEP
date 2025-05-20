@@ -46,20 +46,20 @@ def get_event_log_by_id(id: int, db: Session) -> EventLog | None:
 def get_event_log_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    user_id: int | None,
+    badge_number: str | None,
     log_filter: str | None,
     db: Session,
 ) -> list[EventLog]:
     """Retrieve all event logs with given time period.
-    If user_id is provided, it will be used to filter the logs to
-        those associated with the id.
+    If badge_number is provided, it will be used to filter the logs to
+        those associated with the badge number.
     If log_filter is provided, it will be used to filter the logs to those
         containing the filter text.
 
     Args:
         start_timestamp (datetime): Start timestamp for the time period.
         end_timestamp (datetime): End timestamp for the time period.
-        user_id (int, optional): User's unique identifier.
+        badge_number (str, optional): User's badge number.
             Defaults to None.
         log_filter (str, optional): Filter for log messages.
             Defaults to None.
@@ -74,8 +74,8 @@ def get_event_log_entries(
         .where(EventLog.timestamp >= start_timestamp)
         .where(EventLog.timestamp <= end_timestamp)
     )
-    if user_id is not None:
-        query = query.where(EventLog.user_id == user_id)
+    if badge_number is not None:
+        query = query.where(EventLog.badge_number == badge_number)
     if log_filter:
         query = query.where(EventLog.log.ilike(f"%{log_filter}%"))
     return db.scalars(query).all()

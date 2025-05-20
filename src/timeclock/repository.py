@@ -9,11 +9,11 @@ from src.timeclock.models import TimeclockEntry
 from src.timeclock.schemas import TimeclockEntryBase
 
 
-def timeclock(employee_id: int, db: Session) -> bool:
+def timeclock(badge_number: str, db: Session) -> bool:
     """Clock in/out an employee.
 
     Args:
-        employee_id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
         db (Session): Database session for the current request.
 
     Returns:
@@ -22,7 +22,7 @@ def timeclock(employee_id: int, db: Session) -> bool:
     """
     timeclock = db.scalars(
         select(TimeclockEntry)
-        .where(TimeclockEntry.employee_id == employee_id)
+        .where(TimeclockEntry.badge_number == badge_number)
         .order_by(TimeclockEntry.id.desc())
     ).first()
     if timeclock and not timeclock.clock_out:
@@ -30,20 +30,20 @@ def timeclock(employee_id: int, db: Session) -> bool:
         db.commit()
         return False
     else:
-        new_timeclock = TimeclockEntry(employee_id=employee_id)
+        new_timeclock = TimeclockEntry(badge_number=badge_number)
         db.add(new_timeclock)
         db.commit()
         return True
 
 
 def check_status(
-    employee_id: int,
+    badge_number: str,
     db: Session,
 ) -> bool:
     """Check if an employee is clocked in.
 
     Args:
-        employee_id (int): Employee's unique identifier.
+        badge_number (str): Employee's badge number.
         db (Session): Database session for the current request.
 
     Returns:
@@ -52,7 +52,7 @@ def check_status(
     """
     timeclock = db.scalars(
         select(TimeclockEntry)
-        .where(TimeclockEntry.employee_id == employee_id)
+        .where(TimeclockEntry.badge_number == badge_number)
         .order_by(TimeclockEntry.id.desc())
     ).first()
     return timeclock is not None and not timeclock.clock_out
@@ -61,17 +61,17 @@ def check_status(
 def get_timeclock_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    employee_id: int | None,
+    badge_number: str | None,
     db: Session,
 ) -> list[TimeclockEntry]:
     """Retrieve all timeclocks with given time period.
-    If employee_id is provided, it will be used to filter the logs to
-        those associated with the id.
+    If badge_number is provided, it will be used to filter the logs to
+        those associated with the badge_number.
 
     Args:
         start_timestamp (datetime): Start timestamp for the time period.
         end_timestamp (datetime): End timestamp for the time period.
-        employee_id (int | None): Employee's unique identifier.
+        badge_number (str | None): Employee's badge number.
             Defaults to None.
         db (Session): Database session for the current request.
 
@@ -83,8 +83,8 @@ def get_timeclock_entries(
         TimeclockEntry.clock_in >= start_timestamp,
         TimeclockEntry.clock_in <= end_timestamp,
     )
-    if employee_id:
-        query = query.where(TimeclockEntry.employee_id == employee_id)
+    if badge_number:
+        query = query.where(TimeclockEntry.badge_number == badge_number)
     return db.scalars(query).all()
 
 
@@ -120,7 +120,7 @@ def update_timeclock_entry_by_id(
         TimeclockEntry: The updated timeclock entry.
 
     """
-    timeclock_entry.employee_id = request.employee_id
+    timeclock_entry.badge_number = request.badge_number
     timeclock_entry.clock_in = request.clock_in
     timeclock_entry.clock_out = request.clock_out
     db.commit()

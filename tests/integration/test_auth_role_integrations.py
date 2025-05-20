@@ -55,7 +55,7 @@ def test_create_auth_role_409_name_already_exists(
     assert response.json()["detail"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
-def test_give_employee_auth_role_201(
+def test_give_user_auth_role_201(
     auth_role_data: dict,
     employee_data: dict,
     org_unit_data: dict,
@@ -65,7 +65,7 @@ def test_give_employee_auth_role_201(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
 
@@ -74,10 +74,10 @@ def test_give_employee_auth_role_201(
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == [{"id": user["id"]}]
+    assert response.json() == [user]
 
 
-def test_give_employee_auth_role_404_auth_role_not_found(
+def test_give_user_auth_role_404_auth_role_not_found(
     test_client: TestClient,
 ):
     auth_role_id = 999
@@ -91,7 +91,7 @@ def test_give_employee_auth_role_404_auth_role_not_found(
     assert response.json()["detail"] == EXC_MSG_AUTH_ROLE_NOT_FOUND
 
 
-def test_give_employee_auth_role_409_employee_already_has_auth_role(
+def test_give_user_auth_role_409_user_already_has_auth_role(
     auth_role_data: dict,
     employee_data: dict,
     org_unit_data: dict,
@@ -101,7 +101,7 @@ def test_give_employee_auth_role_409_employee_already_has_auth_role(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)
@@ -169,7 +169,7 @@ def test_get_users_by_auth_role_200_nonempty_list(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)
@@ -300,7 +300,7 @@ def test_delete_auth_role_by_id_404_not_found(
     assert response.json()["detail"] == EXC_MSG_AUTH_ROLE_NOT_FOUND
 
 
-def test_delete_auth_role_by_id_409_employees_assigned(
+def test_delete_auth_role_by_id_409_users_assigned(
     auth_role_data: dict,
     employee_data: dict,
     org_unit_data: dict,
@@ -310,7 +310,7 @@ def test_delete_auth_role_by_id_409_employees_assigned(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)
@@ -321,7 +321,7 @@ def test_delete_auth_role_by_id_409_employees_assigned(
     assert response.json()["detail"] == EXC_MSG_USERS_ASSIGNED
 
 
-def test_remove_auth_role_from_employee_200(
+def test_remove_auth_role_from_user_200(
     auth_role_data: dict,
     employee_data: dict,
     org_unit_data: dict,
@@ -331,7 +331,7 @@ def test_remove_auth_role_from_employee_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)
@@ -344,7 +344,7 @@ def test_remove_auth_role_from_employee_200(
     assert response.json() == []
 
 
-def test_remove_auth_role_from_employee_404_auth_role_not_found(
+def test_remove_auth_role_from_user_404_auth_role_not_found(
     test_client: TestClient,
 ):
     auth_role_id = 999
@@ -358,7 +358,7 @@ def test_remove_auth_role_from_employee_404_auth_role_not_found(
     assert response.json()["detail"] == EXC_MSG_AUTH_ROLE_NOT_FOUND
 
 
-def test_remove_auth_role_from_employee_404_employee_not_member(
+def test_remove_auth_role_from_user_404_user_not_member(
     auth_role_data: dict,
     org_unit_data: dict,
     employee_data: dict,
@@ -368,7 +368,7 @@ def test_remove_auth_role_from_employee_404_employee_not_member(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
 

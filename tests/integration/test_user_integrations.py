@@ -38,12 +38,15 @@ def test_create_user_201(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
 
     response = test_client.post(BASE_URL, json=user_data)
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json() == {"id": user_data["id"]}
+    assert response.json() == {
+        "id": response.json()["id"],
+        "badge_number": user_data["badge_number"],
+    }
 
 
 def test_create_user_409_user_already_exists(
@@ -55,7 +58,7 @@ def test_create_user_409_user_already_exists(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     create_user(user_data, test_client)
 
     response = test_client.post(BASE_URL, json=user_data)
@@ -73,7 +76,7 @@ def test_get_users_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     response = test_client.get(BASE_URL)
@@ -91,7 +94,7 @@ def test_get_user_by_id_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     response = test_client.get(f"{BASE_URL}/{user["id"]}")
@@ -120,7 +123,7 @@ def test_get_user_auth_roles_200_empty_list(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     response = test_client.get(f"{BASE_URL}/{user["id"]}/auth_roles")
@@ -139,7 +142,7 @@ def test_get_user_auth_roles_200_nonempty_list(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)
@@ -161,63 +164,6 @@ def test_get_user_auth_roles_404_user_not_found(
     assert response.json() == {"detail": EXC_MSG_USER_NOT_FOUND}
 
 
-def test_update_user_by_id_200(
-    employee_data: dict,
-    org_unit_data: dict,
-    user_data: dict,
-    test_client: TestClient,
-):
-    org_unit = create_org_unit(org_unit_data, test_client)
-    employee_data["org_unit_id"] = org_unit["id"]
-    employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
-    user = create_user(user_data, test_client)
-    user_data["password"] = "new_password"
-
-    response = test_client.put(f"{BASE_URL}/{user["id"]}", json=user_data)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == user
-
-    login_user(user_data, test_client)
-
-    assert response.status_code == status.HTTP_200_OK
-
-    decoded_jwt = services.decode_jwt_token(
-        test_client.headers["Authorization"].split(" ")[1]
-    )
-    assert decoded_jwt["sub"] == str(user["id"])
-
-    decoded_jwt = services.decode_jwt_token(
-        test_client.cookies["refresh_token"]
-    )
-    assert decoded_jwt["sub"] == str(user["id"])
-
-
-def test_update_user_by_id_400_ids_do_not_match(
-    user_data: dict,
-    test_client: TestClient,
-):
-    user_data["id"] = 999
-
-    response = test_client.put(f"{BASE_URL}/0", json=user_data)
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"detail": EXC_MSG_IDS_DO_NOT_MATCH}
-
-
-def test_update_user_by_id_404_user_not_found(
-    user_data: dict,
-    test_client: TestClient,
-):
-    user_data["id"] = 999
-
-    response = test_client.put(f"{BASE_URL}/{user_data["id"]}", json=user_data)
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json() == {"detail": EXC_MSG_USER_NOT_FOUND}
-
-
 def test_update_user_password_200(
     employee_data: dict,
     org_unit_data: dict,
@@ -227,19 +173,22 @@ def test_update_user_password_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     user_data["new_password"] = "new_password"
 
     test_client.cookies.clear()
     test_client.headers.clear()
     response = test_client.put(
-        f"{BASE_URL}/{user["id"]}/password",
+        f"{BASE_URL}/{user["badge_number"]}/password",
         json=user_data,
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"id": user["id"]}
+    assert response.json() == {
+        "id": user["id"],
+        "badge_number": user["badge_number"],
+    }
 
     user_data["password"] = "new_password"
     login_user(user_data, test_client)
@@ -249,22 +198,22 @@ def test_update_user_password_200(
     decoded_jwt = services.decode_jwt_token(
         test_client.headers["Authorization"].split(" ")[1]
     )
-    assert decoded_jwt["sub"] == str(user["id"])
+    assert decoded_jwt["sub"] == user["badge_number"]
 
     decoded_jwt = services.decode_jwt_token(
         test_client.cookies["refresh_token"]
     )
-    assert decoded_jwt["sub"] == str(user["id"])
+    assert decoded_jwt["sub"] == user["badge_number"]
 
 
 def test_update_user_password_400_ids_do_not_match(
     user_data: dict,
     test_client: TestClient,
 ):
-    user_data["id"] = 999
+    user_data["badge_number"] = "0"
     user_data["new_password"] = "new_password"
 
-    response = test_client.put(f"{BASE_URL}/0/password", json=user_data)
+    response = test_client.put(f"{BASE_URL}/1/password", json=user_data)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": EXC_MSG_IDS_DO_NOT_MATCH}
@@ -274,11 +223,11 @@ def test_update_user_password_404_user_not_found(
     user_data: dict,
     test_client: TestClient,
 ):
-    user_data["id"] = 999
+    user_data["badge_number"] = "999"
     user_data["new_password"] = "new_password"
 
     response = test_client.put(
-        f"{BASE_URL}/{user_data["id"]}/password", json=user_data
+        f"{BASE_URL}/{user_data["badge_number"]}/password", json=user_data
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -294,13 +243,13 @@ def test_update_user_password_403_wrong_password(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     test_client.post(BASE_URL, json=user_data)
     user_data["password"] = "wrong_password"
     user_data["new_password"] = "new_password"
 
     response = test_client.put(
-        f"{BASE_URL}/{user_data["id"]}/password", json=user_data
+        f"{BASE_URL}/{user_data["badge_number"]}/password", json=user_data
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -316,7 +265,7 @@ def test_delete_user_by_id_204(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     response = test_client.delete(f"{BASE_URL}/{user["id"]}")
@@ -344,13 +293,13 @@ def test_login_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     test_client.headers.clear()
     test_client.cookies.clear()
     login_data = {
-        "username": str(user["id"]),
+        "username": user["badge_number"],
         "password": user_data["password"],
     }
     response = test_client.post(f"{BASE_URL}/login", data=login_data)
@@ -363,12 +312,12 @@ def test_login_200(
     decoded_jwt = services.decode_jwt_token(
         test_client.headers["Authorization"].split(" ")[1]
     )
-    assert decoded_jwt["sub"] == str(user["id"])
+    assert decoded_jwt["sub"] == user["badge_number"]
 
     decoded_jwt = services.decode_jwt_token(
         test_client.cookies["refresh_token"]
     )
-    assert decoded_jwt["sub"] == str(user["id"])
+    assert decoded_jwt["sub"] == user["badge_number"]
 
 
 def test_login_401(
@@ -380,7 +329,7 @@ def test_login_401(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     login_data = {
@@ -402,7 +351,7 @@ def test_refresh_token_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     login_user(user_data, test_client)
 
@@ -413,12 +362,12 @@ def test_refresh_token_200(
     decoded_jwt = services.decode_jwt_token(
         test_client.headers["Authorization"].split(" ")[1]
     )
-    assert decoded_jwt["sub"] == str(user["id"])
+    assert decoded_jwt["sub"] == user["badge_number"]
 
     decoded_jwt = services.decode_jwt_token(
         test_client.cookies["refresh_token"]
     )
-    assert decoded_jwt["sub"] == str(user["id"])
+    assert decoded_jwt["sub"] == user["badge_number"]
 
 
 def test_refresh_token_401_refresh_token_not_found(
@@ -454,7 +403,7 @@ def test_refresh_token_401_refresh_token_expired(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
 
     token = services.encode_jwt_token(
@@ -480,7 +429,7 @@ def test_logout_200(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     create_user(user_data, test_client)
     login_user(user_data, test_client)
 
@@ -533,7 +482,7 @@ def test_create_employee_403_missing_permission(
     org_unit = create_org_unit(org_unit_data, test_client)
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
-    user_data["id"] = employee["id"]
+    user_data["badge_number"] = employee["badge_number"]
     user = create_user(user_data, test_client)
     auth_role = create_auth_role(auth_role_data, test_client)
     create_auth_role_membership(auth_role["id"], user["id"], test_client)

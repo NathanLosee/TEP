@@ -18,7 +18,7 @@ from src.department.constants import (
     MEMBERSHIP_IDENTIFIER,
 )
 from src.department.schemas import DepartmentBase, DepartmentExtended
-from src.employee.schemas import EmployeeBase
+from src.employee.schemas import EmployeeExtended
 from src.services import create_event_log, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["department"])
@@ -32,7 +32,7 @@ router = APIRouter(prefix=BASE_URL, tags=["department"])
 def create_department(
     request: DepartmentBase,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["department.create"]
     ),
 ):
@@ -57,20 +57,20 @@ def create_department(
 
     department = department_repository.create_department(request, db)
     log_args = {"department_name": department.name}
-    create_event_log(IDENTIFIER, "CREATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return department
 
 
 @router.post(
     "/{department_id}/employees/{employee_id}",
     status_code=status.HTTP_201_CREATED,
-    response_model=list[EmployeeBase],
+    response_model=list[EmployeeExtended],
 )
 def create_department_membership(
     department_id: int,
     employee_id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["department.assign", "employee.read"]
     ),
 ):
@@ -82,7 +82,7 @@ def create_department_membership(
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeBase]: The updated list of employees in the
+        list[EmployeeExtended]: The updated list of employees in the
             department.
 
     """
@@ -103,8 +103,13 @@ def create_department_membership(
     department = department_repository.create_membership(
         department_id, employee_id, db
     )
-    log_args = {"department_name": department.name, "id": employee.id}
-    create_event_log(MEMBERSHIP_IDENTIFIER, "CREATE", log_args, caller_id, db)
+    log_args = {
+        "department_name": department.name,
+        "badge_number": employee.badge_number,
+    }
+    create_event_log(
+        MEMBERSHIP_IDENTIFIER, "CREATE", log_args, caller_badge, db
+    )
     return department.employees
 
 
@@ -115,7 +120,9 @@ def create_department_membership(
 )
 def get_departments(
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["department.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["department.read"]
+    ),
 ):
     """Retrieve all departments.
 
@@ -137,7 +144,9 @@ def get_departments(
 def get_department(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["department.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["department.read"]
+    ),
 ):
     """Retrieve data for department with provided id.
 
@@ -162,12 +171,12 @@ def get_department(
 @router.get(
     "/{id}/employees",
     status_code=status.HTTP_200_OK,
-    response_model=list[EmployeeBase],
+    response_model=list[EmployeeExtended],
 )
 def get_employees_by_department(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["department.read", "employee.read"]
     ),
 ):
@@ -178,7 +187,7 @@ def get_employees_by_department(
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeBase]: The retrieved employees for the given
+        list[EmployeeExtended]: The retrieved employees for the given
             department.
 
     """
@@ -201,7 +210,7 @@ def update_department(
     id: int,
     request: DepartmentExtended,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["department.update"]
     ),
 ):
@@ -242,7 +251,7 @@ def update_department(
         department, request, db
     )
     log_args = {"department_name": department.name}
-    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return department
 
 
@@ -253,7 +262,7 @@ def update_department(
 def delete_department(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["department.delete"]
     ),
 ):
@@ -278,19 +287,19 @@ def delete_department(
 
     department_repository.delete_department(department, db)
     log_args = {"department_name": department.name}
-    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 
 
 @router.delete(
     "/{department_id}/employees/{employee_id}",
     status_code=status.HTTP_200_OK,
-    response_model=list[EmployeeBase],
+    response_model=list[EmployeeExtended],
 )
 def delete_department_membership(
     department_id: int,
     employee_id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission,
         scopes=["department.unassign", "employee.read"],
     ),
@@ -303,7 +312,7 @@ def delete_department_membership(
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeBase]: The updated list of employees in the
+        list[EmployeeExtended]: The updated list of employees in the
             department.
 
     """
@@ -324,6 +333,11 @@ def delete_department_membership(
     department = department_repository.delete_membership(
         department_id, employee_id, db
     )
-    log_args = {"department_name": department.name, "id": employee.id}
-    create_event_log(MEMBERSHIP_IDENTIFIER, "DELETE", log_args, caller_id, db)
+    log_args = {
+        "department_name": department.name,
+        "badge_number": employee.badge_number,
+    }
+    create_event_log(
+        MEMBERSHIP_IDENTIFIER, "DELETE", log_args, caller_badge, db
+    )
     return department.employees

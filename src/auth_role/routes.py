@@ -32,7 +32,7 @@ router = APIRouter(prefix=BASE_URL, tags=["auth_role"])
 def create_auth_role(
     request: AuthRoleBase,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["auth_role.create"]
     ),
 ):
@@ -57,7 +57,7 @@ def create_auth_role(
 
     auth_role = auth_role_repository.create_auth_role(request, db)
     log_args = {"auth_role_name": auth_role.name}
-    create_event_log(IDENTIFIER, "CREATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return auth_role
 
 
@@ -70,8 +70,8 @@ def create_auth_role_membership(
     auth_role_id: int,
     user_id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
-        requires_permission, scopes=["auth_role.assign", "auth_role.unassign"]
+    caller_badge: str = Security(
+        requires_permission, scopes=["auth_role.assign", "user.read"]
     ),
 ):
     """Insert new membership.
@@ -102,8 +102,10 @@ def create_auth_role_membership(
     auth_role = auth_role_repository.create_membership(
         auth_role_id, user_id, db
     )
-    log_args = {"auth_role_name": auth_role.name, "user_id": user_id}
-    create_event_log(MEMBERSHIP_IDENTIFIER, "CREATE", log_args, caller_id, db)
+    log_args = {"auth_role_name": auth_role.name, "user_id": user.badge_number}
+    create_event_log(
+        MEMBERSHIP_IDENTIFIER, "CREATE", log_args, caller_badge, db
+    )
     return auth_role.users
 
 
@@ -136,7 +138,9 @@ def get_auth_roles(
 def get_auth_role_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(requires_permission, scopes=["auth_role.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["auth_role.read"]
+    ),
 ):
     """Retrieve data for auth role with provided id.
 
@@ -166,8 +170,8 @@ def get_auth_role_by_id(
 def get_users_by_auth_role(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
-        requires_permission, scopes=["auth_role.read", "employee.read"]
+    caller_badge: str = Security(
+        requires_permission, scopes=["auth_role.read", "user.read"]
     ),
 ):
     """Retrieve all users with a given auth role.
@@ -199,7 +203,7 @@ def update_auth_role(
     id: int,
     request: AuthRoleExtended,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["auth_role.update"]
     ),
 ):
@@ -238,7 +242,7 @@ def update_auth_role(
 
     auth_role = auth_role_repository.update_auth_role(auth_role, request, db)
     log_args = {"auth_role_name": auth_role.name}
-    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return auth_role
 
 
@@ -246,7 +250,7 @@ def update_auth_role(
 def delete_auth_role(
     id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
+    caller_badge: str = Security(
         requires_permission, scopes=["auth_role.delete"]
     ),
 ):
@@ -271,7 +275,7 @@ def delete_auth_role(
 
     auth_role_repository.delete_auth_role(auth_role, db)
     log_args = {"auth_role_name": auth_role.name}
-    create_event_log(IDENTIFIER, "DELETE", log_args, caller_id, db)
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 
 
 @router.delete(
@@ -283,8 +287,8 @@ def delete_auth_role_membership(
     auth_role_id: int,
     user_id: int,
     db: Session = Depends(get_db),
-    caller_id: int = Security(
-        requires_permission, scopes=["auth_role.unassign", "employee.read"]
+    caller_badge: str = Security(
+        requires_permission, scopes=["auth_role.unassign", "user.read"]
     ),
 ):
     """Delete membership.
@@ -295,7 +299,7 @@ def delete_auth_role_membership(
         db (Session): Database session for current request.
 
     Returns:
-        list[EmployeeBase]: The updated list of users for the auth role.
+        list[UserResponse]: The updated list of users for the auth role.
 
     """
     auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
@@ -307,7 +311,7 @@ def delete_auth_role_membership(
 
     user = user_routes.get_user_by_id(user_id, db)
     validate(
-        auth_role in user.auth_roles,
+        user in auth_role.users,
         EXC_MSG_USER_NOT_MEMBER,
         status.HTTP_404_NOT_FOUND,
     )
@@ -315,6 +319,8 @@ def delete_auth_role_membership(
     auth_role = auth_role_repository.delete_membership(
         auth_role_id, user_id, db
     )
-    log_args = {"auth_role_name": auth_role.name, "user_id": user_id}
-    create_event_log(MEMBERSHIP_IDENTIFIER, "DELETE", log_args, caller_id, db)
+    log_args = {"auth_role_name": auth_role.name, "user_id": user.badge_number}
+    create_event_log(
+        MEMBERSHIP_IDENTIFIER, "DELETE", log_args, caller_badge, db
+    )
     return auth_role.users

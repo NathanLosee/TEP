@@ -6,7 +6,7 @@ This module defines the service layer for handling CRUD
 """
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import bcrypt
 import jwt
@@ -14,15 +14,17 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 import src.user.repository as user_repository
 from src.auth_role.models import AuthRole, AuthRolePermission
 from src.constants import RESOURCE_SCOPES
 from src.database import SessionLocal, get_db
+from src.employee.models import Employee
 from src.event_log.constants import EVENT_LOG_MSGS
 from src.event_log.models import EventLog
+from src.org_unit.models import OrgUnit
+from src.user.constants import BASE_URL as USER_URL
 from src.user.constants import (
     EXC_MSG_ACCESS_TOKEN_INVALID,
     EXC_MSG_MISSING_PERMISSION,
@@ -39,7 +41,7 @@ algorithm = "RS256"
 access_exp_time = 15
 refresh_exp_time = 60 * 24  # 1 day
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="users/login", scopes=RESOURCE_SCOPES
+    tokenUrl=f"{USER_URL}/login", scopes=RESOURCE_SCOPES
 )
 
 
@@ -76,18 +78,50 @@ def create_root_user_if_not_exists():
     """
     db = SessionLocal()
 
+    root_org_unit = db.get(OrgUnit, 0)
+    if not root_org_unit:
+        root_org_unit = OrgUnit(
+            id=0,
+            name="root",
+        )
+        db.add(root_org_unit)
+        db.commit()
+
+    root_employee = db.get(Employee, 0)
+    if not root_employee:
+        root_employee = Employee(
+            id=0,
+            badge_number="0",
+            first_name="root",
+            last_name="root",
+            payroll_type="hourly",
+            payroll_sync=date.today(),
+            workweek_type="standard",
+            time_type=True,
+            allow_clocking=False,
+            allow_delete=False,
+            org_unit_id=root_org_unit.id,
+            manager_id=None,
+            holiday_group_id=None,
+        )
+        db.add(root_employee)
+        db.commit()
+
     root_user = db.get(User, 0)
     if not root_user:
-        root_user = User(id=0, password=hash_password("password"))
+        root_user = User(
+            id=0,
+            badge_number=root_employee.badge_number,
+            password=hash_password("password"),
+        )
         db.add(root_user)
         db.commit()
         db.refresh(root_user)
 
-    root_auth_role = db.scalars(
-        select(AuthRole).where(AuthRole.name == "root")
-    ).first()
+    root_auth_role = db.get(AuthRole, 0)
     if not root_auth_role:
         root_auth_role = AuthRole(
+            id=0,
             name="root",
             permissions=[
                 AuthRolePermission(resource=resource)
@@ -100,25 +134,6 @@ def create_root_user_if_not_exists():
 
         root_user.auth_roles.append(root_auth_role)
         db.commit()
-
-    db.close()
-
-
-def create_timeclock_user_if_not_exists():
-    """Create a timeclock user if it does not exist.
-
-    This function checks if a timeclock user exists in the database.
-    If not, it creates one with no permissions.
-
-    """
-    db = SessionLocal()
-
-    timeclock_user = db.get(User, 1)
-    if not timeclock_user:
-        timeclock_user = User(id=1, password=hash_password("password"))
-        db.add(timeclock_user)
-        db.commit()
-        db.refresh(timeclock_user)
 
     db.close()
 
@@ -239,11 +254,28 @@ def decode_jwt_token(token: str) -> dict:
     return payload
 
 
+def generate_permission_list(user: User) -> list[str]:
+    """Generate permission list for the logged-in user.
+
+    Args:
+        user (User): The user object containing user credentials.
+
+    Returns:
+        list[str]: A list of unique permissions for the user.
+
+    """
+    permissions_set = set()
+    for role in user.auth_roles:
+        for permission in role.permissions:
+            permissions_set.add(permission.resource)
+    return list(permissions_set)
+
+
 def requires_permission(
     security_scopes: SecurityScopes,
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
-) -> int:
+) -> str:
     """Check if the user has the required permission.
 
     Args:
@@ -268,31 +300,14 @@ def requires_permission(
             EXC_MSG_MISSING_PERMISSION,
             status.HTTP_403_FORBIDDEN,
         )
-    return int(payload.get("sub"))
-
-
-def generate_permission_list(user: User) -> list[str]:
-    """Generate permission list for the logged-in user.
-
-    Args:
-        user (User): The user object containing user credentials.
-
-    Returns:
-        list[str]: A list of unique permissions for the user.
-
-    """
-    permissions_set = set()
-    for role in user.auth_roles:
-        for permission in role.permissions:
-            permissions_set.add(permission.resource)
-    return list(permissions_set)
+    return payload.get("sub")
 
 
 def create_event_log(
     event_entity: str,
     event_type: str,
     format_args: dict,
-    user_id: int,
+    badge_number: str,
     db: Session = Depends(get_db),
 ) -> None:
     """Create an event log entry.
@@ -306,11 +321,11 @@ def create_event_log(
 
     """
     event_log_msg = EVENT_LOG_MSGS[event_entity][event_type]
-    event_log_msg.format(**format_args)
+    event_log_msg = event_log_msg.format(**format_args)
     event_log = EventLog(
         log=event_log_msg,
-        user_id=user_id,
         timestamp=datetime.now(timezone.utc),
+        badge_number=badge_number,
     )
     db.add(event_log)
     db.commit()

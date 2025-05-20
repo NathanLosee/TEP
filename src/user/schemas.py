@@ -13,12 +13,12 @@ class UserBase(BaseModel):
     """Pydantic schema for user data.
 
     Attributes:
-        id (int): User's unique identifier.
+        badge_number (str): Employee's badge number.
         password (str): User's password.
 
     """
 
-    id: int
+    badge_number: str
     password: str
 
 
@@ -39,7 +39,9 @@ class UserResponse(BaseModel):
 
     Attributes:
         id (int): User's unique identifier.
+        badge_number (str): Employee's badge number.
 
     """
 
     id: int
+    badge_number: str
