@@ -1,0 +1,42 @@
+mat-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 1rem 1rem 0 1rem;
+}
+
+mat-card > * {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+}
+
+mat-card-title,
+mat-card-subtitle {
+  background-color: var(--sys-tertiary-container);
+  color: var(--sys-on-tertiary-container);
+  border-radius: 0.5rem;
+}
+
+mat-card-title,
+mat-card-subtitle,
+mat-card-form-field,
+button {
+  width: 100%;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+mat-icon,
+mat-card-subtitle > mat-label {
+  vertical-align: middle;
+}
+
+mat-card-actions > .mat-mdc-button-base {
+  background-color: var(--sys-tertiary-container);
+  color: var(--sys-on-tertiary-container);
+}
+mat-card-actions > .mat-mdc-button-disabled {
+  background-color: var(--sys-surface-container);
+  color: var(--sys-on-surface-container);
+}

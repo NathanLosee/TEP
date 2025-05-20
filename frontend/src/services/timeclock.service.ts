@@ -1,28 +1,45 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ClockResponse, TimeclockEntry } from './timeclock.interfaces';
+
+export interface Timeclock {
+  status: string;
+  message: string;
+}
+
+export interface TimeclockEntry {
+  id: number;
+  employee_id: number;
+  clock_in: Date;
+  clock_out: Date;
+}
 
 /**
- * Service for managing timeclock entries
- * @class TimeclockService
+ * Service for handling clocking in and out of employees
+ * @class ClockerService
  */
 @Injectable({ providedIn: 'root' })
 export class TimeclockService {
   private http = inject(HttpClient);
-  base_url = 'http://localhost:8080/timeclock';
+  base_url = 'timeclock';
 
   /**
    * Clock in/out for an employee
    * @param employee_id The employee ID to clock in/out
    * @returns Whether the ID was clocked in or out
    */
-  timeclock(employee_id: number): Observable<ClockResponse> {
-    return this.http.post<ClockResponse>(`${this.base_url}`, null, {
-      params: { employee_id: employee_id },
-    });
+  timeclock(badgeNumber: string): Observable<Timeclock> {
+    return this.http.post<Timeclock>(`${this.base_url}/${badgeNumber}`, null);
   }
 
+  /**
+   * Check the status of an employee (clocked in or out)
+   * @param employee_id The employee ID to check the status of
+   * @returns The status of the employee (clocked in or out)
+   */
+  checkStatus(badgeNumber: string): Observable<Timeclock> {
+    return this.http.get<Timeclock>(`${this.base_url}/${badgeNumber}/status`);
+  }
   /**
    * Get timeclock entries within a date range
    * @param start_date Optional start date of the range, first day of the month by default

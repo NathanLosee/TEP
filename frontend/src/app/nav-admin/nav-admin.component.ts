@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-navpanel',
+  selector: 'app-nav-admin',
   standalone: true,
   imports: [
     MatToolbarModule,
@@ -61,4 +61,4 @@ import { RouterModule } from '@angular/router';
     }
   `,
 })
-export class NavPanelComponent {}
+export class NavAdminComponent {}
