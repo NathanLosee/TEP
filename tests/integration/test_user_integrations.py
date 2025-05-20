@@ -180,7 +180,7 @@ def test_update_user_password_200(
     test_client.cookies.clear()
     test_client.headers.clear()
     response = test_client.put(
-        f"{BASE_URL}/{user["badge_number"]}/password",
+        f"{BASE_URL}/{user["badge_number"]}",
         json=user_data,
     )
 
@@ -213,7 +213,7 @@ def test_update_user_password_400_ids_do_not_match(
     user_data["badge_number"] = "0"
     user_data["new_password"] = "new_password"
 
-    response = test_client.put(f"{BASE_URL}/1/password", json=user_data)
+    response = test_client.put(f"{BASE_URL}/1", json=user_data)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": EXC_MSG_IDS_DO_NOT_MATCH}
@@ -227,7 +227,7 @@ def test_update_user_password_404_user_not_found(
     user_data["new_password"] = "new_password"
 
     response = test_client.put(
-        f"{BASE_URL}/{user_data["badge_number"]}/password", json=user_data
+        f"{BASE_URL}/{user_data["badge_number"]}", json=user_data
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -249,7 +249,7 @@ def test_update_user_password_403_wrong_password(
     user_data["new_password"] = "new_password"
 
     response = test_client.put(
-        f"{BASE_URL}/{user_data["badge_number"]}/password", json=user_data
+        f"{BASE_URL}/{user_data["badge_number"]}", json=user_data
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN

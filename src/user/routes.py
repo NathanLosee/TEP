@@ -150,7 +150,7 @@ def get_user_auth_roles(
 
 
 @router.put(
-    "/{badge_number}/password",
+    "/{badge_number}",
     status_code=status.HTTP_200_OK,
     response_model=UserResponse,
 )
