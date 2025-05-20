@@ -1,55 +1,36 @@
-<div class="clocker-container">
-  <mat-card>
-    <mat-card-title-group>
-      <mat-card-title>Timeclock</mat-card-title>
-      <mat-card-subtitle>
-        <mat-icon>access_time</mat-icon>
-        <mat-label>
-          <section>
-            {{ currentDateAndTime | date : "H:mmaa" }}
-          </section>
-          <section>
-            {{ currentDateAndTime | date : "EEEE, MMMM d, yyyy" }}
-          </section>
-        </mat-label>
-      </mat-card-subtitle>
-    </mat-card-title-group>
+<mat-toolbar>
+  <mat-toolbar-row>
+    <mat-icon>access_time</mat-icon>
+  </mat-toolbar-row>
+  <mat-toolbar-row>
+    <h1>Timeclock</h1>
+  </mat-toolbar-row>
+  <mat-toolbar-row>
+    <p>{{ currentDateAndTime | date : "EEEE, MMMM d, yyyy - H:mmaa" }}</p>
+  </mat-toolbar-row>
+</mat-toolbar>
 
-    <mat-card-content>
-      <mat-form-field>
-        <mat-label>Badge Number</mat-label>
-        <input matInput name="badgeNumber" required [(ngModel)]="badgeNumber" />
-        @if (badgeNumber) {
-        <button
-          matSuffix
-          mat-icon-button
-          aria-label="Clear"
-          (click)="badgeNumber = null"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
-        }
-      </mat-form-field>
-    </mat-card-content>
+<mat-form-field>
+  <mat-label>Badge Number</mat-label>
+  <input matInput name="badgeNumber" required [(ngModel)]="badgeNumber" />
+  @if (badgeNumber) {
+  <button
+    matSuffix
+    mat-icon-button
+    aria-label="Clear"
+    (click)="badgeNumber = null"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+  }
+</mat-form-field>
 
-    <mat-card-actions>
-      <button
-        mat-raised-button
-        (click)="clockInOut()"
-        [disabled]="!badgeNumber"
-      >
-        Clock In/Out
-      </button>
+<button mat-raised-button (click)="clockInOut()" [disabled]="!badgeNumber">
+  Clock In/Out
+</button>
 
-      <button
-        mat-raised-button
-        (click)="checkStatus()"
-        [disabled]="!badgeNumber"
-      >
-        Check Status
-      </button>
-    </mat-card-actions>
+<button mat-raised-button (click)="checkStatus()" [disabled]="!badgeNumber">
+  Check Status
+</button>
 
-    <img mat-card-image src="monteVista.png" />
-  </mat-card>
-</div>
+<img mat-card-image src="monteVista.png" />

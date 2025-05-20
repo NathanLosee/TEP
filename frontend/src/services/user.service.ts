@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private http = inject(HttpClient);
-  base_url = 'user';
+  base_url = 'users';
 
   /**
    * Login a user
@@ -17,7 +17,12 @@ export class UserService {
    * @returns Whether the login was successful
    */
   login(loginData: FormData): Observable<string> {
-    return this.http.post<string>(`${this.base_url}/login`, loginData);
+    return this.http.post<string>(`${this.base_url}/login`, loginData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
   }
 
   /**
