@@ -6,18 +6,18 @@
     <input
       matInput
       ngModel
-      name="username"
+      name="badgeNumber"
       type="text"
       required
-      #username="ngModel"
+      #badgeNumber="ngModel"
     />
-    @if (username.value) {
+    @if (badgeNumber.value) {
     <button
       matSuffix
       mat-icon-button
       type="button"
       aria-label="Clear"
-      (click)="username.reset('')"
+      (click)="badgeNumber.reset('')"
     >
       <mat-icon>close</mat-icon>
     </button>

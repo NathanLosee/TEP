@@ -1,6 +1,16 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+
+export interface AccessResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface User {
+  id: number;
+  badge_number: string;
+}
 
 /**
  * Service for handling login/logout of employees
@@ -9,20 +19,17 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private http = inject(HttpClient);
+
   base_url = 'users';
+  access_token: string | null = null;
 
   /**
    * Login a user
    * @param loginData The login data to send to the server
    * @returns Whether the login was successful
    */
-  login(loginData: FormData): Observable<string> {
-    return this.http.post<string>(`${this.base_url}/login`, loginData, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      withCredentials: true,
-    });
+  login(loginData: FormData): Observable<AccessResponse> {
+    return this.http.post<AccessResponse>(`${this.base_url}/login`, loginData);
   }
 
   /**

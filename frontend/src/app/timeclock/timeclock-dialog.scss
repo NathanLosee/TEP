@@ -1,0 +1,8 @@
+::ng-deep .mat-mdc-dialog-surface {
+  background-color: var(--sys-primary-container);
+}
+
+.mat-mdc-dialog-title,
+.mat-mdc-dialog-content {
+  color: var(--sys-on-primary-container);
+}

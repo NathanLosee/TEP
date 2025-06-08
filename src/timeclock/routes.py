@@ -36,16 +36,14 @@ def timeclock(badge_number: str, db: Session = Depends(get_db)):
         dict: Clock in/out status.
 
     """
-    employees = employee_routes.search_for_employees(
-        badge_number=badge_number, db=db
-    )
+    employee = employee_routes.get_employee_by_badge_number(badge_number, db)
     validate(
-        len(employees) == 1 and employees[0].allow_clocking,
+        employee.allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    log_args = {"badge_number": employees[0].badge_number}
+    log_args = {"badge_number": employee.badge_number}
     if timeclock_repository.timeclock(badge_number, db):
         create_event_log(IDENTIFIER, "CLOCK_IN", log_args, "0", db)
         return {"status": "success", "message": "Clocked in"}

@@ -78,6 +78,161 @@ def test_get_employee_by_id_404_employee_not_found(
     assert response.json()["detail"] == EXC_MSG_EMPLOYEE_NOT_FOUND
 
 
+def test_get_employee_by_badge_number_200(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(f"{BASE_URL}/badge/{employee["badge_number"]}")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == employee
+
+
+def test_get_employee_by_badge_number_404_employee_not_found(
+    test_client: TestClient,
+):
+    badge_number = 999
+
+    response = test_client.get(f"{BASE_URL}/badge/{badge_number}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == EXC_MSG_EMPLOYEE_NOT_FOUND
+
+
+def test_search_for_employees_200_no_params(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(f"{BASE_URL}/search")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
+def test_search_for_employees_200_with_department(
+    employee_data: dict,
+    org_unit_data: dict,
+    department_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+    department = create_department(department_data, test_client)
+    create_department_membership(department["id"], employee["id"], test_client)
+
+    response = test_client.get(
+        f"{BASE_URL}/search",
+        params={"department": department["name"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
+def test_search_for_employees_200_with_org_unit(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(
+        f"{BASE_URL}/search",
+        params={"org_unit": org_unit["name"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
+def test_search_for_employees_200_with_holiday_group(
+    employee_data: dict,
+    org_unit_data: dict,
+    holiday_group_data: dict,
+    test_client: TestClient,
+):
+    holiday_group = create_holiday_group(holiday_group_data, test_client)
+    employee_data["holiday_group_id"] = holiday_group["id"]
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(
+        f"{BASE_URL}/search",
+        params={"holiday_group": holiday_group["name"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
+def test_search_for_employees_200_with_badge_number(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(
+        f"{BASE_URL}/search",
+        params={"badge_number": employee["badge_number"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
+def test_search_for_employees_200_with_first_name(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(
+        f"{BASE_URL}/search",
+        params={"first_name": employee["first_name"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
+def test_search_for_employees_200_with_last_name(
+    employee_data: dict,
+    org_unit_data: dict,
+    test_client: TestClient,
+):
+    org_unit = create_org_unit(org_unit_data, test_client)
+    employee_data["org_unit_id"] = org_unit["id"]
+    employee = create_employee(employee_data, test_client)
+
+    response = test_client.get(
+        f"{BASE_URL}/search",
+        params={"last_name": employee["last_name"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert employee in response.json()
+
+
 def test_get_employee_departments_200(
     employee_data: dict,
     org_unit_data: dict,

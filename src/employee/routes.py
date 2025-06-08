@@ -80,38 +80,6 @@ def get_employees(
 
 
 @router.get(
-    "/{id}",
-    status_code=status.HTTP_200_OK,
-    response_model=EmployeeExtended,
-)
-def get_employee_by_id(
-    id: int,
-    db: Session = Depends(get_db),
-    caller_badge: str = Security(
-        requires_permission, scopes=["employee.read"]
-    ),
-):
-    """Retrieve data for employee with provided id.
-
-    Args:
-        id (int): Employee's id.
-        db (Session): Database session for current request.
-
-    Returns:
-        EmployeeExtended: The retrieved employee.
-
-    """
-    employee = employee_repository.get_employee_by_id(id, db)
-    validate(
-        employee,
-        EXC_MSG_EMPLOYEE_NOT_FOUND,
-        status.HTTP_404_NOT_FOUND,
-    )
-
-    return employee
-
-
-@router.get(
     "/search",
     status_code=status.HTTP_200_OK,
     response_model=list[EmployeeExtended],
@@ -154,6 +122,72 @@ def search_for_employees(
     )
 
     return employees
+
+
+@router.get(
+    "/{id}",
+    status_code=status.HTTP_200_OK,
+    response_model=EmployeeExtended,
+)
+def get_employee_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    caller_badge: str = Security(
+        requires_permission, scopes=["employee.read"]
+    ),
+):
+    """Retrieve data for employee with provided id.
+
+    Args:
+        id (int): Employee's id.
+        db (Session): Database session for current request.
+
+    Returns:
+        EmployeeExtended: The retrieved employee.
+
+    """
+    employee = employee_repository.get_employee_by_id(id, db)
+    validate(
+        employee,
+        EXC_MSG_EMPLOYEE_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
+
+    return employee
+
+
+@router.get(
+    "/badge/{badge_number}",
+    status_code=status.HTTP_200_OK,
+    response_model=EmployeeExtended,
+)
+def get_employee_by_badge_number(
+    badge_number: str,
+    db: Session = Depends(get_db),
+    caller_badge: str = Security(
+        requires_permission, scopes=["employee.read"]
+    ),
+):
+    """Retrieve data for employee with provided badge number.
+
+    Args:
+        badge_number (str): Employee's badge number.
+        db (Session): Database session for current request.
+
+    Returns:
+        EmployeeExtended: The retrieved employee.
+
+    """
+    employee = employee_repository.get_employee_by_badge_number(
+        badge_number, db
+    )
+    validate(
+        employee,
+        EXC_MSG_EMPLOYEE_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
+
+    return employee
 
 
 @router.get(

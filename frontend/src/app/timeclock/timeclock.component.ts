@@ -1,6 +1,12 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  MatDialog,
+  MAT_DIALOG_DATA,
+  MatDialogContent,
+  MatDialogTitle,
+} from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -8,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { TimeclockService } from '../../services/timeclock.service';
 import { interval, Subscription } from 'rxjs';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-timeclock',
@@ -26,27 +33,29 @@ import { interval, Subscription } from 'rxjs';
 })
 export class TimeclockComponent implements OnInit, OnDestroy {
   private timeclockService = inject(TimeclockService);
-  private subscription?: Subscription;
+  private clockSubscription?: Subscription;
+  readonly dialog = inject(MatDialog);
+  readonly errorDialog = inject(ErrorDialogComponent);
 
   currentDateAndTime = Date.now();
-  badgeNumber: string | null = null;
+  badgeNumber: string;
 
   constructor() {
-    this.badgeNumber = null;
+    this.badgeNumber = '';
   }
 
   ngOnInit() {
     // Update the current date and time every second
     const timer = interval(1000);
-    this.subscription = timer.subscribe(() => {
+    this.clockSubscription = timer.subscribe(() => {
       this.currentDateAndTime = Date.now();
     });
   }
 
   ngOnDestroy() {
     // Unsubscribe from the timer to prevent memory leaks
-    if (this.subscription) {
-      this.subscription.unsubscribe();
+    if (this.clockSubscription) {
+      this.clockSubscription.unsubscribe();
     }
   }
 
@@ -54,44 +63,64 @@ export class TimeclockComponent implements OnInit, OnDestroy {
    * Clock in/out for the employee ID
    */
   clockInOut() {
-    if (this.badgeNumber) {
-      this.timeclockService
-        .timeclock(this.badgeNumber)
-        .subscribe((response) => {
-          console.log(response);
-          if (response.status === 'success') {
-            alert(`Employee ${this.badgeNumber} has been ${response.message}`);
-            this.badgeNumber = null; // Clear the input field
-          } else {
-            alert(`Error: ${response.message}`);
-          }
-        });
-    } else {
-      alert('Please enter a valid employee ID');
-    }
+    this.timeclockService.timeclock(this.badgeNumber).subscribe({
+      next: (response) => {
+        console.log(response);
+        this.openTimeclockDialog(this.badgeNumber, response.message);
+        this.badgeNumber = '';
+      },
+      error: (error) => {
+        this.errorDialog.openErrorDialog(error);
+      },
+    });
   }
 
   /**
    * Check the status of the employee ID
    */
   checkStatus() {
-    if (this.badgeNumber) {
-      this.timeclockService
-        .checkStatus(this.badgeNumber)
-        .subscribe((response) => {
-          console.log(response);
-          if (response.status === 'success') {
-            alert(
-              `Employee ${this.badgeNumber} is currently ${
-                response.message ? 'clocked in' : 'clocked out'
-              }`
-            );
-          } else {
-            alert(`Error: ${response.message}`);
-          }
-        });
-    } else {
-      alert('Please enter a valid employee badge number');
-    }
+    this.timeclockService.checkStatus(this.badgeNumber).subscribe({
+      next: (response) => {
+        console.log(response);
+        this.openTimeclockDialog(this.badgeNumber, response.message);
+      },
+      error: (error) => {
+        this.errorDialog.openErrorDialog(error);
+      },
+    });
   }
+
+  /**
+   * Open the dialog to display the timeclock status
+   * @param timeclockStatus The timeclock status of the employee
+   */
+  openTimeclockDialog(badgeNumber: string, timeclockStatus: string): void {
+    const dialogRef = this.dialog.open(TimeclockDialog, {
+      height: '300px',
+      width: '300px',
+      enterAnimationDuration: 500,
+      exitAnimationDuration: 1000,
+      data: {
+        badgeNumber: badgeNumber,
+        timeclockStatus: timeclockStatus,
+      },
+    });
+
+    dialogRef.afterOpened().subscribe((result) => {
+      setTimeout(() => {
+        dialogRef.close();
+      }, 3500);
+    });
+  }
+}
+
+@Component({
+  selector: 'app-timeclock-dialog',
+  templateUrl: './timeclock-dialog.html',
+  styleUrl: './timeclock-dialog.scss',
+  standalone: true,
+  imports: [MatDialogTitle, MatDialogContent],
+})
+export class TimeclockDialog {
+  readonly data = inject(MAT_DIALOG_DATA);
 }
