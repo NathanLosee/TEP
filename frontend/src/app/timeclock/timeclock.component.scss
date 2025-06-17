@@ -33,6 +33,10 @@ input {
   text-align: center;
 }
 
+mat-form-field {
+  margin-bottom: 17px;
+}
+
 :host > button {
   width: 100%;
   text-align: center;

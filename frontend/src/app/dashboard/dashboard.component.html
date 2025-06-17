@@ -1,0 +1,250 @@
+<div class="dashboard-container">
+  <!-- Main Header -->
+  <mat-toolbar class="main-toolbar">
+    <div class="toolbar-content">
+      <div class="logo-section">
+        <mat-icon class="logo-icon">access_time</mat-icon>
+        <h1>TEP Timeclock</h1>
+      </div>
+      <div class="datetime-display">
+        <div class="time">{{ currentDateTime | date: "HH:mm:ss" }}</div>
+        <div class="date">{{ currentDateTime | date: "EEEE, MMMM d, y" }}</div>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <!-- Quick Actions Section -->
+  <div class="content-container">
+    <mat-grid-list
+      cols="2"
+      rowHeight="360px"
+      gutterSize="24px"
+      class="main-grid"
+    >
+      <!-- Quick Clock In/Out Card -->
+      <mat-grid-tile>
+        <mat-card class="action-card quick-clock-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon">timer</mat-icon>
+            <mat-card-title>Quick Clock In/Out</mat-card-title>
+            <mat-card-subtitle
+              >Enter your badge number to clock in or out</mat-card-subtitle
+            >
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="clock-form">
+              <mat-form-field appearance="outline" class="badge-input">
+                <mat-label>Badge Number</mat-label>
+                <input
+                  matInput
+                  [(ngModel)]="badgeNumber"
+                  placeholder="Enter badge number"
+                  (keyup.enter)="quickClockInOut()"
+                  type="text"
+                  autocomplete="off"
+                />
+                <mat-icon matSuffix>badge</mat-icon>
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions class="card-actions">
+            <button
+              mat-raised-button
+              color="primary"
+              class="action-button clock-button"
+              [disabled]="isLoading || !badgeNumber.trim()"
+              (click)="quickClockInOut()"
+            >
+              <mat-icon>schedule</mat-icon>
+              <span *ngIf="!isLoading">Clock In/Out</span>
+              <mat-progress-spinner
+                *ngIf="isLoading"
+                diameter="20"
+                mode="indeterminate"
+              >
+              </mat-progress-spinner>
+            </button>
+
+            <button
+              mat-stroked-button
+              color="accent"
+              class="action-button status-button"
+              [disabled]="isLoading || !badgeNumber.trim()"
+              (click)="checkStatus()"
+            >
+              <mat-icon>info</mat-icon>
+              Check Status
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </mat-grid-tile>
+
+      <!-- Admin Access Card -->
+      <mat-grid-tile>
+        <mat-card class="action-card admin-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="card-icon admin-icon"
+              >admin_panel_settings</mat-icon
+            >
+            <mat-card-title>Administration</mat-card-title>
+            <mat-card-subtitle *ngIf="!isAuthenticated"
+              >Login required to access admin features</mat-card-subtitle
+            >
+            <mat-card-subtitle *ngIf="isAuthenticated"
+              >Manage employees, departments, and reports</mat-card-subtitle
+            >
+          </mat-card-header>
+
+          <mat-card-content>
+            <!-- Authenticated State - Show Feature Buttons -->
+            <div class="admin-features" *ngIf="isAuthenticated">
+              <button
+                mat-button
+                class="feature-button"
+                (click)="goToEmployees()"
+              >
+                <mat-icon>people</mat-icon>
+                <span>Employee Management</span>
+              </button>
+              <button mat-button class="feature-button" (click)="goToReports()">
+                <mat-icon>assessment</mat-icon>
+                <span>Time Reports</span>
+              </button>
+              <button
+                mat-button
+                class="feature-button"
+                (click)="goToDepartments()"
+              >
+                <mat-icon>business</mat-icon>
+                <span>Department Setup</span>
+              </button>
+              <button
+                mat-button
+                class="feature-button"
+                (click)="goToOrgUnits()"
+              >
+                <mat-icon>account_tree</mat-icon>
+                <span>Org Units</span>
+              </button>
+            </div>
+
+            <!-- Non-Authenticated State - Show Login Prompt -->
+            <div class="login-prompt" *ngIf="!isAuthenticated">
+              <div class="prompt-content">
+                <mat-icon class="prompt-icon">lock</mat-icon>
+                <p class="prompt-text">
+                  Access to administrative features requires authentication.
+                </p>
+                <div class="feature-list">
+                  <div class="feature-item">
+                    <mat-icon>people</mat-icon>
+                    <span>Employee Management</span>
+                  </div>
+                  <div class="feature-item">
+                    <mat-icon>assessment</mat-icon>
+                    <span>Time Reports & Analytics</span>
+                  </div>
+                  <div class="feature-item">
+                    <mat-icon>business</mat-icon>
+                    <span>Department & Org Units</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions class="card-actions">
+            <button
+              *ngIf="!isAuthenticated"
+              mat-raised-button
+              color="accent"
+              class="action-button admin-button"
+              (click)="goToLogin()"
+            >
+              <mat-icon>login</mat-icon>
+              Admin Login
+            </button>
+
+            <button
+              *ngIf="isAuthenticated"
+              mat-raised-button
+              color="primary"
+              class="action-button admin-button"
+              (click)="goToAdminDashboard()"
+            >
+              <mat-icon>dashboard</mat-icon>
+              Open Admin Panel
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </mat-grid-tile>
+    </mat-grid-list>
+
+    <!-- Stats Overview -->
+    <div class="stats-section">
+      <h2 class="section-title">
+        <mat-icon>analytics</mat-icon>
+        Today's Overview
+      </h2>
+
+      <mat-grid-list
+        cols="5"
+        rowHeight="120px"
+        gutterSize="16px"
+        class="stats-grid"
+      >
+        <mat-grid-tile>
+          <mat-card class="stat-card">
+            <div class="stat-content">
+              <mat-icon class="stat-icon">schedule</mat-icon>
+              <div class="stat-value">--</div>
+              <div class="stat-label">Active Employees</div>
+            </div>
+          </mat-card>
+        </mat-grid-tile>
+
+        <mat-grid-tile>
+          <mat-card class="stat-card">
+            <div class="stat-content">
+              <mat-icon class="stat-icon">group</mat-icon>
+              <div class="stat-value">--</div>
+              <div class="stat-label">Total Clocked In</div>
+            </div>
+          </mat-card>
+        </mat-grid-tile>
+
+        <mat-grid-tile>
+          <mat-card class="stat-card">
+            <div class="stat-content">
+              <mat-icon class="stat-icon">business</mat-icon>
+              <div class="stat-value">6</div>
+              <div class="stat-label">Departments</div>
+            </div>
+          </mat-card>
+        </mat-grid-tile>
+
+        <mat-grid-tile>
+          <mat-card class="stat-card">
+            <div class="stat-content">
+              <mat-icon class="stat-icon">account_tree</mat-icon>
+              <div class="stat-value">6</div>
+              <div class="stat-label">Org Units</div>
+            </div>
+          </mat-card>
+        </mat-grid-tile>
+
+        <mat-grid-tile>
+          <mat-card class="stat-card">
+            <div class="stat-content">
+              <mat-icon class="stat-icon">timeline</mat-icon>
+              <div class="stat-value">--</div>
+              <div class="stat-label">Avg. Hours</div>
+            </div>
+          </mat-card>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </div>
+  </div>
+</div>

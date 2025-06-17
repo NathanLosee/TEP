@@ -1,37 +1,193 @@
-form {
+.login-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  width: 300px;
-  padding: 1rem;
-  background-color: var(--sys-surface-container-low);
-  border-radius: 1rem;
-}
-
-mat-toolbar {
-  background-color: var(--sys-tertiary-container);
-  color: var(--sys-on-tertiary-container);
-  border-radius: 1rem;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  height: 32px;
-  width: 100%;
   justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24px;
 }
 
-input {
-  text-align: center;
-}
-
-form > button {
+.login-card {
   width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    padding: 32px 24px 0 24px;
+
+    .login-header {
+      width: 100%;
+      text-align: center;
+
+      .login-icon {
+        font-size: 3rem;
+        width: 3rem;
+        height: 3rem;
+        color: var(--sys-primary);
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--sys-on-surface);
+      }
+
+      .login-subtitle {
+        margin: 0 0 16px 0;
+        color: var(--sys-on-surface-variant);
+        font-size: 0.875rem;
+        line-height: 1.4;
+      }
+
+      .demo-credentials {
+        background: var(--sys-tertiary-container);
+        color: var(--sys-on-tertiary-container);
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 8px;
+
+        .demo-title {
+          font-size: 0.75rem;
+          font-weight: 600;
+          margin-bottom: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .demo-cred {
+          font-size: 0.75rem;
+          margin: 2px 0;
+          font-family: "Roboto Mono", monospace;
+
+          strong {
+            color: var(--sys-tertiary);
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+          }
+        }
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 32px 24px 24px 24px;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .full-width {
+    width: 100%;
+  }
+
+  mat-form-field {
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 8px;
+    }
+
+    mat-icon[matSuffix] {
+      color: var(--sys-on-surface-variant);
+    }
+
+    .clear-button {
+      margin-left: 8px;
+    }
+  }
+}
+
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+
+  .login-button {
+    width: 100%;
+    height: 48px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+    background: var(--sys-primary);
+    color: var(--sys-on-primary);
+
+    mat-icon,
+    mat-progress-spinner {
+      margin-right: 8px;
+    }
+
+    &:disabled {
+      background: var(--sys-surface-variant);
+      color: var(--sys-on-surface-variant);
+    }
+
+    &:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+.login-footer {
+  margin-top: 24px;
   text-align: center;
-  margin-bottom: 1rem;
+
+  p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+
+    mat-icon {
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
 }
-form > .mat-mdc-button-base {
-  background-color: var(--sys-tertiary-container);
-  color: var(--sys-on-tertiary-container);
+
+// Responsive design
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px;
+  }
+
+  .login-card {
+    mat-card-header {
+      padding: 24px 20px 0 20px;
+
+      .login-header {
+        .login-icon {
+          font-size: 2.5rem;
+          width: 2.5rem;
+          height: 2.5rem;
+        }
+
+        h1 {
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    mat-card-content {
+      padding: 24px 20px 20px 20px;
+    }
+  }
 }
-form > .mat-mdc-button-disabled {
-  background-color: var(--sys-surface-container);
-  color: var(--sys-on-surface-container);
+
+// Animation
+.login-button {
+  transition: all 0.3s ease;
 }
