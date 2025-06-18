@@ -39,16 +39,16 @@
           />
           <mat-icon matSuffix>badge</mat-icon>
           @if (badgeNumber.value) {
-            <button
-              matSuffix
-              mat-icon-button
-              type="button"
-              aria-label="Clear"
-              (click)="badgeNumber.reset('')"
-              class="clear-button"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
+          <button
+            matSuffix
+            mat-icon-button
+            type="button"
+            aria-label="Clear"
+            (click)="badgeNumber.reset('')"
+            class="clear-button"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
           }
         </mat-form-field>
 
@@ -75,16 +75,16 @@
             }}</mat-icon>
           </button>
           @if (password.value) {
-            <button
-              matSuffix
-              mat-icon-button
-              type="button"
-              aria-label="Clear"
-              (click)="password.reset('')"
-              class="clear-button"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
+          <button
+            matSuffix
+            mat-icon-button
+            type="button"
+            aria-label="Clear"
+            (click)="password.reset('')"
+            class="clear-button"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
           }
         </mat-form-field>
 
@@ -104,11 +104,6 @@
             </mat-progress-spinner>
             <span *ngIf="!isLoading">Sign In</span>
             <span *ngIf="isLoading">Signing In...</span>
-          </button>
-
-          <button mat-button type="button" class="back-button" routerLink="/">
-            <mat-icon>arrow_back</mat-icon>
-            Back to Dashboard
           </button>
         </div>
       </form>

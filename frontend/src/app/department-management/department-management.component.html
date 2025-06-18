@@ -200,48 +200,4 @@
       </div>
     </mat-card-content>
   </mat-card>
-
-  <!-- Stats Section -->
-  <div class="stats-section">
-    <h2 class="section-title">
-      <mat-icon>analytics</mat-icon>
-      Department Overview
-    </h2>
-
-    <div class="stats-grid">
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">business</mat-icon>
-          <div class="stat-value">{{ departments.length }}</div>
-          <div class="stat-label">Total Departments</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">people</mat-icon>
-          <div class="stat-value">{{ getTotalEmployees() }}</div>
-          <div class="stat-label">Total Employees</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">trending_up</mat-icon>
-          <div class="stat-value">{{ getAverageDepartmentSize() }}</div>
-          <div class="stat-label">Avg. Dept Size</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">star</mat-icon>
-          <div class="stat-value">
-            {{ getLargestDepartment()?.name || "N/A" }}
-          </div>
-          <div class="stat-label">Largest Department</div>
-        </div>
-      </mat-card>
-    </div>
-  </div>
 </div>

@@ -1,48 +1,23 @@
 <div class="user-management-container">
   <!-- Header -->
-  <div class="header-section">
-    <div class="page-title">
-      <mat-icon class="title-icon">people</mat-icon>
-      <h1>User Account Management</h1>
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">people</mat-icon>
+        <h1>User Account Management</h1>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="showCreateUserForm()"
+          [disabled]="isLoading"
+        >
+          <mat-icon>add</mat-icon>
+          Create User
+        </button>
+      </div>
     </div>
-    <p class="page-description">
-      Manage user accounts and their role assignments for system access control
-    </p>
-  </div>
-
-  <!-- Statistics Cards -->
-  <div class="stats-section">
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">account_circle</mat-icon>
-        <div class="stat-value">{{ users.length }}</div>
-        <div class="stat-label">Total Users</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">check_circle</mat-icon>
-        <div class="stat-value">{{ getActiveUsersCount() }}</div>
-        <div class="stat-label">Active Users</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">security</mat-icon>
-        <div class="stat-value">{{ authRoles.length }}</div>
-        <div class="stat-label">Available Roles</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">key</mat-icon>
-        <div class="stat-value">{{ getTotalPermissions() }}</div>
-        <div class="stat-label">Total Permissions</div>
-      </div>
-    </mat-card>
   </div>
 
   <!-- Main Content Tabs -->
@@ -62,16 +37,6 @@
             />
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
-
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="showCreateUserForm()"
-            [disabled]="isLoading"
-          >
-            <mat-icon>add</mat-icon>
-            Create User
-          </button>
         </div>
 
         <!-- Create User Form -->

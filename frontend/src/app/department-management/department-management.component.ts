@@ -1,23 +1,23 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
   Validators,
-} from "@angular/forms";
-import { MatTableModule } from "@angular/material/table";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatDialogModule, MatDialog } from "@angular/material/dialog";
-import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
-import { MatChipsModule } from "@angular/material/chips";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+} from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 interface Department {
   id: number;
@@ -27,7 +27,7 @@ interface Department {
 }
 
 @Component({
-  selector: "app-department-management",
+  selector: 'app-department-management',
   standalone: true,
   imports: [
     CommonModule,
@@ -45,8 +45,8 @@ interface Department {
     MatTooltipModule,
     MatProgressSpinnerModule,
   ],
-  templateUrl: "./department-management.component.html",
-  styleUrl: "./department-management.component.scss",
+  templateUrl: './department-management.component.html',
+  styleUrl: './department-management.component.scss',
 })
 export class DepartmentManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -55,7 +55,7 @@ export class DepartmentManagementComponent implements OnInit {
 
   departments: Department[] = [];
   filteredDepartments: Department[] = [];
-  displayedColumns: string[] = ["name", "employee_count", "actions"];
+  displayedColumns: string[] = ['name', 'employee_count', 'actions'];
 
   searchForm: FormGroup;
   addDepartmentForm: FormGroup;
@@ -69,15 +69,15 @@ export class DepartmentManagementComponent implements OnInit {
 
   constructor() {
     this.searchForm = this.fb.group({
-      searchTerm: [""],
+      searchTerm: [''],
     });
 
     this.addDepartmentForm = this.fb.group({
-      name: ["", [Validators.required, Validators.minLength(2)]],
+      name: ['', [Validators.required, Validators.minLength(2)]],
     });
 
     this.editForm = this.fb.group({
-      name: ["", [Validators.required, Validators.minLength(2)]],
+      name: ['', [Validators.required, Validators.minLength(2)]],
     });
   }
 
@@ -104,10 +104,10 @@ export class DepartmentManagementComponent implements OnInit {
 
   filterDepartments() {
     const searchTerm =
-      this.searchForm.get("searchTerm")?.value?.toLowerCase() || "";
+      this.searchForm.get('searchTerm')?.value?.toLowerCase() || '';
 
     this.filteredDepartments = this.departments.filter((dept) =>
-      dept.name.toLowerCase().includes(searchTerm),
+      dept.name.toLowerCase().includes(searchTerm)
     );
   }
 
@@ -122,7 +122,7 @@ export class DepartmentManagementComponent implements OnInit {
     if (this.addDepartmentForm.valid) {
       const newDept: Department = {
         id: this.departments.length + 1,
-        name: this.addDepartmentForm.get("name")?.value,
+        name: this.addDepartmentForm.get('name')?.value,
         employee_count: 0,
       };
 
@@ -132,7 +132,7 @@ export class DepartmentManagementComponent implements OnInit {
       this.showAddForm = false;
       this.showSnackBar(
         `Department "${newDept.name}" created successfully`,
-        "success",
+        'success'
       );
     }
   }
@@ -142,7 +142,7 @@ export class DepartmentManagementComponent implements OnInit {
     this.selectedDepartment = department;
     this.showEmployeeList = true;
     this.showEditForm = false;
-    this.showSnackBar(`Viewing employees for ${department.name}`, "info");
+    this.showSnackBar(`Viewing employees for ${department.name}`, 'info');
   }
 
   editDepartment(department: Department) {
@@ -158,7 +158,7 @@ export class DepartmentManagementComponent implements OnInit {
 
   deleteDepartment(department: Department) {
     const confirmDelete = confirm(
-      `Are you sure you want to delete ${department.name}? This action cannot be undone.`,
+      `Are you sure you want to delete ${department.name}? This action cannot be undone.`
     );
 
     if (confirmDelete) {
@@ -167,14 +167,14 @@ export class DepartmentManagementComponent implements OnInit {
       // Remove department from the array (simulating API call)
       setTimeout(() => {
         const index = this.departments.findIndex(
-          (dept) => dept.id === department.id,
+          (dept) => dept.id === department.id
         );
         if (index > -1) {
           this.departments.splice(index, 1);
           this.filterDepartments();
           this.showSnackBar(
             `${department.name} has been deleted successfully`,
-            "success",
+            'success'
           );
         }
         this.isLoading = false;
@@ -191,7 +191,7 @@ export class DepartmentManagementComponent implements OnInit {
       // Update department data (simulating API call)
       setTimeout(() => {
         const index = this.departments.findIndex(
-          (dept) => dept.id === this.selectedDepartment!.id,
+          (dept) => dept.id === this.selectedDepartment!.id
         );
         if (index > -1) {
           this.departments[index] = {
@@ -199,7 +199,7 @@ export class DepartmentManagementComponent implements OnInit {
             name: formData.name,
           };
           this.filterDepartments();
-          this.showSnackBar("Department updated successfully", "success");
+          this.showSnackBar('Department updated successfully', 'success');
           this.cancelEdit();
         }
         this.isLoading = false;
@@ -214,34 +214,11 @@ export class DepartmentManagementComponent implements OnInit {
     this.editForm?.reset();
   }
 
-  // Statistics methods
-  getTotalEmployees(): number {
-    return this.departments.reduce(
-      (total, dept) => total + (dept.employee_count || 0),
-      0,
-    );
-  }
-
-  getAverageDepartmentSize(): number {
-    if (this.departments.length === 0) return 0;
-    return Math.round(this.getTotalEmployees() / this.departments.length);
-  }
-
-  getLargestDepartment(): Department {
-    if (this.departments.length === 0)
-      return { id: 0, name: "N/A", employee_count: 0 };
-    return this.departments.reduce((largest, dept) =>
-      (dept.employee_count || 0) > (largest.employee_count || 0)
-        ? dept
-        : largest,
-    );
-  }
-
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info",
+    type: 'success' | 'error' | 'info' = 'info'
   ) {
-    this.snackBar.open(message, "Close", {
+    this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });
@@ -251,32 +228,32 @@ export class DepartmentManagementComponent implements OnInit {
     return [
       {
         id: 1,
-        name: "Information Technology",
+        name: 'Information Technology',
         employee_count: 12,
       },
       {
         id: 2,
-        name: "Human Resources",
+        name: 'Human Resources',
         employee_count: 5,
       },
       {
         id: 3,
-        name: "Production",
+        name: 'Production',
         employee_count: 25,
       },
       {
         id: 4,
-        name: "Quality Assurance",
+        name: 'Quality Assurance',
         employee_count: 8,
       },
       {
         id: 5,
-        name: "Administration",
+        name: 'Administration',
         employee_count: 6,
       },
       {
         id: 6,
-        name: "Sales & Marketing",
+        name: 'Sales & Marketing',
         employee_count: 15,
       },
     ];

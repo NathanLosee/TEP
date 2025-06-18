@@ -37,15 +37,6 @@
       display: flex;
       gap: 12px;
 
-      .import-btn,
-      .export-btn {
-        border: 2px solid var(--sys-outline);
-
-        mat-icon {
-          margin-right: 8px;
-        }
-      }
-
       .add-btn {
         mat-icon {
           margin-right: 8px;
@@ -444,72 +435,6 @@
             color: var(--sys-on-secondary-container);
             font-size: 0.75rem;
           }
-        }
-      }
-    }
-  }
-}
-
-// Statistics Section
-.stats-section {
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    color: var(--sys-on-surface);
-    font-size: 1.5rem;
-    font-weight: 600;
-
-    mat-icon {
-      font-size: 1.8rem;
-      width: 1.8rem;
-      height: 1.8rem;
-      color: var(--sys-primary);
-    }
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-
-    .stat-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      .stat-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        gap: 12px;
-
-        .stat-icon {
-          font-size: 2.5rem;
-          width: 2.5rem;
-          height: 2.5rem;
-          color: var(--sys-primary);
-        }
-
-        .stat-value {
-          font-size: 1.8rem;
-          font-weight: 700;
-          color: var(--sys-on-surface);
-        }
-
-        .stat-label {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--sys-on-surface-variant);
-          text-align: center;
         }
       }
     }

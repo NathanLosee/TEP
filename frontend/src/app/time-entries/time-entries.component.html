@@ -7,10 +7,6 @@
         <h1>Time Entries</h1>
       </div>
       <div class="header-actions">
-        <button mat-stroked-button (click)="exportEntries()" class="export-btn">
-          <mat-icon>download</mat-icon>
-          Export
-        </button>
         <button
           mat-raised-button
           color="primary"
@@ -21,6 +17,43 @@
           Manual Entry
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <div class="stat-content">
+          <mat-icon class="stat-icon">schedule</mat-icon>
+          <div class="stat-value">{{ filteredEntries.length }}</div>
+          <div class="stat-label">Total Entries</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-content">
+          <mat-icon class="stat-icon active-icon">play_circle</mat-icon>
+          <div class="stat-value">{{ getActiveEntriesCount() }}</div>
+          <div class="stat-label">Currently Active</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-content">
+          <mat-icon class="stat-icon complete-icon">check_circle</mat-icon>
+          <div class="stat-value">{{ getCompletedEntriesCount() }}</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <div class="stat-content">
+          <mat-icon class="stat-icon warning-icon">warning</mat-icon>
+          <div class="stat-value">{{ getIncompleteEntriesCount() }}</div>
+          <div class="stat-label">Incomplete</div>
+        </div>
+      </mat-card>
     </div>
   </div>
 
@@ -134,10 +167,10 @@
             <td mat-cell *matCellDef="let entry">
               <div class="time-cell">
                 <div class="time-date">
-                  {{ entry.clock_in | date: "MMM d, y" }}
+                  {{ entry.clock_in | date : "MMM d, y" }}
                 </div>
                 <div class="time-value">
-                  {{ entry.clock_in | date: "HH:mm" }}
+                  {{ entry.clock_in | date : "HH:mm" }}
                 </div>
               </div>
             </td>
@@ -149,10 +182,10 @@
             <td mat-cell *matCellDef="let entry">
               <div class="time-cell" *ngIf="entry.clock_out; else noClockOut">
                 <div class="time-date">
-                  {{ entry.clock_out | date: "MMM d, y" }}
+                  {{ entry.clock_out | date : "MMM d, y" }}
                 </div>
                 <div class="time-value">
-                  {{ entry.clock_out | date: "HH:mm" }}
+                  {{ entry.clock_out | date : "HH:mm" }}
                 </div>
               </div>
               <ng-template #noClockOut>
@@ -173,7 +206,7 @@
               <div class="hours-cell">
                 <mat-icon class="hours-icon">timer</mat-icon>
                 <span class="hours-value"
-                  >{{ entry.total_hours || 0 | number: "1.2-2" }}h</span
+                  >{{ entry.total_hours || 0 | number : "1.2-2" }}h</span
                 >
               </div>
             </td>
@@ -190,16 +223,16 @@
                       entry.status === "clocked_in"
                         ? "play_circle"
                         : entry.status === "clocked_out"
-                          ? "check_circle"
-                          : "warning"
+                        ? "check_circle"
+                        : "warning"
                     }}
                   </mat-icon>
                   {{
                     entry.status === "clocked_in"
                       ? "Active"
                       : entry.status === "clocked_out"
-                        ? "Complete"
-                        : "Incomplete"
+                      ? "Complete"
+                      : "Incomplete"
                   }}
                 </mat-chip>
               </mat-chip-listbox>
@@ -263,46 +296,4 @@
       </div>
     </mat-card-content>
   </mat-card>
-
-  <!-- Summary Stats -->
-  <div class="stats-section">
-    <h2 class="section-title">
-      <mat-icon>analytics</mat-icon>
-      Summary Statistics
-    </h2>
-
-    <div class="stats-grid">
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">schedule</mat-icon>
-          <div class="stat-value">{{ filteredEntries.length }}</div>
-          <div class="stat-label">Total Entries</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon active-icon">play_circle</mat-icon>
-          <div class="stat-value">{{ getActiveEntriesCount() }}</div>
-          <div class="stat-label">Currently Active</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon complete-icon">check_circle</mat-icon>
-          <div class="stat-value">{{ getCompletedEntriesCount() }}</div>
-          <div class="stat-label">Completed</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon warning-icon">warning</mat-icon>
-          <div class="stat-value">{{ getIncompleteEntriesCount() }}</div>
-          <div class="stat-label">Incomplete</div>
-        </div>
-      </mat-card>
-    </div>
-  </div>
 </div>

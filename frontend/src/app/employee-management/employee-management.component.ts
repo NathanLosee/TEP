@@ -1,27 +1,27 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
   Validators,
-} from "@angular/forms";
-import { MatTableModule } from "@angular/material/table";
-import { MatPaginatorModule } from "@angular/material/paginator";
-import { MatSortModule } from "@angular/material/sort";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatSelectModule } from "@angular/material/select";
-import { MatDialogModule, MatDialog } from "@angular/material/dialog";
-import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
-import { MatChipsModule } from "@angular/material/chips";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatSlideToggleModule } from "@angular/material/slide-toggle";
+} from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 interface Employee {
   id: number;
@@ -40,7 +40,7 @@ interface Employee {
 }
 
 @Component({
-  selector: "app-employee-management",
+  selector: 'app-employee-management',
   standalone: true,
   imports: [
     CommonModule,
@@ -62,8 +62,8 @@ interface Employee {
     MatProgressSpinnerModule,
     MatSlideToggleModule,
   ],
-  templateUrl: "./employee-management.component.html",
-  styleUrl: "./employee-management.component.scss",
+  templateUrl: './employee-management.component.html',
+  styleUrl: './employee-management.component.scss',
 })
 export class EmployeeManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -73,14 +73,14 @@ export class EmployeeManagementComponent implements OnInit {
   employees: Employee[] = [];
   filteredEmployees: Employee[] = [];
   displayedColumns: string[] = [
-    "badge_number",
-    "name",
-    "payroll_type",
-    "org_unit",
-    "departments",
-    "holiday_group",
-    "status",
-    "actions",
+    'badge_number',
+    'name',
+    'payroll_type',
+    'org_unit',
+    'departments',
+    'holiday_group',
+    'status',
+    'actions',
   ];
 
   searchForm: FormGroup;
@@ -88,28 +88,28 @@ export class EmployeeManagementComponent implements OnInit {
 
   // Search filters
   searchFilters = {
-    badge_number: "",
-    first_name: "",
-    last_name: "",
-    department_name: "",
-    org_unit_name: "",
+    badge_number: '',
+    first_name: '',
+    last_name: '',
+    department_name: '',
+    org_unit_name: '',
   };
 
   constructor() {
     this.searchForm = this.fb.group({
-      searchTerm: [""],
-      department: [""],
-      org_unit: [""],
-      status: [""],
+      searchTerm: [''],
+      department: [''],
+      org_unit: [''],
+      status: [''],
     });
 
     // Initialize empty edit form
     this.editForm = this.fb.group({
-      badge_number: ["", [Validators.required]],
-      first_name: ["", [Validators.required]],
-      last_name: ["", [Validators.required]],
-      payroll_type: ["", [Validators.required]],
-      workweek_type: ["", [Validators.required]],
+      badge_number: ['', [Validators.required]],
+      first_name: ['', [Validators.required]],
+      last_name: ['', [Validators.required]],
+      payroll_type: ['', [Validators.required]],
+      workweek_type: ['', [Validators.required]],
       time_type: [false],
       allow_clocking: [true],
       allow_delete: [true],
@@ -141,7 +141,7 @@ export class EmployeeManagementComponent implements OnInit {
     const filters = this.searchForm.value;
 
     this.filteredEmployees = this.employees.filter((employee) => {
-      const searchTerm = filters.searchTerm?.toLowerCase() || "";
+      const searchTerm = filters.searchTerm?.toLowerCase() || '';
       const matchesSearch =
         !searchTerm ||
         employee.badge_number.toLowerCase().includes(searchTerm) ||
@@ -157,8 +157,8 @@ export class EmployeeManagementComponent implements OnInit {
 
       const matchesStatus =
         !filters.status ||
-        (filters.status === "active" && employee.allow_clocking) ||
-        (filters.status === "inactive" && !employee.allow_clocking);
+        (filters.status === 'active' && employee.allow_clocking) ||
+        (filters.status === 'inactive' && !employee.allow_clocking);
 
       return (
         matchesSearch && matchesDepartment && matchesOrgUnit && matchesStatus
@@ -168,7 +168,7 @@ export class EmployeeManagementComponent implements OnInit {
 
   addEmployee() {
     // Open add employee dialog
-    this.showSnackBar("Add employee feature coming soon", "info");
+    this.showSnackBar('Add employee feature coming soon', 'info');
   }
 
   selectedEmployee: Employee | null = null;
@@ -202,12 +202,12 @@ export class EmployeeManagementComponent implements OnInit {
 
   deleteEmployee(employee: Employee) {
     if (!employee.allow_delete) {
-      this.showSnackBar("This employee cannot be deleted", "error");
+      this.showSnackBar('This employee cannot be deleted', 'error');
       return;
     }
 
     const confirmDelete = confirm(
-      `Are you sure you want to delete ${employee.first_name} ${employee.last_name}? This action cannot be undone.`,
+      `Are you sure you want to delete ${employee.first_name} ${employee.last_name}? This action cannot be undone.`
     );
 
     if (confirmDelete) {
@@ -221,7 +221,7 @@ export class EmployeeManagementComponent implements OnInit {
           this.filterEmployees();
           this.showSnackBar(
             `${employee.first_name} ${employee.last_name} has been deleted successfully`,
-            "success",
+            'success'
           );
         }
         this.isLoading = false;
@@ -238,7 +238,7 @@ export class EmployeeManagementComponent implements OnInit {
       // Update employee data (simulating API call)
       setTimeout(() => {
         const index = this.employees.findIndex(
-          (emp) => emp.id === this.selectedEmployee!.id,
+          (emp) => emp.id === this.selectedEmployee!.id
         );
         if (index > -1) {
           this.employees[index] = {
@@ -246,7 +246,7 @@ export class EmployeeManagementComponent implements OnInit {
             ...formData,
           };
           this.filterEmployees();
-          this.showSnackBar("Employee updated successfully", "success");
+          this.showSnackBar('Employee updated successfully', 'success');
           this.cancelEdit();
         }
         this.isLoading = false;
@@ -261,15 +261,11 @@ export class EmployeeManagementComponent implements OnInit {
     this.editForm?.reset();
   }
 
-  exportEmployees() {
-    this.showSnackBar("Export functionality coming soon", "info");
-  }
-
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info",
+    type: 'success' | 'error' | 'info' = 'info'
   ) {
-    this.snackBar.open(message, "Close", {
+    this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });
@@ -279,45 +275,45 @@ export class EmployeeManagementComponent implements OnInit {
     return [
       {
         id: 1,
-        badge_number: "EMP001",
-        first_name: "John",
-        last_name: "Doe",
-        payroll_type: "Salary",
-        workweek_type: "Standard",
+        badge_number: 'EMP001',
+        first_name: 'John',
+        last_name: 'Doe',
+        payroll_type: 'Salary',
+        workweek_type: 'Standard',
         time_type: true,
         allow_clocking: true,
         allow_delete: true,
-        org_unit: { name: "Corporate" },
-        departments: [{ name: "IT" }, { name: "Admin" }],
-        holiday_group: { name: "Standard US Holidays" },
+        org_unit: { name: 'Corporate' },
+        departments: [{ name: 'IT' }, { name: 'Admin' }],
+        holiday_group: { name: 'Standard US Holidays' },
       },
       {
         id: 2,
-        badge_number: "EMP002",
-        first_name: "Jane",
-        last_name: "Smith",
-        payroll_type: "Hourly",
-        workweek_type: "Flexible",
+        badge_number: 'EMP002',
+        first_name: 'Jane',
+        last_name: 'Smith',
+        payroll_type: 'Hourly',
+        workweek_type: 'Flexible',
         time_type: false,
         allow_clocking: true,
         allow_delete: true,
-        org_unit: { name: "Manufacturing" },
-        departments: [{ name: "Production" }],
-        holiday_group: { name: "Manufacturing Holidays" },
+        org_unit: { name: 'Manufacturing' },
+        departments: [{ name: 'Production' }],
+        holiday_group: { name: 'Manufacturing Holidays' },
       },
       {
         id: 3,
-        badge_number: "EMP003",
-        first_name: "Mike",
-        last_name: "Johnson",
-        payroll_type: "Salary",
-        workweek_type: "Standard",
+        badge_number: 'EMP003',
+        first_name: 'Mike',
+        last_name: 'Johnson',
+        payroll_type: 'Salary',
+        workweek_type: 'Standard',
         time_type: true,
         allow_clocking: false,
         allow_delete: false,
-        org_unit: { name: "Corporate" },
-        departments: [{ name: "HR" }],
-        holiday_group: { name: "Corporate Holidays" },
+        org_unit: { name: 'Corporate' },
+        departments: [{ name: 'HR' }],
+        holiday_group: { name: 'Corporate Holidays' },
       },
     ];
   }

@@ -8,22 +8,6 @@
       </div>
       <div class="header-actions">
         <button
-          mat-stroked-button
-          (click)="importHolidays()"
-          class="import-btn"
-        >
-          <mat-icon>upload</mat-icon>
-          Import
-        </button>
-        <button
-          mat-stroked-button
-          (click)="exportHolidaySchedule()"
-          class="export-btn"
-        >
-          <mat-icon>download</mat-icon>
-          Export Schedule
-        </button>
-        <button
           mat-raised-button
           color="primary"
           (click)="toggleAddForm()"
@@ -124,7 +108,9 @@
             <table mat-table [dataSource]="filteredGroups" class="groups-table">
               <!-- Name Column -->
               <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Group Name</th>
+                <th mat-header-cell *matHeaderCellDef>
+                  Group Name ({{ filteredGroups.length }})
+                </th>
                 <td mat-cell *matCellDef="let group">
                   <div class="group-cell">
                     <mat-icon class="group-icon">event</mat-icon>
@@ -249,14 +235,14 @@
                       <div class="holiday-info">
                         <div class="holiday-name">{{ holiday.name }}</div>
                         <div class="holiday-dates">
-                          {{ holiday.start_date | date: "MMM d, y" }}
+                          {{ holiday.start_date | date : "MMM d, y" }}
                           <span
                             *ngIf="
                               holiday.start_date.getTime() !==
                               holiday.end_date.getTime()
                             "
                           >
-                            - {{ holiday.end_date | date: "MMM d, y" }}
+                            - {{ holiday.end_date | date : "MMM d, y" }}
                           </span>
                           <mat-chip class="duration-chip"
                             >{{ holiday.days_count }} day{{
@@ -293,7 +279,10 @@
                   *ngIf="selectedGroup?.id === group.id; else addHolidayButton"
                   <div
                     class="add-holiday-section"
-                    *ngIf="selectedGroup?.id === group.id; else addHolidayButton"
+                    *ngIf="
+                      selectedGroup?.id === group.id;
+                      else addHolidayButton
+                    "
                   >
                     <form
                       [formGroup]="addHolidayForm"
@@ -411,7 +400,7 @@
                   <div class="holiday-details">
                     <div class="holiday-name">{{ holiday.name }}</div>
                     <div class="holiday-date">
-                      {{ holiday.start_date | date: "EEEE, MMMM d, y" }}
+                      {{ holiday.start_date | date : "EEEE, MMMM d, y" }}
                     </div>
                     <div
                       class="holiday-duration"
@@ -435,48 +424,6 @@
       </mat-tab>
     </mat-tab-group>
   </mat-card>
-
-  <!-- Statistics Overview -->
-  <div class="stats-section">
-    <h2 class="section-title">
-      <mat-icon>analytics</mat-icon>
-      Holiday Statistics
-    </h2>
-
-    <div class="stats-grid">
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">event</mat-icon>
-          <div class="stat-value">{{ getTotalHolidayGroups() }}</div>
-          <div class="stat-label">Holiday Groups</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">calendar_today</mat-icon>
-          <div class="stat-value">{{ getTotalHolidays() }}</div>
-          <div class="stat-label">Total Holidays</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">people</mat-icon>
-          <div class="stat-value">{{ getTotalEmployeesCovered() }}</div>
-          <div class="stat-label">Employees Covered</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">trending_up</mat-icon>
-          <div class="stat-value">{{ getAverageHolidaysPerGroup() }}</div>
-          <div class="stat-label">Avg Holidays/Group</div>
-        </div>
-      </mat-card>
-    </div>
-  </div>
 
   <!-- Edit Holiday Group Form -->
   <mat-card *ngIf="showEditForm && selectedGroup" class="edit-form-card">
@@ -523,8 +470,8 @@
               <div class="holiday-info">
                 <div class="holiday-name">{{ holiday.name }}</div>
                 <div class="holiday-dates">
-                  {{ holiday.start_date | date: "mediumDate" }} -
-                  {{ holiday.end_date | date: "mediumDate" }}
+                  {{ holiday.start_date | date : "mediumDate" }} -
+                  {{ holiday.end_date | date : "mediumDate" }}
                 </div>
                 <div class="holiday-meta">
                   {{ holiday.days_count }} days
@@ -616,8 +563,8 @@
             <div class="holiday-dates">
               <mat-icon>date_range</mat-icon>
               <span
-                >{{ holiday.start_date | date: "mediumDate" }} -
-                {{ holiday.end_date | date: "mediumDate" }}</span
+                >{{ holiday.start_date | date : "mediumDate" }} -
+                {{ holiday.end_date | date : "mediumDate" }}</span
               >
             </div>
             <div class="holiday-duration">

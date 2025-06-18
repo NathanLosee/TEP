@@ -45,8 +45,8 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Update the current date and time every second
-    const timer = interval(1000);
+    // Update the current date and time every minute
+    const timer = interval(60000);
     this.clockSubscription = timer.subscribe(() => {
       this.currentDateAndTime = Date.now();
     });

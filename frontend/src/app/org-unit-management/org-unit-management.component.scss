@@ -121,16 +121,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   .search-form {
-    .search-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-      align-items: center;
-
-      .search-field,
-      .filter-field {
-        width: 100%;
-      }
+    .search-field {
+      width: 100%;
+      max-width: 400px;
     }
   }
 }

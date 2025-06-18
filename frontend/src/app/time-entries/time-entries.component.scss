@@ -54,6 +54,68 @@
   }
 }
 
+.stats-section {
+  margin-bottom: 24px;
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+
+    .stat-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .stat-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        gap: 12px;
+
+        .stat-icon {
+          font-size: 2.5rem;
+          width: 2.5rem;
+          height: 2.5rem;
+          color: var(--sys-primary);
+
+          &.active-icon {
+            color: var(--sys-tertiary);
+          }
+
+          &.complete-icon {
+            color: var(--sys-primary);
+          }
+
+          &.warning-icon {
+            color: var(--sys-error);
+          }
+        }
+
+        .stat-value {
+          font-size: 2rem;
+          font-weight: 700;
+          color: var(--sys-on-surface);
+        }
+
+        .stat-label {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--sys-on-surface-variant);
+          text-align: center;
+        }
+      }
+    }
+  }
+}
+
 .filter-card {
   margin-bottom: 24px;
   border-radius: 12px;
@@ -83,7 +145,6 @@
 }
 
 .table-card {
-  margin-bottom: 24px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -135,11 +196,13 @@
 
     // Row status styling
     tr.status-active {
-      border-left: 4px solid var(--sys-primary);
+      color: var(--sys-tertiary);
+      border-left: 4px solid var(--sys-tertiary);
     }
 
     tr.status-complete {
-      border-left: 4px solid var(--sys-tertiary);
+      color: var(--sys-primary);
+      border-left: 4px solid var(--sys-primary);
     }
 
     tr.status-warning {
@@ -155,7 +218,6 @@
   gap: 8px;
 
   .badge-icon {
-    color: var(--sys-primary);
     font-size: 1.2rem;
     width: 1.2rem;
     height: 1.2rem;
@@ -173,7 +235,6 @@
   gap: 8px;
 
   .employee-icon {
-    color: var(--sys-on-surface-variant);
     font-size: 1.1rem;
     width: 1.1rem;
     height: 1.1rem;
@@ -183,7 +244,6 @@
 .time-cell {
   .time-date {
     font-size: 0.75rem;
-    color: var(--sys-on-surface-variant);
     margin-bottom: 2px;
   }
 
@@ -191,7 +251,6 @@
     font-weight: 600;
     font-family: "Roboto Mono", monospace;
     font-size: 0.9rem;
-    color: var(--sys-on-surface);
   }
 }
 
@@ -199,7 +258,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--sys-primary);
 
   mat-icon {
     font-size: 1.1rem;
@@ -219,7 +277,6 @@
   gap: 8px;
 
   .hours-icon {
-    color: var(--sys-tertiary);
     font-size: 1.1rem;
     width: 1.1rem;
     height: 1.1rem;
@@ -233,20 +290,20 @@
 
 // Status chip styles
 .status-active {
-  background: var(--sys-primary-container);
-  color: var(--sys-on-primary-container);
-
-  mat-icon {
-    color: var(--sys-primary);
-  }
-}
-
-.status-complete {
   background: var(--sys-tertiary-container);
   color: var(--sys-on-tertiary-container);
 
   mat-icon {
     color: var(--sys-tertiary);
+  }
+}
+
+.status-complete {
+  background: var(--sys-primary-container);
+  color: var(--sys-on-primary-container);
+
+  mat-icon {
+    color: var(--sys-primary);
   }
 }
 
@@ -321,84 +378,6 @@
   button {
     mat-icon {
       margin-right: 8px;
-    }
-  }
-}
-
-// Summary Stats
-.stats-section {
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    color: var(--sys-on-surface);
-    font-size: 1.5rem;
-    font-weight: 600;
-
-    mat-icon {
-      font-size: 1.8rem;
-      width: 1.8rem;
-      height: 1.8rem;
-      color: var(--sys-primary);
-    }
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-
-    .stat-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      .stat-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        gap: 12px;
-
-        .stat-icon {
-          font-size: 2.5rem;
-          width: 2.5rem;
-          height: 2.5rem;
-          color: var(--sys-primary);
-
-          &.active-icon {
-            color: var(--sys-primary);
-          }
-
-          &.complete-icon {
-            color: var(--sys-tertiary);
-          }
-
-          &.warning-icon {
-            color: var(--sys-error);
-          }
-        }
-
-        .stat-value {
-          font-size: 2rem;
-          font-weight: 700;
-          color: var(--sys-on-surface);
-        }
-
-        .stat-label {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--sys-on-surface-variant);
-          text-align: center;
-        }
-      }
     }
   }
 }

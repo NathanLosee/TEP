@@ -2,8 +2,55 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .page-icon {
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+        color: var(--sys-primary);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--sys-on-surface);
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+
+      .export-btn {
+        border: 2px solid var(--sys-outline);
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+
+      .add-btn {
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
 }
 
 .header-section {
@@ -45,7 +92,6 @@
   margin-bottom: 32px;
 
   .stat-card {
-    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -86,7 +132,6 @@
 }
 
 .main-tabs {
-  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);

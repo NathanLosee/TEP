@@ -5,240 +5,13 @@
       <div class="welcome-text">
         <h1>Welcome to TEP Admin</h1>
         <p class="welcome-subtitle">
-          {{ currentDateTime | date: "EEEE, MMMM d, y" }} •
-          {{ currentDateTime | date: "h:mm a" }}
+          {{ currentDateAndTime | date : "EEEE, MMMM d, yyyy - H:mmaa" }}
         </p>
       </div>
       <div class="admin-avatar">
         <mat-icon class="avatar-icon">admin_panel_settings</mat-icon>
       </div>
     </div>
-  </div>
-
-  <!-- Key Metrics -->
-  <div class="metrics-section">
-    <h2 class="section-title">
-      <mat-icon>analytics</mat-icon>
-      Key Metrics
-    </h2>
-
-    <mat-grid-list
-      cols="6"
-      rowHeight="140px"
-      gutterSize="16px"
-      class="metrics-grid"
-    >
-      <!-- Employees Metric -->
-      <mat-grid-tile>
-        <mat-card class="metric-card employee-card">
-          <div class="metric-header">
-            <mat-icon class="metric-icon">people</mat-icon>
-            <h3>Employees</h3>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ dashboardStats.employees.total }}</div>
-            <div class="metric-breakdown">
-              <div class="breakdown-item">
-                <span class="breakdown-label">Active:</span>
-                <span class="breakdown-value active">{{
-                  dashboardStats.employees.active
-                }}</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">New this month:</span>
-                <span class="breakdown-value new"
-                  >+{{ dashboardStats.employees.newThisMonth }}</span
-                >
-              </div>
-            </div>
-          </div>
-        </mat-card>
-      </mat-grid-tile>
-
-      <!-- Departments Metric -->
-      <mat-grid-tile>
-        <mat-card class="metric-card department-card">
-          <div class="metric-header">
-            <mat-icon class="metric-icon">business</mat-icon>
-            <h3>Departments</h3>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">
-              {{ dashboardStats.departments.total }}
-            </div>
-            <div class="metric-breakdown">
-              <div class="breakdown-item">
-                <span class="breakdown-label">All active</span>
-                <mat-icon class="status-icon success">check_circle</mat-icon>
-              </div>
-            </div>
-          </div>
-        </mat-card>
-      </mat-grid-tile>
-
-      <!-- Org Units Metric -->
-      <mat-grid-tile>
-        <mat-card class="metric-card orgunit-card">
-          <div class="metric-header">
-            <mat-icon class="metric-icon">account_tree</mat-icon>
-            <h3>Org Units</h3>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ dashboardStats.orgUnits.total }}</div>
-            <div class="metric-breakdown">
-              <div class="breakdown-item">
-                <span class="breakdown-label">Locations:</span>
-                <span class="breakdown-value">{{
-                  dashboardStats.orgUnits.locations
-                }}</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Top level:</span>
-                <span class="breakdown-value">{{
-                  dashboardStats.orgUnits.topLevel
-                }}</span>
-              </div>
-            </div>
-          </div>
-        </mat-card>
-      </mat-grid-tile>
-
-      <!-- User Accounts Metric -->
-      <mat-grid-tile>
-        <mat-card class="metric-card user-card">
-          <div class="metric-header">
-            <mat-icon class="metric-icon">account_circle</mat-icon>
-            <h3>User Accounts</h3>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ dashboardStats.users.total }}</div>
-            <div class="metric-breakdown">
-              <div class="breakdown-item">
-                <span class="breakdown-label">Active:</span>
-                <span class="breakdown-value active">{{
-                  dashboardStats.users.active
-                }}</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">New this week:</span>
-                <span class="breakdown-value new"
-                  >+{{ dashboardStats.users.newThisWeek }}</span
-                >
-              </div>
-            </div>
-          </div>
-        </mat-card>
-      </mat-grid-tile>
-
-      <!-- Auth Roles Metric -->
-      <mat-grid-tile>
-        <mat-card class="metric-card authrole-card">
-          <div class="metric-header">
-            <mat-icon class="metric-icon">security</mat-icon>
-            <h3>Auth Roles</h3>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">{{ dashboardStats.authRoles.total }}</div>
-            <div class="metric-breakdown">
-              <div class="breakdown-item">
-                <span class="breakdown-label">Permissions:</span>
-                <span class="breakdown-value">{{
-                  dashboardStats.authRoles.totalPermissions
-                }}</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Assigned users:</span>
-                <span class="breakdown-value">{{
-                  dashboardStats.authRoles.assignedUsers
-                }}</span>
-              </div>
-            </div>
-          </div>
-        </mat-card>
-      </mat-grid-tile>
-
-      <!-- Timeclock Metric -->
-      <mat-grid-tile>
-        <mat-card class="metric-card timeclock-card">
-          <div class="metric-header">
-            <mat-icon class="metric-icon">schedule</mat-icon>
-            <h3>Active Now</h3>
-          </div>
-          <div class="metric-content">
-            <div class="metric-value">
-              {{ dashboardStats.timeclock.currentlyClocked }}
-            </div>
-            <div class="metric-breakdown">
-              <div class="breakdown-item">
-                <span class="breakdown-label">Entries today:</span>
-                <span class="breakdown-value">{{
-                  dashboardStats.timeclock.totalEntriesToday
-                }}</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Avg hours:</span>
-                <span class="breakdown-value"
-                  >{{ dashboardStats.timeclock.avgHoursPerDay }}h</span
-                >
-              </div>
-            </div>
-          </div>
-        </mat-card>
-      </mat-grid-tile>
-    </mat-grid-list>
-  </div>
-
-  <!-- Main Content Grid -->
-  <div class="content-grid">
-    <!-- Quick Actions -->
-    <mat-card class="quick-actions-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>flash_on</mat-icon>
-          Quick Actions
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="actions-grid">
-          <button
-            *ngFor="let action of quickActions"
-            mat-raised-button
-            [color]="action.color"
-            [routerLink]="action.route"
-            class="action-button"
-          >
-            <mat-icon>{{ action.icon }}</mat-icon>
-            <span>{{ action.title }}</span>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Recent Activity -->
-    <mat-card class="activity-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>history</mat-icon>
-          Recent Activity
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="activity-list">
-          <div *ngFor="let activity of recentActivity" class="activity-item">
-            <div class="activity-icon">
-              <mat-icon [class]="'activity-icon-' + activity.type">{{
-                activity.icon
-              }}</mat-icon>
-            </div>
-            <div class="activity-content">
-              <div class="activity-action">{{ activity.action }}</div>
-              <div class="activity-detail">{{ activity.detail }}</div>
-              <div class="activity-time">{{ activity.time }}</div>
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
   </div>
 
   <!-- System Status -->
@@ -259,7 +32,7 @@
           </div>
         </div>
         <div class="status-item">
-          <div class="status-label">Timeclock Service</div>
+          <div class="status-label">Backend Server</div>
           <div class="status-indicator">
             <mat-icon class="status-icon success">check_circle</mat-icon>
             <span>Running</span>
@@ -277,6 +50,32 @@
           <div class="status-indicator">
             <mat-icon class="status-icon warning">schedule</mat-icon>
             <span>2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Recent Activity -->
+  <mat-card class="activity-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>history</mat-icon>
+        Recent Activity
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="activity-list">
+        <div *ngFor="let activity of recentActivity" class="activity-item">
+          <div class="activity-icon">
+            <mat-icon [class]="'activity-icon-' + activity.type">{{
+              activity.icon
+            }}</mat-icon>
+          </div>
+          <div class="activity-content">
+            <div class="activity-action">{{ activity.action }}</div>
+            <div class="activity-detail">{{ activity.detail }}</div>
+            <div class="activity-time">{{ activity.time }}</div>
           </div>
         </div>
       </div>

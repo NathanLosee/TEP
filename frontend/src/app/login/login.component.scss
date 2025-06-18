@@ -1,17 +1,16 @@
 .login-container {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--sys-surface-container-low);
   padding: 24px;
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--sys-tertiary-container);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -27,7 +26,7 @@
         font-size: 3rem;
         width: 3rem;
         height: 3rem;
-        color: var(--sys-primary);
+        color: var(--sys-on-tertiary-container);
         margin-bottom: 16px;
       }
 
@@ -35,7 +34,7 @@
         margin: 0 0 8px 0;
         font-size: 1.5rem;
         font-weight: 600;
-        color: var(--sys-on-surface);
+        color: var(--sys-on-tertiary-container);
       }
 
       .login-subtitle {

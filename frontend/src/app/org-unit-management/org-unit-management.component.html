@@ -7,10 +7,6 @@
         <h1>Organizational Units</h1>
       </div>
       <div class="header-actions">
-        <button mat-stroked-button class="hierarchy-btn">
-          <mat-icon>hub</mat-icon>
-          View Hierarchy
-        </button>
         <button
           mat-raised-button
           color="primary"
@@ -61,10 +57,7 @@
             <mat-label>Parent Unit</mat-label>
             <mat-select formControlName="parent_id">
               <mat-option [value]="">None (Top Level)</mat-option>
-              <mat-option
-                *ngFor="let unit of orgUnits"
-                [value]="unit.id"
-              >
+              <mat-option *ngFor="let unit of orgUnits" [value]="unit.id">
                 {{ unit.name }}
               </mat-option>
             </mat-select>
@@ -134,19 +127,9 @@
             <input
               matInput
               formControlName="searchTerm"
-              placeholder="Name, description, or location"
+              placeholder="Org unit name"
             />
             <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Location</mat-label>
-            <input
-              matInput
-              formControlName="location"
-              placeholder="Filter by location"
-            />
-            <mat-icon matSuffix>location_on</mat-icon>
           </mat-form-field>
         </div>
       </form>
@@ -187,23 +170,6 @@
             </td>
           </ng-container>
 
-          <!-- Location Column -->
-          <ng-container matColumnDef="location">
-            <th mat-header-cell *matHeaderCellDef>Location</th>
-            <td mat-cell *matCellDef="let orgUnit">
-              <div
-                class="location-cell"
-                *ngIf="orgUnit.location; else noLocation"
-              >
-                <mat-icon class="location-icon">location_on</mat-icon>
-                <span>{{ orgUnit.location }}</span>
-              </div>
-              <ng-template #noLocation>
-                <span class="no-data">Not specified</span>
-              </ng-template>
-            </td>
-          </ng-container>
-
           <!-- Employee Count Column -->
           <ng-container matColumnDef="employee_count">
             <th mat-header-cell *matHeaderCellDef>Employees</th>
@@ -214,23 +180,6 @@
                   orgUnit.employee_count || 0
                 }}</span>
               </div>
-            </td>
-          </ng-container>
-
-          <!-- Manager Column -->
-          <ng-container matColumnDef="manager">
-            <th mat-header-cell *matHeaderCellDef>Manager</th>
-            <td mat-cell *matCellDef="let orgUnit">
-              <div
-                class="manager-cell"
-                *ngIf="orgUnit.manager_name; else noManager"
-              >
-                <mat-icon class="manager-icon">person</mat-icon>
-                <span>{{ orgUnit.manager_name }}</span>
-              </div>
-              <ng-template #noManager>
-                <span class="no-data">Not assigned</span>
-              </ng-template>
             </td>
           </ng-container>
 
@@ -296,48 +245,6 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Stats Section -->
-  <div class="stats-section">
-    <h2 class="section-title">
-      <mat-icon>analytics</mat-icon>
-      Organizational Overview
-    </h2>
-
-    <div class="stats-grid">
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">account_tree</mat-icon>
-          <div class="stat-value">{{ orgUnits.length }}</div>
-          <div class="stat-label">Total Org Units</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">people</mat-icon>
-          <div class="stat-value">{{ getTotalEmployees() }}</div>
-          <div class="stat-label">Total Employees</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">home</mat-icon>
-          <div class="stat-value">{{ orgUnits.length }}</div>
-          <div class="stat-label">Top Level Units</div>
-        </div>
-      </mat-card>
-
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">location_on</mat-icon>
-          <div class="stat-value">{{ getUniqueLocations() }}</div>
-          <div class="stat-label">Locations</div>
-        </div>
-      </mat-card>
-    </div>
-  </div>
-
   <!-- Edit Org Unit Form -->
   <mat-card *ngIf="showEditForm && selectedOrgUnit" class="edit-form-card">
     <mat-card-header>
@@ -360,25 +267,7 @@
               Unit name is required
             </mat-error>
           </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Location</mat-label>
-            <input
-              matInput
-              formControlName="location"
-              placeholder="Enter location"
-            />
-          </mat-form-field>
         </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Manager</mat-label>
-          <input
-            matInput
-            formControlName="manager_name"
-            placeholder="Enter manager name"
-          />
-        </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Description</mat-label>

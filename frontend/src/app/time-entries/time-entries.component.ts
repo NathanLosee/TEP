@@ -1,27 +1,27 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
-} from "@angular/forms";
-import { MatTableModule } from "@angular/material/table";
-import { MatPaginatorModule } from "@angular/material/paginator";
-import { MatSortModule } from "@angular/material/sort";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatNativeDateModule } from "@angular/material/core";
-import { MatSelectModule } from "@angular/material/select";
-import { MatDialogModule } from "@angular/material/dialog";
-import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatChipsModule } from "@angular/material/chips";
+} from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 
 interface TimeclockEntry {
   id: number;
@@ -30,11 +30,11 @@ interface TimeclockEntry {
   clock_in: Date;
   clock_out?: Date;
   total_hours?: number;
-  status: "clocked_in" | "clocked_out" | "incomplete";
+  status: 'clocked_in' | 'clocked_out' | 'incomplete';
 }
 
 @Component({
-  selector: "app-time-entries",
+  selector: 'app-time-entries',
   standalone: true,
   imports: [
     CommonModule,
@@ -57,8 +57,8 @@ interface TimeclockEntry {
     MatProgressSpinnerModule,
     MatChipsModule,
   ],
-  templateUrl: "./time-entries.component.html",
-  styleUrl: "./time-entries.component.scss",
+  templateUrl: './time-entries.component.html',
+  styleUrl: './time-entries.component.scss',
 })
 export class TimeEntriesComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -67,13 +67,13 @@ export class TimeEntriesComponent implements OnInit {
   timeEntries: TimeclockEntry[] = [];
   filteredEntries: TimeclockEntry[] = [];
   displayedColumns: string[] = [
-    "badge_number",
-    "employee_name",
-    "clock_in",
-    "clock_out",
-    "total_hours",
-    "status",
-    "actions",
+    'badge_number',
+    'employee_name',
+    'clock_in',
+    'clock_out',
+    'total_hours',
+    'status',
+    'actions',
   ];
 
   filterForm: FormGroup;
@@ -85,8 +85,8 @@ export class TimeEntriesComponent implements OnInit {
         start: [new Date()],
         end: [new Date()],
       }),
-      badge_number: [""],
-      status: [""],
+      badge_number: [''],
+      status: [''],
     });
   }
 
@@ -150,61 +150,57 @@ export class TimeEntriesComponent implements OnInit {
   }
 
   editEntry(entry: TimeclockEntry) {
-    this.showSnackBar(`Edit entry for ${entry.badge_number}`, "info");
+    this.showSnackBar(`Edit entry for ${entry.badge_number}`, 'info');
   }
 
   deleteEntry(entry: TimeclockEntry) {
-    this.showSnackBar(`Delete entry for ${entry.badge_number}`, "info");
-  }
-
-  exportEntries() {
-    this.showSnackBar("Export functionality coming soon", "info");
+    this.showSnackBar(`Delete entry for ${entry.badge_number}`, 'info');
   }
 
   addManualEntry() {
-    this.showSnackBar("Add manual entry feature coming soon", "info");
+    this.showSnackBar('Add manual entry feature coming soon', 'info');
   }
 
   calculateTotalHours(clockIn: Date, clockOut?: Date): number {
     if (!clockOut) return 0;
     return (
       Math.round(
-        ((clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)) * 100,
+        ((clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)) * 100
       ) / 100
     );
   }
 
   getStatusClass(status: string): string {
     switch (status) {
-      case "clocked_in":
-        return "status-active";
-      case "clocked_out":
-        return "status-complete";
-      case "incomplete":
-        return "status-warning";
+      case 'clocked_in':
+        return 'status-active';
+      case 'clocked_out':
+        return 'status-complete';
+      case 'incomplete':
+        return 'status-warning';
       default:
-        return "";
+        return '';
     }
   }
 
   getActiveEntriesCount(): number {
-    return this.filteredEntries.filter((e) => e.status === "clocked_in").length;
+    return this.filteredEntries.filter((e) => e.status === 'clocked_in').length;
   }
 
   getCompletedEntriesCount(): number {
-    return this.filteredEntries.filter((e) => e.status === "clocked_out")
+    return this.filteredEntries.filter((e) => e.status === 'clocked_out')
       .length;
   }
 
   getIncompleteEntriesCount(): number {
-    return this.filteredEntries.filter((e) => e.status === "incomplete").length;
+    return this.filteredEntries.filter((e) => e.status === 'incomplete').length;
   }
 
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info",
+    type: 'success' | 'error' | 'info' = 'info'
   ) {
-    this.snackBar.open(message, "Close", {
+    this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });
@@ -221,23 +217,23 @@ export class TimeEntriesComponent implements OnInit {
       const clockIn = new Date(date);
       clockIn.setHours(
         8 + Math.floor(Math.random() * 2),
-        Math.floor(Math.random() * 60),
+        Math.floor(Math.random() * 60)
       );
 
       const clockOut = Math.random() > 0.2 ? new Date(clockIn) : undefined;
       if (clockOut) {
         clockOut.setHours(
           clockIn.getHours() + 8 + Math.floor(Math.random() * 2),
-          Math.floor(Math.random() * 60),
+          Math.floor(Math.random() * 60)
         );
       }
 
-      const badgeNumber = `EMP${String(i + 1).padStart(3, "0")}`;
+      const badgeNumber = `EMP${String(i + 1).padStart(3, '0')}`;
       const status = !clockOut
-        ? "clocked_in"
+        ? 'clocked_in'
         : clockOut.getTime() - clockIn.getTime() < 4 * 60 * 60 * 1000
-          ? "incomplete"
-          : "clocked_out";
+        ? 'incomplete'
+        : 'clocked_out';
 
       entries.push({
         id: i + 1,
@@ -255,16 +251,16 @@ export class TimeEntriesComponent implements OnInit {
 
   private getRandomEmployeeName(): string {
     const names = [
-      "John Doe",
-      "Jane Smith",
-      "Mike Johnson",
-      "Sarah Williams",
-      "David Brown",
-      "Lisa Davis",
-      "Robert Miller",
-      "Maria Garcia",
-      "James Wilson",
-      "Jennifer Moore",
+      'John Doe',
+      'Jane Smith',
+      'Mike Johnson',
+      'Sarah Williams',
+      'David Brown',
+      'Lisa Davis',
+      'Robert Miller',
+      'Maria Garcia',
+      'James Wilson',
+      'Jennifer Moore',
     ];
     return names[Math.floor(Math.random() * names.length)];
   }

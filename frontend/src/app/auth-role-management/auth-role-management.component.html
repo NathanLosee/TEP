@@ -1,50 +1,23 @@
 <div class="auth-role-management-container">
   <!-- Header -->
-  <div class="header-section">
-    <div class="page-title">
-      <mat-icon class="title-icon">security</mat-icon>
-      <h1>Auth Role Management</h1>
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">security</mat-icon>
+        <h1>Auth Role Management</h1>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="showCreateRoleForm()"
+          [disabled]="isLoading"
+        >
+          <mat-icon>add</mat-icon>
+          Create Role
+        </button>
+      </div>
     </div>
-    <p class="page-description">
-      Manage user roles and permissions to control access to system features
-    </p>
-  </div>
-
-  <!-- Statistics Cards -->
-  <div class="stats-section">
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">admin_panel_settings</mat-icon>
-        <div class="stat-value">{{ authRoles.length }}</div>
-        <div class="stat-label">Total Roles</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">key</mat-icon>
-        <div class="stat-value">{{ getPermissionCount() }}</div>
-        <div class="stat-label">Total Permissions</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">people</mat-icon>
-        <div class="stat-value">{{ users.length }}</div>
-        <div class="stat-label">Total Users</div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <mat-icon class="stat-icon">category</mat-icon>
-        <div class="stat-value">
-          {{ Object.keys(availablePermissions).length }}
-        </div>
-        <div class="stat-label">Categories</div>
-      </div>
-    </mat-card>
   </div>
 
   <!-- Main Content Tabs -->
@@ -64,16 +37,6 @@
             />
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
-
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="showCreateRoleForm()"
-            [disabled]="isLoading"
-          >
-            <mat-icon>add</mat-icon>
-            Create Role
-          </button>
         </div>
 
         <!-- Create/Edit Role Form -->
@@ -124,9 +87,7 @@
                       </mat-panel-title>
                       <mat-panel-description>
                         {{ getSelectedPermissionsCount(category) }} /
-                        {{
-                          Object.keys(availablePermissions[category]).length
-                        }}
+                        {{ Object.keys(availablePermissions[category]).length }}
                         selected
                       </mat-panel-description>
                     </mat-expansion-panel-header>

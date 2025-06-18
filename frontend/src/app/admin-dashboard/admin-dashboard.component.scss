@@ -12,13 +12,9 @@
     justify-content: space-between;
     align-items: center;
     padding: 24px;
-    background: linear-gradient(
-      135deg,
-      var(--sys-primary) 0%,
-      var(--sys-tertiary) 100%
-    );
+    background: var(--sys-primary-container);
     border-radius: 16px;
-    color: white;
+    color: var(--sys-on-primary-container);
 
     .welcome-text {
       h1 {
@@ -45,136 +41,10 @@
   }
 }
 
-.metrics-section {
-  margin-bottom: 32px;
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    color: var(--sys-on-surface);
-    font-size: 1.5rem;
-    font-weight: 600;
-
-    mat-icon {
-      font-size: 1.8rem;
-      width: 1.8rem;
-      height: 1.8rem;
-      color: var(--sys-primary);
-    }
-  }
-}
-
-.metrics-grid {
-  .metric-card {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .metric-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-
-      .metric-icon {
-        font-size: 1.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-      }
-
-      h3 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--sys-on-surface);
-      }
-    }
-
-    .metric-content {
-      .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: var(--sys-on-surface);
-      }
-
-      .metric-breakdown {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-
-        .breakdown-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 0.875rem;
-
-          .breakdown-label {
-            color: var(--sys-on-surface-variant);
-          }
-
-          .breakdown-value {
-            font-weight: 500;
-
-            &.active {
-              color: var(--sys-primary);
-            }
-
-            &.new {
-              color: var(--sys-tertiary);
-            }
-          }
-
-          .status-icon {
-            font-size: 1rem;
-            width: 1rem;
-            height: 1rem;
-
-            &.success {
-              color: var(--sys-primary);
-            }
-          }
-        }
-      }
-    }
-
-    &.employee-card .metric-icon {
-      color: var(--sys-primary);
-    }
-
-    &.department-card .metric-icon {
-      color: var(--sys-secondary);
-    }
-
-    &.orgunit-card .metric-icon {
-      color: var(--sys-tertiary);
-    }
-
-    &.timeclock-card .metric-icon {
-      color: var(--sys-error);
-    }
-  }
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-.quick-actions-card {
+.system-status-card {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
 
   mat-card-header {
     mat-card-title {
@@ -188,34 +58,48 @@
     }
   }
 
-  .actions-grid {
+  .status-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
 
-    .action-button {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .status-item {
+      text-align: center;
       padding: 16px;
-      height: auto;
-      min-height: 80px;
       border-radius: 8px;
-      transition: all 0.2s ease;
+      background: var(--sys-surface-variant);
 
-      mat-icon {
-        font-size: 1.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-      }
-
-      span {
+      .status-label {
         font-size: 0.875rem;
-        font-weight: 500;
+        color: var(--sys-on-surface-variant);
+        margin-bottom: 8px;
       }
 
-      &:hover {
-        transform: translateY(-1px);
+      .status-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+
+        .status-icon {
+          font-size: 1.5rem;
+          width: 1.5rem;
+          height: 1.5rem;
+
+          &.success {
+            color: var(--sys-primary);
+          }
+
+          &.warning {
+            color: var(--sys-tertiary);
+          }
+        }
+
+        span {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--sys-on-surface);
+        }
       }
     }
   }
@@ -300,69 +184,6 @@
           font-size: 0.75rem;
           color: var(--sys-on-surface-variant);
           opacity: 0.7;
-        }
-      }
-    }
-  }
-}
-
-.system-status-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  mat-card-header {
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      mat-icon {
-        color: var(--sys-primary);
-      }
-    }
-  }
-
-  .status-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-
-    .status-item {
-      text-align: center;
-      padding: 16px;
-      border-radius: 8px;
-      background: var(--sys-surface-variant);
-
-      .status-label {
-        font-size: 0.875rem;
-        color: var(--sys-on-surface-variant);
-        margin-bottom: 8px;
-      }
-
-      .status-indicator {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-
-        .status-icon {
-          font-size: 1.5rem;
-          width: 1.5rem;
-          height: 1.5rem;
-
-          &.success {
-            color: var(--sys-primary);
-          }
-
-          &.warning {
-            color: var(--sys-tertiary);
-          }
-        }
-
-        span {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--sys-on-surface);
         }
       }
     }
