@@ -258,37 +258,4 @@ export class OrgUnitManagementComponent implements OnInit {
       }
     });
   }
-    return [
-      {
-        id: 1,
-        name: 'Corporate Office',
-        employee_count: 15,
-      },
-      {
-        id: 2,
-        name: 'Manufacturing Plant',
-        employee_count: 25,
-      },
-      {
-        id: 3,
-        name: 'IT Department',
-        employee_count: 12,
-      },
-      {
-        id: 4,
-        name: 'Quality Control',
-        employee_count: 8,
-      },
-      {
-        id: 5,
-        name: 'Sales & Marketing',
-        employee_count: 10,
-      },
-      {
-        id: 6,
-        name: 'Research & Development',
-        employee_count: 18,
-      },
-    ];
-  }
 }
