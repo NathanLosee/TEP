@@ -351,7 +351,7 @@ export class HolidayGroupManagementComponent implements OnInit {
       }
     });
   }
-    return [
+}
       {
         id: 1,
         name: 'US Federal Holidays',
