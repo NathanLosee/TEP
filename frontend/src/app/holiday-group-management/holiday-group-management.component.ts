@@ -22,23 +22,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTabsModule } from '@angular/material/tabs';
-
-interface Holiday {
-  name: string;
-  start_date: Date;
-  end_date: Date;
-  days_count: number;
-  is_recurring: boolean;
-}
-
-interface HolidayGroup {
-  id: number;
-  name: string;
-  description?: string;
-  holidays: Holiday[];
-  employee_count: number;
-  total_holiday_days: number;
-}
+import { HolidayGroupService, HolidayGroup, Holiday, HolidayGroupWithDetails } from '../../services/holiday-group.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-holiday-group-management',
