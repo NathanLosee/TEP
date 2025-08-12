@@ -3,7 +3,7 @@ import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.compo
 import { NavFrontpageComponent } from './nav-frontpage/nav-frontpage.component';
 import { NavAdminComponent } from './nav-admin/nav-admin.component';
 import { EmployeeManagementComponent } from './employee-management/employee-management.component';
-import { TimeEntriesComponent } from './time-entries/time-entries.component';
+import { TimeclockEntriesManagementComponent } from './timeclock-entries-management/timeclock-entries-management.component';
 import { DepartmentManagementComponent } from './department-management/department-management.component';
 import { OrgUnitManagementComponent } from './org-unit-management/org-unit-management.component';
 import { HolidayGroupManagementComponent } from './holiday-group-management/holiday-group-management.component';
@@ -35,9 +35,9 @@ export const routes: Routes = [
         component: AdminDashboardComponent,
       },
       {
-        title: 'Time Entries',
-        path: 'time-entries',
-        component: TimeEntriesComponent,
+        title: 'Timeclock Entries',
+        path: 'timeclock-entries',
+        component: TimeclockEntriesManagementComponent,
       },
       {
         title: 'User Accounts',

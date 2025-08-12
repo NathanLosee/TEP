@@ -62,10 +62,10 @@ interface TimeclockEntryListing {
     MatProgressSpinnerModule,
     MatChipsModule,
   ],
-  templateUrl: './time-entries.component.html',
-  styleUrl: './time-entries.component.scss',
+  templateUrl: './timeclock-entries-management.component.html',
+  styleUrl: './timeclock-entries-management.component.scss',
 })
-export class TimeEntriesComponent implements OnInit {
+export class TimeclockEntriesManagementComponent implements OnInit {
   private timeclockService = inject(TimeclockService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
