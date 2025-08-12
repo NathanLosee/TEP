@@ -143,6 +143,9 @@ export class EmployeeManagementComponent implements OnInit {
 
   ngOnInit() {
     this.loadEmployees();
+    this.loadDepartments();
+    this.loadOrgUnits();
+    this.loadHolidayGroups();
     this.setupSearchForm();
   }
 
