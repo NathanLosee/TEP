@@ -22,22 +22,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-
-interface Employee {
-  id: number;
-  badge_number: string;
-  first_name: string;
-  last_name: string;
-  payroll_type: string;
-  workweek_type: string;
-  time_type: boolean;
-  allow_clocking: boolean;
-  allow_delete: boolean;
-  org_unit?: any;
-  manager?: any;
-  departments?: any[];
-  holiday_group?: any;
-}
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { EmployeeService, Employee } from '../../services/employee.service';
+import { DepartmentService, Department } from '../../services/department.service';
+import { OrgUnitService, OrgUnit } from '../../services/org-unit.service';
+import { HolidayGroupService, HolidayGroup } from '../../services/holiday-group.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-employee-management',
