@@ -206,25 +206,28 @@ export class OrgUnitManagementComponent implements OnInit {
     if (this.editForm && this.editForm.valid && this.selectedOrgUnit) {
       this.isLoading = true;
 
-      const formData = this.editForm.value;
+      const orgUnitData = {
+        name: this.editForm.get('name')?.value
+      };
 
-      // Update org unit data (simulating API call)
-      setTimeout(() => {
-        const index = this.orgUnits.findIndex(
-          (unit) => unit.id === this.selectedOrgUnit!.id
-        );
-        if (index > -1) {
-          this.orgUnits[index] = {
-            ...this.orgUnits[index],
-            name: formData.name,
-            description: formData.description,
-          };
-          this.filterOrgUnits();
-          this.showSnackBar('Org Unit updated successfully', 'success');
-          this.cancelAction();
+      this.orgUnitService.updateOrgUnit(this.selectedOrgUnit.id, orgUnitData).subscribe({
+        next: (updatedOrgUnit) => {
+          const index = this.orgUnits.findIndex(
+            (unit) => unit.id === this.selectedOrgUnit!.id
+          );
+          if (index > -1) {
+            this.orgUnits[index] = updatedOrgUnit;
+            this.filterOrgUnits();
+            this.showSnackBar('Org Unit updated successfully', 'success');
+            this.cancelAction();
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to update organizational unit', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
