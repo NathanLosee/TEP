@@ -125,20 +125,28 @@ export class DepartmentManagementComponent implements OnInit {
 
   addDepartment() {
     if (this.addDepartmentForm.valid) {
-      const newDept: Department = {
-        id: this.departments.length + 1,
-        name: this.addDepartmentForm.get('name')?.value,
-        employee_count: 0,
+      this.isLoading = true;
+      const departmentData = {
+        name: this.addDepartmentForm.get('name')?.value
       };
 
-      this.departments.push(newDept);
-      this.filterDepartments();
-      this.addDepartmentForm.reset();
-      this.showAddForm = false;
-      this.showSnackBar(
-        `Department "${newDept.name}" created successfully`,
-        'success'
-      );
+      this.departmentService.createDepartment(departmentData).subscribe({
+        next: (newDept) => {
+          this.departments.push({ ...newDept, employee_count: 0 });
+          this.filterDepartments();
+          this.addDepartmentForm.reset();
+          this.showAddForm = false;
+          this.showSnackBar(
+            `Department "${newDept.name}" created successfully`,
+            'success'
+          );
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to create department', error);
+          this.isLoading = false;
+        }
+      });
     }
   }
 
