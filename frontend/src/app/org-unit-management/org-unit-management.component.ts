@@ -21,8 +21,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { OrgUnitService, OrgUnit, OrgUnitWithEmployees } from '../../services/org-unit.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-  employees?: any[];
-}
 
 @Component({
   selector: 'app-org-unit-management',
