@@ -153,9 +153,27 @@ export class DepartmentManagementComponent implements OnInit {
   // Action methods for buttons
   viewEmployees(department: Department) {
     this.selectedDepartment = department;
+    this.isLoading = true;
     this.showEmployeeList = true;
     this.showEditForm = false;
-    this.showSnackBar(`Viewing employees for ${department.name}`, 'info');
+
+    this.departmentService.getDepartmentById(department.id).subscribe({
+      next: (departmentDetails) => {
+        this.selectedDepartmentDetails = departmentDetails;
+        // Update employee count in the main list
+        const index = this.departments.findIndex(d => d.id === department.id);
+        if (index > -1) {
+          this.departments[index].employee_count = departmentDetails.employees.length;
+          this.filterDepartments();
+        }
+        this.isLoading = false;
+        this.showSnackBar(`Viewing employees for ${department.name}`, 'info');
+      },
+      error: (error) => {
+        this.handleError('Failed to load department details', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   editDepartment(department: Department) {
