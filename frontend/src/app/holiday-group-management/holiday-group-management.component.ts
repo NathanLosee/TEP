@@ -147,22 +147,28 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   addHolidayGroup() {
     if (this.addGroupForm.valid) {
-      const newGroup: HolidayGroup = {
-        id: this.holidayGroups.length + 1,
-        name: this.addGroupForm.get('name')?.value,
-        holidays: [],
-        employee_count: 0,
-        total_holiday_days: 0,
+      this.isLoading = true;
+      const holidayGroupData = {
+        name: this.addGroupForm.get('name')?.value
       };
 
-      this.holidayGroups.push(newGroup);
-      this.filterGroups();
-      this.addGroupForm.reset();
-      this.showAddForm = false;
-      this.showSnackBar(
-        `Holiday Group "${newGroup.name}" created successfully`,
-        'success'
-      );
+      this.holidayGroupService.createHolidayGroup(holidayGroupData).subscribe({
+        next: (newGroup) => {
+          this.holidayGroups.push(newGroup);
+          this.filterGroups();
+          this.addGroupForm.reset();
+          this.showAddForm = false;
+          this.showSnackBar(
+            `Holiday Group "${newGroup.name}" created successfully`,
+            'success'
+          );
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to create holiday group', error);
+          this.isLoading = false;
+        }
+      });
     }
   }
 
