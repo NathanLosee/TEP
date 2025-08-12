@@ -335,24 +335,31 @@ export class EmployeeManagementComponent implements OnInit {
     if (this.editForm && this.editForm.valid && this.selectedEmployee) {
       this.isLoading = true;
 
-      const formData = this.editForm.value;
+      const employeeData = {
+        ...this.editForm.value,
+        payroll_sync: typeof this.editForm.get('payroll_sync')?.value === 'string'
+          ? this.editForm.get('payroll_sync')?.value
+          : this.editForm.get('payroll_sync')?.value?.toISOString().split('T')[0]
+      };
 
-      // Update employee data (simulating API call)
-      setTimeout(() => {
-        const index = this.employees.findIndex(
-          (emp) => emp.id === this.selectedEmployee!.id
-        );
-        if (index > -1) {
-          this.employees[index] = {
-            ...this.employees[index],
-            ...formData,
-          };
-          this.filterEmployees();
-          this.showSnackBar('Employee updated successfully', 'success');
-          this.cancelEdit();
+      this.employeeService.updateEmployee(this.selectedEmployee.id, employeeData).subscribe({
+        next: (updatedEmployee) => {
+          const index = this.employees.findIndex(
+            (emp) => emp.id === this.selectedEmployee!.id
+          );
+          if (index > -1) {
+            this.employees[index] = updatedEmployee;
+            this.filterEmployees();
+            this.showSnackBar('Employee updated successfully', 'success');
+            this.cancelEdit();
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to update employee', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
