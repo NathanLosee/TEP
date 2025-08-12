@@ -85,7 +85,13 @@ export class EmployeeManagementComponent implements OnInit {
   ];
 
   searchForm: FormGroup;
+  addEmployeeForm: FormGroup;
+  editForm: FormGroup;
   isLoading = false;
+  showAddForm = false;
+  showEditForm = false;
+  showViewDetails = false;
+  selectedEmployee: Employee | null = null;
 
   // Search filters
   searchFilters = {
@@ -104,16 +110,34 @@ export class EmployeeManagementComponent implements OnInit {
       status: [''],
     });
 
-    // Initialize empty edit form
+    this.addEmployeeForm = this.fb.group({
+      badge_number: ['', [Validators.required]],
+      first_name: ['', [Validators.required]],
+      last_name: ['', [Validators.required]],
+      payroll_type: ['', [Validators.required]],
+      payroll_sync: [new Date(), [Validators.required]],
+      workweek_type: ['', [Validators.required]],
+      time_type: [true],
+      allow_clocking: [true],
+      allow_delete: [true],
+      holiday_group_id: [''],
+      org_unit_id: ['', [Validators.required]],
+      manager_id: [''],
+    });
+
     this.editForm = this.fb.group({
       badge_number: ['', [Validators.required]],
       first_name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
       payroll_type: ['', [Validators.required]],
+      payroll_sync: ['', [Validators.required]],
       workweek_type: ['', [Validators.required]],
-      time_type: [false],
+      time_type: [true],
       allow_clocking: [true],
       allow_delete: [true],
+      holiday_group_id: [''],
+      org_unit_id: ['', [Validators.required]],
+      manager_id: [''],
     });
   }
 
