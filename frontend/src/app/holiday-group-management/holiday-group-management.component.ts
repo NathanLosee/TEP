@@ -114,12 +114,17 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   loadHolidayGroups() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.holidayGroups = this.generateMockHolidayGroups();
-      this.filteredGroups = [...this.holidayGroups];
-      this.isLoading = false;
-    }, 1000);
+    this.holidayGroupService.getHolidayGroups().subscribe({
+      next: (holidayGroups) => {
+        this.holidayGroups = holidayGroups;
+        this.filteredGroups = [...this.holidayGroups];
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load holiday groups', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   filterGroups() {
