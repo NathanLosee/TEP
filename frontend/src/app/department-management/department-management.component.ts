@@ -195,21 +195,26 @@ export class DepartmentManagementComponent implements OnInit {
     if (confirmDelete) {
       this.isLoading = true;
 
-      // Remove department from the array (simulating API call)
-      setTimeout(() => {
-        const index = this.departments.findIndex(
-          (dept) => dept.id === department.id
-        );
-        if (index > -1) {
-          this.departments.splice(index, 1);
-          this.filterDepartments();
-          this.showSnackBar(
-            `${department.name} has been deleted successfully`,
-            'success'
+      this.departmentService.deleteDepartment(department.id).subscribe({
+        next: () => {
+          const index = this.departments.findIndex(
+            (dept) => dept.id === department.id
           );
+          if (index > -1) {
+            this.departments.splice(index, 1);
+            this.filterDepartments();
+            this.showSnackBar(
+              `${department.name} has been deleted successfully`,
+              'success'
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to delete department', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
