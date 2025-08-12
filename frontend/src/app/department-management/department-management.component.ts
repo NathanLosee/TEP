@@ -267,38 +267,14 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  private generateMockDepartments(): Department[] {
-    return [
-      {
-        id: 1,
-        name: 'Information Technology',
-        employee_count: 12,
-      },
-      {
-        id: 2,
-        name: 'Human Resources',
-        employee_count: 5,
-      },
-      {
-        id: 3,
-        name: 'Production',
-        employee_count: 25,
-      },
-      {
-        id: 4,
-        name: 'Quality Assurance',
-        employee_count: 8,
-      },
-      {
-        id: 5,
-        name: 'Administration',
-        employee_count: 6,
-      },
-      {
-        id: 6,
-        name: 'Sales & Marketing',
-        employee_count: 15,
-      },
-    ];
+  private handleError(message: string, error: any) {
+    console.error(message, error);
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Error',
+        message: `${message}. Please try again.`,
+        error: error?.error?.detail || error?.message || 'Unknown error'
+      }
+    });
   }
 }
