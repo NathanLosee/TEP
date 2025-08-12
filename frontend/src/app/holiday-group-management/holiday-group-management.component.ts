@@ -261,25 +261,28 @@ export class HolidayGroupManagementComponent implements OnInit {
     if (this.editForm && this.editForm.valid && this.selectedGroup) {
       this.isLoading = true;
 
-      const formData = this.editForm.value;
+      const holidayGroupData = {
+        name: this.editForm.get('name')?.value
+      };
 
-      // Update group data (simulating API call)
-      setTimeout(() => {
-        const index = this.holidayGroups.findIndex(
-          (g) => g.id === this.selectedGroup!.id
-        );
-        if (index > -1) {
-          this.holidayGroups[index] = {
-            ...this.holidayGroups[index],
-            name: formData.name,
-            description: formData.description,
-          };
-          this.filterGroups();
-          this.showSnackBar('Holiday Group updated successfully', 'success');
-          this.cancelAction();
+      this.holidayGroupService.updateHolidayGroup(this.selectedGroup.id, holidayGroupData).subscribe({
+        next: (updatedGroup) => {
+          const index = this.holidayGroups.findIndex(
+            (g) => g.id === this.selectedGroup!.id
+          );
+          if (index > -1) {
+            this.holidayGroups[index] = updatedGroup;
+            this.filterGroups();
+            this.showSnackBar('Holiday Group updated successfully', 'success');
+            this.cancelAction();
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to update holiday group', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
