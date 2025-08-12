@@ -55,9 +55,11 @@ export class HolidayGroupManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private holidayGroupService = inject(HolidayGroupService);
 
   holidayGroups: HolidayGroup[] = [];
   filteredGroups: HolidayGroup[] = [];
+  selectedGroupDetails: HolidayGroupWithDetails | null = null;
   displayedColumns: string[] = [
     'name',
     'holidays_count',
