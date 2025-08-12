@@ -275,15 +275,19 @@ export class EmployeeManagementComponent implements OnInit {
     this.showViewDetails = false;
 
     // Initialize edit form with employee data
-    this.editForm = this.fb.group({
-      badge_number: [employee.badge_number, [Validators.required]],
-      first_name: [employee.first_name, [Validators.required]],
-      last_name: [employee.last_name, [Validators.required]],
-      payroll_type: [employee.payroll_type, [Validators.required]],
-      workweek_type: [employee.workweek_type, [Validators.required]],
-      time_type: [employee.time_type],
-      allow_clocking: [employee.allow_clocking],
-      allow_delete: [employee.allow_delete],
+    this.editForm.patchValue({
+      badge_number: employee.badge_number,
+      first_name: employee.first_name,
+      last_name: employee.last_name,
+      payroll_type: employee.payroll_type,
+      payroll_sync: employee.payroll_sync,
+      workweek_type: employee.workweek_type,
+      time_type: employee.time_type,
+      allow_clocking: employee.allow_clocking,
+      allow_delete: employee.allow_delete,
+      holiday_group_id: employee.holiday_group_id,
+      org_unit_id: employee.org_unit_id,
+      manager_id: employee.manager_id,
     });
   }
 
