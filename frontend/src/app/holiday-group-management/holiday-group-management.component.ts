@@ -62,9 +62,7 @@ export class HolidayGroupManagementComponent implements OnInit {
   selectedGroupDetails: HolidayGroupWithDetails | null = null;
   displayedColumns: string[] = [
     'name',
-    'holidays_count',
-    'employee_count',
-    'total_days',
+    'holidays_count', 
     'actions',
   ];
 
@@ -85,19 +83,16 @@ export class HolidayGroupManagementComponent implements OnInit {
 
     this.addGroupForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
     });
 
     this.addHolidayForm = this.fb.group({
       name: ['', [Validators.required]],
-      start_date: ['', [Validators.required]],
-      end_date: ['', [Validators.required]],
-      is_recurring: [false],
+      start_date: [null, [Validators.required]],
+      end_date: [null, [Validators.required]],
     });
 
     this.editForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
     });
   }
 
@@ -131,10 +126,8 @@ export class HolidayGroupManagementComponent implements OnInit {
     const searchTerm =
       this.searchForm.get('searchTerm')?.value?.toLowerCase() || '';
 
-    this.filteredGroups = this.holidayGroups.filter(
-      (group) =>
-        group.name.toLowerCase().includes(searchTerm) ||
-        group.description?.toLowerCase().includes(searchTerm)
+    this.filteredGroups = this.holidayGroups.filter((group) =>
+      group.name.toLowerCase().includes(searchTerm)
     );
   }
 
@@ -174,51 +167,52 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   addHoliday(groupId: number) {
     if (this.addHolidayForm.valid) {
-      const group = this.holidayGroups.find((g) => g.id === groupId);
-      if (group) {
-        const startDate = new Date(
-          this.addHolidayForm.get('start_date')?.value
-        );
-        const endDate = new Date(this.addHolidayForm.get('end_date')?.value);
-        const daysCount =
-          Math.ceil(
-            (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-          ) + 1;
+      const startDate = this.addHolidayForm.get('start_date')?.value;
+      const endDate = this.addHolidayForm.get('end_date')?.value;
+      
+      const holidayData = {
+        name: this.addHolidayForm.get('name')?.value,
+        start_date: startDate?.toISOString().split('T')[0],
+        end_date: endDate?.toISOString().split('T')[0],
+      };
 
-        const newHoliday: Holiday = {
-          name: this.addHolidayForm.get('name')?.value,
-          start_date: startDate,
-          end_date: endDate,
-          days_count: daysCount,
-          is_recurring: this.addHolidayForm.get('is_recurring')?.value,
-        };
-
-        group.holidays.push(newHoliday);
-        group.total_holiday_days = group.holidays.reduce(
-          (sum, h) => sum + h.days_count,
-          0
-        );
-
-        this.addHolidayForm.reset();
-        // selectedGroup reset handled in addHolidayToGroup method
-        this.showSnackBar(
-          `Holiday "${newHoliday.name}" added successfully`,
-          'success'
-        );
-      }
+      this.holidayGroupService.addHoliday(groupId, holidayData).subscribe({
+        next: (newHoliday) => {
+          this.showSnackBar(
+            `Holiday "${newHoliday.name}" added successfully`,
+            'success'
+          );
+          this.addHolidayForm.reset();
+          // Reload the group details if we're viewing them
+          if (this.selectedGroup?.id === groupId) {
+            this.loadGroupDetails(groupId);
+          }
+        },
+        error: (error) => {
+          this.handleError('Failed to add holiday', error);
+        }
+      });
     }
   }
 
-  // Action methods for buttons
+  loadGroupDetails(groupId: number) {
+    this.holidayGroupService.getHolidayGroupById(groupId).subscribe({
+      next: (groupDetails) => {
+        this.selectedGroupDetails = groupDetails;
+      },
+      error: (error) => {
+        this.handleError('Failed to load group details', error);
+      }
+    });
+  }
+
   editGroup(group: HolidayGroup) {
     this.selectedGroup = group;
     this.showEditForm = true;
     this.showEmployeeList = false;
 
-    // Initialize edit form with group data
     this.editForm.patchValue({
       name: group.name,
-      description: group.description || '',
     });
   }
 
@@ -255,6 +249,7 @@ export class HolidayGroupManagementComponent implements OnInit {
     this.selectedGroup = group;
     this.showEmployeeList = true;
     this.showEditForm = false;
+    this.loadGroupDetails(group.id);
   }
 
   saveGroup() {
@@ -290,16 +285,23 @@ export class HolidayGroupManagementComponent implements OnInit {
     this.showEditForm = false;
     this.showEmployeeList = false;
     this.selectedGroup = null;
+    this.selectedGroupDetails = null;
     this.editForm?.reset();
   }
 
-  removeHoliday(group: HolidayGroup, holidayIndex: number) {
-    group.holidays.splice(holidayIndex, 1);
-    group.total_holiday_days = group.holidays.reduce(
-      (sum, h) => sum + h.days_count,
-      0
-    );
-    this.showSnackBar('Holiday removed successfully', 'success');
+  removeHoliday(groupId: number, holidayName: string) {
+    this.holidayGroupService.deleteHoliday(groupId, holidayName).subscribe({
+      next: () => {
+        this.showSnackBar('Holiday removed successfully', 'success');
+        // Reload group details
+        if (this.selectedGroup?.id === groupId) {
+          this.loadGroupDetails(groupId);
+        }
+      },
+      error: (error) => {
+        this.handleError('Failed to remove holiday', error);
+      }
+    });
   }
 
   exportHolidaySchedule() {
@@ -313,22 +315,14 @@ export class HolidayGroupManagementComponent implements OnInit {
     this.showSnackBar('Import holidays feature coming soon', 'info');
   }
 
-  getUpcomingHolidays(): Holiday[] {
+  getUpcomingHolidays() {
+    if (!this.selectedGroupDetails?.holidays) return [];
+    
     const today = new Date();
-    const allHolidays: Holiday[] = [];
-
-    this.holidayGroups.forEach((group) => {
-      allHolidays.push(...group.holidays);
-    });
-
-    return allHolidays
-      .filter((holiday) => holiday.start_date >= today)
-      .sort((a, b) => a.start_date.getTime() - b.start_date.getTime())
+    return this.selectedGroupDetails.holidays
+      .filter((holiday) => new Date(holiday.start_date) >= today)
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
       .slice(0, 5);
-  }
-
-  getTotalHolidayGroups(): number {
-    return this.holidayGroups.length;
   }
 
   private showSnackBar(
@@ -350,85 +344,5 @@ export class HolidayGroupManagementComponent implements OnInit {
         error: error?.error?.detail || error?.message || 'Unknown error'
       }
     });
-  }
-}
-      {
-        id: 1,
-        name: 'US Federal Holidays',
-        description: 'Standard US federal holidays observed by all employees',
-        employee_count: 85,
-        total_holiday_days: 11,
-        holidays: [
-          {
-            name: "New Year's Day",
-            start_date: new Date('2024-01-01'),
-            end_date: new Date('2024-01-01'),
-            days_count: 1,
-            is_recurring: true,
-          },
-          {
-            name: 'Independence Day',
-            start_date: new Date('2024-07-04'),
-            end_date: new Date('2024-07-04'),
-            days_count: 1,
-            is_recurring: true,
-          },
-          {
-            name: 'Christmas Day',
-            start_date: new Date('2024-12-25'),
-            end_date: new Date('2024-12-25'),
-            days_count: 1,
-            is_recurring: true,
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: 'Manufacturing Holidays',
-        description:
-          'Extended holidays for manufacturing employees including plant shutdowns',
-        employee_count: 45,
-        total_holiday_days: 15,
-        holidays: [
-          {
-            name: 'Summer Plant Shutdown',
-            start_date: new Date('2024-07-01'),
-            end_date: new Date('2024-07-05'),
-            days_count: 5,
-            is_recurring: true,
-          },
-          {
-            name: 'Winter Plant Shutdown',
-            start_date: new Date('2024-12-23'),
-            end_date: new Date('2024-12-29'),
-            days_count: 7,
-            is_recurring: true,
-          },
-        ],
-      },
-      {
-        id: 3,
-        name: 'International Holidays',
-        description: 'Additional holidays for international employees',
-        employee_count: 28,
-        total_holiday_days: 8,
-        holidays: [
-          {
-            name: "International Workers' Day",
-            start_date: new Date('2024-05-01'),
-            end_date: new Date('2024-05-01'),
-            days_count: 1,
-            is_recurring: true,
-          },
-          {
-            name: 'Boxing Day',
-            start_date: new Date('2024-12-26'),
-            end_date: new Date('2024-12-26'),
-            days_count: 1,
-            is_recurring: true,
-          },
-        ],
-      },
-    ];
   }
 }
