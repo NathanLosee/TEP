@@ -47,9 +47,11 @@ export class DepartmentManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private departmentService = inject(DepartmentService);
 
   departments: Department[] = [];
   filteredDepartments: Department[] = [];
+  selectedDepartmentDetails: DepartmentWithEmployees | null = null;
   displayedColumns: string[] = ['name', 'employee_count', 'actions'];
 
   searchForm: FormGroup;
