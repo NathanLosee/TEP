@@ -390,49 +390,4 @@ export class EmployeeManagementComponent implements OnInit {
       }
     });
   }
-    return [
-      {
-        id: 1,
-        badge_number: 'EMP001',
-        first_name: 'John',
-        last_name: 'Doe',
-        payroll_type: 'Salary',
-        workweek_type: 'Standard',
-        time_type: true,
-        allow_clocking: true,
-        allow_delete: true,
-        org_unit: { name: 'Corporate' },
-        departments: [{ name: 'IT' }, { name: 'Admin' }],
-        holiday_group: { name: 'Standard US Holidays' },
-      },
-      {
-        id: 2,
-        badge_number: 'EMP002',
-        first_name: 'Jane',
-        last_name: 'Smith',
-        payroll_type: 'Hourly',
-        workweek_type: 'Flexible',
-        time_type: false,
-        allow_clocking: true,
-        allow_delete: true,
-        org_unit: { name: 'Manufacturing' },
-        departments: [{ name: 'Production' }],
-        holiday_group: { name: 'Manufacturing Holidays' },
-      },
-      {
-        id: 3,
-        badge_number: 'EMP003',
-        first_name: 'Mike',
-        last_name: 'Johnson',
-        payroll_type: 'Salary',
-        workweek_type: 'Standard',
-        time_type: true,
-        allow_clocking: false,
-        allow_delete: false,
-        org_unit: { name: 'Corporate' },
-        departments: [{ name: 'HR' }],
-        holiday_group: { name: 'Corporate Holidays' },
-      },
-    ];
-  }
 }
