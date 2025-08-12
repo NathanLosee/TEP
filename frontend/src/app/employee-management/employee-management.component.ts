@@ -52,6 +52,8 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
   ],
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss',
