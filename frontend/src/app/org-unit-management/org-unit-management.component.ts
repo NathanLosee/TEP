@@ -95,12 +95,17 @@ export class OrgUnitManagementComponent implements OnInit {
 
   loadOrgUnits() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.orgUnits = this.generateMockOrgUnits();
-      this.filteredOrgUnits = [...this.orgUnits];
-      this.isLoading = false;
-    }, 1000);
+    this.orgUnitService.getOrgUnits().subscribe({
+      next: (orgUnits) => {
+        this.orgUnits = orgUnits;
+        this.filteredOrgUnits = [...this.orgUnits];
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load organizational units', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   filterOrgUnits() {
