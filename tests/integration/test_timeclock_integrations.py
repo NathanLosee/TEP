@@ -182,6 +182,8 @@ def test_update_timeclock_entry_by_id_200(
     new_clock_in = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     timeclock["badge_number"] = employee["badge_number"]
     timeclock["clock_in"] = new_clock_in
+    del timeclock["first_name"]
+    del timeclock["last_name"]
 
     response = test_client.put(
         f"{BASE_URL}/{timeclock["id"]}",

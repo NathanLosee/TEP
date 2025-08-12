@@ -22,15 +22,20 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import {
+  TimeclockEntry,
+  TimeclockService,
+} from '../../services/timeclock.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
-interface TimeclockEntry {
+interface TimeclockEntryListing {
   id: number;
-  badge_number: string;
-  employee_name?: string;
-  clock_in: Date;
-  clock_out?: Date;
-  total_hours?: number;
-  status: 'clocked_in' | 'clocked_out' | 'incomplete';
+  badgeNumber: string;
+  employeeName?: string;
+  clockIn: Date;
+  clockOut?: Date;
+  totalHours?: number;
+  status: string;
 }
 
 @Component({
@@ -61,11 +66,12 @@ interface TimeclockEntry {
   styleUrl: './time-entries.component.scss',
 })
 export class TimeEntriesComponent implements OnInit {
+  private timeclockService = inject(TimeclockService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  readonly errorDialog = inject(ErrorDialogComponent);
 
-  timeEntries: TimeclockEntry[] = [];
-  filteredEntries: TimeclockEntry[] = [];
+  timeEntries: TimeclockEntryListing[] = [];
   displayedColumns: string[] = [
     'badge_number',
     'employee_name',
@@ -86,6 +92,8 @@ export class TimeEntriesComponent implements OnInit {
         end: [new Date()],
       }),
       badge_number: [''],
+      first_name: [''],
+      last_name: [''],
       status: [''],
     });
   }
@@ -111,50 +119,50 @@ export class TimeEntriesComponent implements OnInit {
 
   setupFilterForm() {
     this.filterForm.valueChanges.subscribe(() => {
-      this.filterEntries();
+      this.loadTimeEntries();
     });
   }
 
   loadTimeEntries() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.timeEntries = this.generateMockTimeEntries();
-      this.filteredEntries = [...this.timeEntries];
-      this.isLoading = false;
-    }, 1000);
-  }
-
-  filterEntries() {
     const filters = this.filterForm.value;
-    const startDate = filters.dateRange?.start;
-    const endDate = filters.dateRange?.end;
-
-    this.filteredEntries = this.timeEntries.filter((entry) => {
-      const entryDate = new Date(entry.clock_in);
-
-      const matchesDateRange =
-        (!startDate || entryDate >= startDate) &&
-        (!endDate || entryDate <= endDate);
-
-      const matchesBadge =
-        !filters.badge_number ||
-        entry.badge_number
-          .toLowerCase()
-          .includes(filters.badge_number.toLowerCase());
-
-      const matchesStatus = !filters.status || entry.status === filters.status;
-
-      return matchesDateRange && matchesBadge && matchesStatus;
-    });
+    this.timeclockService
+      .getTimeclockEntries(
+        filters.dateRange?.start,
+        filters.dateRange?.end,
+        filters.badge_number,
+        filters.first_name,
+        filters.last_name
+      )
+      .subscribe({
+        next: (response) => {
+          console.log(response);
+          this.timeEntries = response.map((entry) => ({
+            ...entry,
+            employeeName: entry.firstName + ' ' + entry.lastName,
+            totalHours: entry.clockOut
+              ? this.calculateTotalHours(
+                  new Date(entry.clockIn),
+                  new Date(entry.clockOut)
+                )
+              : 0,
+            status: this.getEntryStatus(entry),
+          }));
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.errorDialog.openErrorDialog(error);
+          this.isLoading = false;
+        },
+      });
   }
 
-  editEntry(entry: TimeclockEntry) {
-    this.showSnackBar(`Edit entry for ${entry.badge_number}`, 'info');
+  editEntry(entry: TimeclockEntryListing) {
+    this.showSnackBar(`Edit entry for ${entry.badgeNumber}`, 'info');
   }
 
-  deleteEntry(entry: TimeclockEntry) {
-    this.showSnackBar(`Delete entry for ${entry.badge_number}`, 'info');
+  deleteEntry(entry: TimeclockEntryListing) {
+    this.showSnackBar(`Delete entry for ${entry.badgeNumber}`, 'info');
   }
 
   addManualEntry() {
@@ -168,6 +176,14 @@ export class TimeEntriesComponent implements OnInit {
         ((clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)) * 100
       ) / 100
     );
+  }
+
+  getEntryStatus(entry: TimeclockEntry): string {
+    return !entry.clockOut
+      ? 'clocked_in'
+      : entry.clockOut.getTime() - entry.clockIn.getTime() < 4 * 60 * 60 * 1000
+      ? 'incomplete'
+      : 'clocked_out';
   }
 
   getStatusClass(status: string): string {
@@ -184,16 +200,15 @@ export class TimeEntriesComponent implements OnInit {
   }
 
   getActiveEntriesCount(): number {
-    return this.filteredEntries.filter((e) => e.status === 'clocked_in').length;
+    return this.timeEntries.filter((e) => e.status === 'clocked_in').length;
   }
 
   getCompletedEntriesCount(): number {
-    return this.filteredEntries.filter((e) => e.status === 'clocked_out')
-      .length;
+    return this.timeEntries.filter((e) => e.status === 'clocked_out').length;
   }
 
   getIncompleteEntriesCount(): number {
-    return this.filteredEntries.filter((e) => e.status === 'incomplete').length;
+    return this.timeEntries.filter((e) => e.status === 'incomplete').length;
   }
 
   private showSnackBar(
@@ -204,64 +219,5 @@ export class TimeEntriesComponent implements OnInit {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });
-  }
-
-  private generateMockTimeEntries(): TimeclockEntry[] {
-    const entries: TimeclockEntry[] = [];
-    const today = new Date();
-
-    for (let i = 0; i < 20; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - Math.floor(Math.random() * 7));
-
-      const clockIn = new Date(date);
-      clockIn.setHours(
-        8 + Math.floor(Math.random() * 2),
-        Math.floor(Math.random() * 60)
-      );
-
-      const clockOut = Math.random() > 0.2 ? new Date(clockIn) : undefined;
-      if (clockOut) {
-        clockOut.setHours(
-          clockIn.getHours() + 8 + Math.floor(Math.random() * 2),
-          Math.floor(Math.random() * 60)
-        );
-      }
-
-      const badgeNumber = `EMP${String(i + 1).padStart(3, '0')}`;
-      const status = !clockOut
-        ? 'clocked_in'
-        : clockOut.getTime() - clockIn.getTime() < 4 * 60 * 60 * 1000
-        ? 'incomplete'
-        : 'clocked_out';
-
-      entries.push({
-        id: i + 1,
-        badge_number: badgeNumber,
-        employee_name: this.getRandomEmployeeName(),
-        clock_in: clockIn,
-        clock_out: clockOut,
-        total_hours: clockOut ? this.calculateTotalHours(clockIn, clockOut) : 0,
-        status: status as any,
-      });
-    }
-
-    return entries.sort((a, b) => b.clock_in.getTime() - a.clock_in.getTime());
-  }
-
-  private getRandomEmployeeName(): string {
-    const names = [
-      'John Doe',
-      'Jane Smith',
-      'Mike Johnson',
-      'Sarah Williams',
-      'David Brown',
-      'Lisa Davis',
-      'Robert Miller',
-      'Maria Garcia',
-      'James Wilson',
-      'Jennifer Moore',
-    ];
-    return names[Math.floor(Math.random() * names.length)];
   }
 }

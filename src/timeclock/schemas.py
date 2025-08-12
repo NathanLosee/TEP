@@ -38,3 +38,16 @@ class TimeclockEntryBase(BaseModel):
             status.HTTP_400_BAD_REQUEST,
         )
         return self
+
+
+class TimeclockEntryWithName(TimeclockEntryBase):
+    """Pydantic schema for request/response data with employee names.
+
+    Attributes:
+        first_name (str): Employee's first name.
+        last_name (str): Employee's last name.
+
+    """
+
+    first_name: str
+    last_name: str

@@ -26,7 +26,7 @@
       <mat-card class="stat-card">
         <div class="stat-content">
           <mat-icon class="stat-icon">schedule</mat-icon>
-          <div class="stat-value">{{ filteredEntries.length }}</div>
+          <div class="stat-value">{{ timeEntries.length }}</div>
           <div class="stat-label">Total Entries</div>
         </div>
       </mat-card>
@@ -93,6 +93,16 @@
           </div>
 
           <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="">All Status</mat-option>
+              <mat-option value="clocked_in">Currently Clocked In</mat-option>
+              <mat-option value="clocked_out">Completed</mat-option>
+              <mat-option value="incomplete">Incomplete</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Badge Number</mat-label>
             <input
               matInput
@@ -103,13 +113,23 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="">All Status</mat-option>
-              <mat-option value="clocked_in">Currently Clocked In</mat-option>
-              <mat-option value="clocked_out">Completed</mat-option>
-              <mat-option value="incomplete">Incomplete</mat-option>
-            </mat-select>
+            <mat-label>First Name</mat-label>
+            <input
+              matInput
+              formControlName="first_name"
+              placeholder="Search by first name"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Last Name</mat-label>
+            <input
+              matInput
+              formControlName="last_name"
+              placeholder="Search by last name"
+            />
+            <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
         </div>
       </form>
@@ -120,7 +140,7 @@
   <mat-card class="table-card">
     <mat-card-content>
       <div class="table-header">
-        <h2>Time Entries ({{ filteredEntries.length }})</h2>
+        <h2>Time Entries ({{ timeEntries.length }})</h2>
         <div class="table-actions">
           <button
             mat-icon-button
@@ -135,7 +155,7 @@
       <div class="table-container" *ngIf="!isLoading">
         <table
           mat-table
-          [dataSource]="filteredEntries"
+          [dataSource]="timeEntries"
           class="entries-table"
           matSort
         >
@@ -282,10 +302,7 @@
       </div>
 
       <!-- Empty State -->
-      <div
-        *ngIf="!isLoading && filteredEntries.length === 0"
-        class="empty-state"
-      >
+      <div *ngIf="!isLoading && timeEntries.length === 0" class="empty-state">
         <mat-icon class="empty-icon">schedule</mat-icon>
         <h3>No time entries found</h3>
         <p>Try adjusting your date range or search criteria.</p>

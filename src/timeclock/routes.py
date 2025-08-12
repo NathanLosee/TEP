@@ -16,7 +16,7 @@ from src.timeclock.constants import (
     EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
     IDENTIFIER,
 )
-from src.timeclock.schemas import TimeclockEntryBase
+from src.timeclock.schemas import TimeclockEntryBase, TimeclockEntryWithName
 
 router = APIRouter(prefix=BASE_URL, tags=["timeclock"])
 
@@ -85,12 +85,14 @@ def check_status(badge_number: str, db: Session = Depends(get_db)):
 @router.get(
     "",
     status_code=status.HTTP_200_OK,
-    response_model=list[TimeclockEntryBase],
+    response_model=list[TimeclockEntryWithName],
 )
 def get_timeclock_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
     badge_number: str = None,
+    first_name: str = None,
+    last_name: str = None,
     db: Session = Depends(get_db),
     caller_badge: str = Security(
         requires_permission, scopes=["timeclock.read"]
@@ -105,6 +107,10 @@ def get_timeclock_entries(
         end_timestamp (datetime): End timestamp for the time period.
         badge_number (str, optional): Employee's badge number.
             Defaults to None.
+        first_name (str, optional): Employee's first name to filter by.
+            Defaults to None.
+        last_name (str, optional): Employee's last name to filter by.
+            Defaults to None.
         db (Session): Database session for current request.
 
     Returns:
@@ -112,7 +118,7 @@ def get_timeclock_entries(
 
     """
     return timeclock_repository.get_timeclock_entries(
-        start_timestamp, end_timestamp, badge_number, db
+        start_timestamp, end_timestamp, badge_number, first_name, last_name, db
     )
 
 
