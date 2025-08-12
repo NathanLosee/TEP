@@ -49,9 +49,11 @@ export class OrgUnitManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private orgUnitService = inject(OrgUnitService);
 
   orgUnits: OrgUnit[] = [];
   filteredOrgUnits: OrgUnit[] = [];
+  selectedOrgUnitDetails: OrgUnitWithEmployees | null = null;
   displayedColumns: string[] = ['name', 'employee_count', 'actions'];
 
   searchForm: FormGroup;
