@@ -129,21 +129,28 @@ export class OrgUnitManagementComponent implements OnInit {
 
   addOrgUnit() {
     if (this.addOrgUnitForm.valid) {
-      const formValue = this.addOrgUnitForm.value;
-      const newOrgUnit: OrgUnit = {
-        id: this.orgUnits.length + 1,
-        name: formValue.name,
-        employee_count: 0,
+      this.isLoading = true;
+      const orgUnitData = {
+        name: this.addOrgUnitForm.get('name')?.value
       };
 
-      this.orgUnits.push(newOrgUnit);
-      this.filterOrgUnits();
-      this.addOrgUnitForm.reset();
-      this.showAddForm = false;
-      this.showSnackBar(
-        `Org Unit "${newOrgUnit.name}" created successfully`,
-        'success'
-      );
+      this.orgUnitService.createOrgUnit(orgUnitData).subscribe({
+        next: (newOrgUnit) => {
+          this.orgUnits.push(newOrgUnit);
+          this.filterOrgUnits();
+          this.addOrgUnitForm.reset();
+          this.showAddForm = false;
+          this.showSnackBar(
+            `Org Unit "${newOrgUnit.name}" created successfully`,
+            'success'
+          );
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to create organizational unit', error);
+          this.isLoading = false;
+        }
+      });
     }
   }
 
