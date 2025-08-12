@@ -62,9 +62,17 @@ export class EmployeeManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private employeeService = inject(EmployeeService);
+  private departmentService = inject(DepartmentService);
+  private orgUnitService = inject(OrgUnitService);
+  private holidayGroupService = inject(HolidayGroupService);
 
   employees: Employee[] = [];
   filteredEmployees: Employee[] = [];
+  departments: Department[] = [];
+  orgUnits: OrgUnit[] = [];
+  holidayGroups: HolidayGroup[] = [];
+  managers: Employee[] = [];
   displayedColumns: string[] = [
     'badge_number',
     'name',
