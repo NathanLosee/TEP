@@ -1,39 +1,39 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
   Validators,
-} from "@angular/forms";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatTableModule } from "@angular/material/table";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatSelectModule } from "@angular/material/select";
-import { MatChipsModule } from "@angular/material/chips";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatDialogModule, MatDialog } from "@angular/material/dialog";
-import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
-import { MatTabsModule } from "@angular/material/tabs";
-import { MatExpansionModule } from "@angular/material/expansion";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { MatDividerModule } from "@angular/material/divider";
+} from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import {
   AuthRoleService,
   AuthRole,
   AuthRoleBase,
   Permission,
   UserResponse,
-} from "../../services/auth-role.service";
-import { UserService, User } from "../../services/user.service";
+} from '../../services/auth-role.service';
+import { UserService, User } from '../../services/user.service';
 
 @Component({
-  selector: "app-auth-role-management",
+  selector: 'app-auth-role-management',
   standalone: true,
   imports: [
     CommonModule,
@@ -56,8 +56,8 @@ import { UserService, User } from "../../services/user.service";
     MatTooltipModule,
     MatDividerModule,
   ],
-  templateUrl: "./auth-role-management.component.html",
-  styleUrl: "./auth-role-management.component.scss",
+  templateUrl: './auth-role-management.component.html',
+  styleUrl: './auth-role-management.component.scss',
 })
 export class AuthRoleManagementComponent implements OnInit {
   private authRoleService = inject(AuthRoleService);
@@ -78,7 +78,7 @@ export class AuthRoleManagementComponent implements OnInit {
 
   // UI State
   isLoading = false;
-  searchTerm = "";
+  searchTerm = '';
   showCreateForm = false;
   editingRole: AuthRole | null = null;
 
@@ -87,12 +87,12 @@ export class AuthRoleManagementComponent implements OnInit {
   selectedPermissions: Set<string> = new Set();
 
   // Table columns
-  displayedColumns = ["name", "permissions", "users", "actions"];
+  displayedColumns = ['name', 'permissions', 'users', 'actions'];
 
   constructor() {
     this.roleForm = this.formBuilder.group({
       name: [
-        "",
+        '',
         [
           Validators.required,
           Validators.minLength(2),
@@ -119,9 +119,9 @@ export class AuthRoleManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to load auth roles: " +
+          'Failed to load auth roles: ' +
             (error.error?.detail || error.message),
-          "error",
+          'error'
         );
         this.isLoading = false;
       },
@@ -135,8 +135,8 @@ export class AuthRoleManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to load users: " + (error.error?.detail || error.message),
-          "error",
+          'Failed to load users: ' + (error.error?.detail || error.message),
+          'error'
         );
       },
     });
@@ -149,9 +149,9 @@ export class AuthRoleManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to load role users: " +
+          'Failed to load role users: ' +
             (error.error?.detail || error.message),
-          "error",
+          'error'
         );
       },
     });
@@ -165,7 +165,7 @@ export class AuthRoleManagementComponent implements OnInit {
       this.filteredAuthRoles = this.authRoles.filter(
         (role) =>
           role.name.toLowerCase().includes(term) ||
-          role.permissions.some((p) => p.resource.toLowerCase().includes(term)),
+          role.permissions.some((p) => p.resource.toLowerCase().includes(term))
       );
     }
   }
@@ -219,8 +219,8 @@ export class AuthRoleManagementComponent implements OnInit {
   onSubmit() {
     if (this.roleForm.invalid) {
       this.showSnackBar(
-        "Please fill in all required fields correctly",
-        "error",
+        'Please fill in all required fields correctly',
+        'error'
       );
       return;
     }
@@ -246,16 +246,16 @@ export class AuthRoleManagementComponent implements OnInit {
         .updateAuthRole(this.editingRole.id, updateData)
         .subscribe({
           next: (updatedRole) => {
-            this.showSnackBar("Auth role updated successfully", "success");
+            this.showSnackBar('Auth role updated successfully', 'success');
             this.loadAuthRoles();
             this.cancelForm();
             this.isLoading = false;
           },
           error: (error) => {
             this.showSnackBar(
-              "Failed to update auth role: " +
+              'Failed to update auth role: ' +
                 (error.error?.detail || error.message),
-              "error",
+              'error'
             );
             this.isLoading = false;
           },
@@ -264,16 +264,16 @@ export class AuthRoleManagementComponent implements OnInit {
       // Create new role
       this.authRoleService.createAuthRole(roleData).subscribe({
         next: (newRole) => {
-          this.showSnackBar("Auth role created successfully", "success");
+          this.showSnackBar('Auth role created successfully', 'success');
           this.loadAuthRoles();
           this.cancelForm();
           this.isLoading = false;
         },
         error: (error) => {
           this.showSnackBar(
-            "Failed to create auth role: " +
+            'Failed to create auth role: ' +
               (error.error?.detail || error.message),
-            "error",
+            'error'
           );
           this.isLoading = false;
         },
@@ -284,21 +284,21 @@ export class AuthRoleManagementComponent implements OnInit {
   deleteRole(role: AuthRole) {
     if (
       confirm(
-        `Are you sure you want to delete the auth role "${role.name}"? This action cannot be undone.`,
+        `Are you sure you want to delete the auth role "${role.name}"? This action cannot be undone.`
       )
     ) {
       this.isLoading = true;
       this.authRoleService.deleteAuthRole(role.id).subscribe({
         next: () => {
-          this.showSnackBar("Auth role deleted successfully", "success");
+          this.showSnackBar('Auth role deleted successfully', 'success');
           this.loadAuthRoles();
           this.isLoading = false;
         },
         error: (error) => {
           this.showSnackBar(
-            "Failed to delete auth role: " +
+            'Failed to delete auth role: ' +
               (error.error?.detail || error.message),
-            "error",
+            'error'
           );
           this.isLoading = false;
         },
@@ -319,12 +319,12 @@ export class AuthRoleManagementComponent implements OnInit {
       .subscribe({
         next: (users) => {
           this.selectedRoleUsers = users;
-          this.showSnackBar("User assigned to role successfully", "success");
+          this.showSnackBar('User assigned to role successfully', 'success');
         },
         error: (error) => {
           this.showSnackBar(
-            "Failed to assign user: " + (error.error?.detail || error.message),
-            "error",
+            'Failed to assign user: ' + (error.error?.detail || error.message),
+            'error'
           );
         },
       });
@@ -333,19 +333,19 @@ export class AuthRoleManagementComponent implements OnInit {
   removeUserFromRole(userId: number) {
     if (!this.selectedRole) return;
 
-    if (confirm("Are you sure you want to remove this user from the role?")) {
+    if (confirm('Are you sure you want to remove this user from the role?')) {
       this.authRoleService
         .removeUserFromRole(this.selectedRole.id, userId)
         .subscribe({
           next: (users) => {
             this.selectedRoleUsers = users;
-            this.showSnackBar("User removed from role successfully", "success");
+            this.showSnackBar('User removed from role successfully', 'success');
           },
           error: (error) => {
             this.showSnackBar(
-              "Failed to remove user: " +
+              'Failed to remove user: ' +
                 (error.error?.detail || error.message),
-              "error",
+              'error'
             );
           },
         });
@@ -359,14 +359,14 @@ export class AuthRoleManagementComponent implements OnInit {
 
   getCategoryName(category: string): string {
     const names: { [key: string]: string } = {
-      auth_role: "Auth Roles",
-      department: "Departments",
-      employee: "Employees",
-      event_log: "Event Logs",
-      holiday_group: "Holiday Groups",
-      org_unit: "Organizational Units",
-      timeclock: "Timeclock",
-      user: "Users",
+      auth_role: 'Auth Roles',
+      department: 'Departments',
+      employee: 'Employees',
+      event_log: 'Event Logs',
+      holiday_group: 'Holiday Groups',
+      org_unit: 'Organizational Units',
+      timeclock: 'Timeclock',
+      user: 'Users',
     };
     return (
       names[category] || category.charAt(0).toUpperCase() + category.slice(1)
@@ -375,21 +375,21 @@ export class AuthRoleManagementComponent implements OnInit {
 
   getCategoryIcon(category: string): string {
     const icons: { [key: string]: string } = {
-      auth_role: "security",
-      department: "business",
-      employee: "people",
-      event_log: "history",
-      holiday_group: "event",
-      org_unit: "account_tree",
-      timeclock: "schedule",
-      user: "person",
+      auth_role: 'security',
+      department: 'business',
+      employee: 'people',
+      event_log: 'history',
+      holiday_group: 'event',
+      org_unit: 'account_tree',
+      timeclock: 'schedule',
+      user: 'person',
     };
-    return icons[category] || "settings";
+    return icons[category] || 'settings';
   }
 
   getSelectedPermissionsCount(category: string): number {
     const categoryPermissions = Object.keys(
-      this.availablePermissions[category] || {},
+      this.availablePermissions[category] || {}
     );
     return categoryPermissions.filter((p) => this.selectedPermissions.has(p))
       .length;
@@ -402,7 +402,7 @@ export class AuthRoleManagementComponent implements OnInit {
   getPermissionCount(): number {
     return this.authRoles.reduce(
       (total, role) => total + role.permissions.length,
-      0,
+      0
     );
   }
 
@@ -417,9 +417,9 @@ export class AuthRoleManagementComponent implements OnInit {
 
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info",
+    type: 'success' | 'error' | 'info' = 'info'
   ) {
-    this.snackBar.open(message, "Close", {
+    this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });
