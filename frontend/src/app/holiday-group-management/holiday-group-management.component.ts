@@ -223,14 +223,6 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   deleteGroup(group: HolidayGroup) {
-    if (group.employee_count > 0) {
-      this.showSnackBar(
-        'Cannot delete holiday group with assigned employees. Please reassign employees first.',
-        'error'
-      );
-      return;
-    }
-
     const confirmDelete = confirm(
       `Are you sure you want to delete ${group.name}? This action cannot be undone.`
     );
@@ -238,19 +230,24 @@ export class HolidayGroupManagementComponent implements OnInit {
     if (confirmDelete) {
       this.isLoading = true;
 
-      // Remove group from the array (simulating API call)
-      setTimeout(() => {
-        const index = this.holidayGroups.findIndex((g) => g.id === group.id);
-        if (index > -1) {
-          this.holidayGroups.splice(index, 1);
-          this.filterGroups();
-          this.showSnackBar(
-            `${group.name} has been deleted successfully`,
-            'success'
-          );
+      this.holidayGroupService.deleteHolidayGroup(group.id).subscribe({
+        next: () => {
+          const index = this.holidayGroups.findIndex((g) => g.id === group.id);
+          if (index > -1) {
+            this.holidayGroups.splice(index, 1);
+            this.filterGroups();
+            this.showSnackBar(
+              `${group.name} has been deleted successfully`,
+              'success'
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to delete holiday group', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
