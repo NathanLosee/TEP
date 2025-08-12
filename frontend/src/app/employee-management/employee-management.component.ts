@@ -234,15 +234,40 @@ export class EmployeeManagementComponent implements OnInit {
     });
   }
 
-  addEmployee() {
-    // Open add employee dialog
-    this.showSnackBar('Add employee feature coming soon', 'info');
+  toggleAddForm() {
+    this.showAddForm = !this.showAddForm;
+    if (!this.showAddForm) {
+      this.addEmployeeForm.reset();
+    }
   }
 
-  selectedEmployee: Employee | null = null;
-  showEditForm = false;
-  showViewDetails = false;
-  editForm: FormGroup;
+  addEmployee() {
+    if (this.addEmployeeForm.valid) {
+      this.isLoading = true;
+      const employeeData = {
+        ...this.addEmployeeForm.value,
+        payroll_sync: this.addEmployeeForm.get('payroll_sync')?.value?.toISOString().split('T')[0]
+      };
+
+      this.employeeService.createEmployee(employeeData).subscribe({
+        next: (newEmployee) => {
+          this.employees.push(newEmployee);
+          this.filterEmployees();
+          this.addEmployeeForm.reset();
+          this.showAddForm = false;
+          this.showSnackBar(
+            `Employee "${newEmployee.first_name} ${newEmployee.last_name}" created successfully`,
+            'success'
+          );
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to create employee', error);
+          this.isLoading = false;
+        }
+      });
+    }
+  }
 
   editEmployee(employee: Employee) {
     this.selectedEmployee = employee;
