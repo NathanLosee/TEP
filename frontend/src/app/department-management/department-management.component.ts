@@ -222,24 +222,31 @@ export class DepartmentManagementComponent implements OnInit {
     if (this.editForm && this.editForm.valid && this.selectedDepartment) {
       this.isLoading = true;
 
-      const formData = this.editForm.value;
+      const departmentData = {
+        name: this.editForm.get('name')?.value
+      };
 
-      // Update department data (simulating API call)
-      setTimeout(() => {
-        const index = this.departments.findIndex(
-          (dept) => dept.id === this.selectedDepartment!.id
-        );
-        if (index > -1) {
-          this.departments[index] = {
-            ...this.departments[index],
-            name: formData.name,
-          };
-          this.filterDepartments();
-          this.showSnackBar('Department updated successfully', 'success');
-          this.cancelEdit();
+      this.departmentService.updateDepartment(this.selectedDepartment.id, departmentData).subscribe({
+        next: (updatedDept) => {
+          const index = this.departments.findIndex(
+            (dept) => dept.id === this.selectedDepartment!.id
+          );
+          if (index > -1) {
+            this.departments[index] = {
+              ...this.departments[index],
+              name: updatedDept.name,
+            };
+            this.filterDepartments();
+            this.showSnackBar('Department updated successfully', 'success');
+            this.cancelEdit();
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to update department', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
