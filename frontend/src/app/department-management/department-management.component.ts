@@ -18,13 +18,8 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-interface Department {
-  id: number;
-  name: string;
-  employee_count?: number;
-  employees?: any[];
-}
+import { DepartmentService, Department, DepartmentWithEmployees } from '../../services/department.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-department-management',
