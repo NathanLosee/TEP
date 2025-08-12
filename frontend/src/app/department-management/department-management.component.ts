@@ -91,12 +91,20 @@ export class DepartmentManagementComponent implements OnInit {
 
   loadDepartments() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.departments = this.generateMockDepartments();
-      this.filteredDepartments = [...this.departments];
-      this.isLoading = false;
-    }, 1000);
+    this.departmentService.getDepartments().subscribe({
+      next: (departments) => {
+        this.departments = departments.map(dept => ({
+          ...dept,
+          employee_count: 0 // Will be populated when viewing details
+        }));
+        this.filteredDepartments = [...this.departments];
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load departments', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   filterDepartments() {
