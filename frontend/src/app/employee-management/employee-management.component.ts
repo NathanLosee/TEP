@@ -157,12 +157,52 @@ export class EmployeeManagementComponent implements OnInit {
 
   loadEmployees() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.employees = this.generateMockEmployees();
-      this.filteredEmployees = [...this.employees];
-      this.isLoading = false;
-    }, 1000);
+    this.employeeService.getEmployees().subscribe({
+      next: (employees) => {
+        this.employees = employees;
+        this.filteredEmployees = [...this.employees];
+        // Load managers list (employees who can be managers)
+        this.managers = employees.filter(emp => emp.allow_clocking);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load employees', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadDepartments() {
+    this.departmentService.getDepartments().subscribe({
+      next: (departments) => {
+        this.departments = departments;
+      },
+      error: (error) => {
+        console.error('Failed to load departments', error);
+      }
+    });
+  }
+
+  loadOrgUnits() {
+    this.orgUnitService.getOrgUnits().subscribe({
+      next: (orgUnits) => {
+        this.orgUnits = orgUnits;
+      },
+      error: (error) => {
+        console.error('Failed to load org units', error);
+      }
+    });
+  }
+
+  loadHolidayGroups() {
+    this.holidayGroupService.getHolidayGroups().subscribe({
+      next: (holidayGroups) => {
+        this.holidayGroups = holidayGroups;
+      },
+      error: (error) => {
+        console.error('Failed to load holiday groups', error);
+      }
+    });
   }
 
   filterEmployees() {
