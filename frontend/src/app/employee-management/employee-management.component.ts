@@ -310,19 +310,24 @@ export class EmployeeManagementComponent implements OnInit {
     if (confirmDelete) {
       this.isLoading = true;
 
-      // Remove employee from the array (simulating API call)
-      setTimeout(() => {
-        const index = this.employees.findIndex((emp) => emp.id === employee.id);
-        if (index > -1) {
-          this.employees.splice(index, 1);
-          this.filterEmployees();
-          this.showSnackBar(
-            `${employee.first_name} ${employee.last_name} has been deleted successfully`,
-            'success'
-          );
+      this.employeeService.deleteEmployee(employee.id).subscribe({
+        next: () => {
+          const index = this.employees.findIndex((emp) => emp.id === employee.id);
+          if (index > -1) {
+            this.employees.splice(index, 1);
+            this.filterEmployees();
+            this.showSnackBar(
+              `${employee.first_name} ${employee.last_name} has been deleted successfully`,
+              'success'
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to delete employee', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
