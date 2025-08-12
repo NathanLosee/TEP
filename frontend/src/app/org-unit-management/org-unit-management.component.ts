@@ -19,14 +19,8 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-interface OrgUnit {
-  id: number;
-  name: string;
-  description?: string;
-  employee_count?: number;
-  location?: string;
-  manager_name?: string;
+import { OrgUnitService, OrgUnit, OrgUnitWithEmployees } from '../../services/org-unit.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
   employees?: any[];
 }
 
