@@ -380,7 +380,16 @@ export class EmployeeManagementComponent implements OnInit {
     });
   }
 
-  private generateMockEmployees(): Employee[] {
+  private handleError(message: string, error: any) {
+    console.error(message, error);
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Error',
+        message: `${message}. Please try again.`,
+        error: error?.error?.detail || error?.message || 'Unknown error'
+      }
+    });
+  }
     return [
       {
         id: 1,
