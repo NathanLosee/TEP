@@ -181,19 +181,24 @@ export class OrgUnitManagementComponent implements OnInit {
     if (confirmDelete) {
       this.isLoading = true;
 
-      // Remove org unit from the array (simulating API call)
-      setTimeout(() => {
-        const index = this.orgUnits.findIndex((unit) => unit.id === orgUnit.id);
-        if (index > -1) {
-          this.orgUnits.splice(index, 1);
-          this.filterOrgUnits();
-          this.showSnackBar(
-            `${orgUnit.name} has been deleted successfully`,
-            'success'
-          );
+      this.orgUnitService.deleteOrgUnit(orgUnit.id).subscribe({
+        next: () => {
+          const index = this.orgUnits.findIndex((unit) => unit.id === orgUnit.id);
+          if (index > -1) {
+            this.orgUnits.splice(index, 1);
+            this.filterOrgUnits();
+            this.showSnackBar(
+              `${orgUnit.name} has been deleted successfully`,
+              'success'
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to delete organizational unit', error);
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      }, 1000);
+      });
     }
   }
 
