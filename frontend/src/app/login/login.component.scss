@@ -43,35 +43,6 @@
         font-size: 0.875rem;
         line-height: 1.4;
       }
-
-      .demo-credentials {
-        background: var(--sys-tertiary-container);
-        color: var(--sys-on-tertiary-container);
-        padding: 12px;
-        border-radius: 8px;
-        margin-top: 8px;
-
-        .demo-title {
-          font-size: 0.75rem;
-          font-weight: 600;
-          margin-bottom: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .demo-cred {
-          font-size: 0.75rem;
-          margin: 2px 0;
-          font-family: "Roboto Mono", monospace;
-
-          strong {
-            color: var(--sys-tertiary);
-            background: rgba(255, 255, 255, 0.2);
-            padding: 2px 4px;
-            border-radius: 3px;
-          }
-        }
-      }
     }
   }
 
@@ -83,7 +54,6 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
 
   .full-width {
     width: 100%;

@@ -17,7 +17,7 @@
 
       <div class="current-holidays">
         <h3>Current Holidays ({{ getHolidays().length }})</h3>
-        <div class="holidays-list">
+        <div class="holidays-list" formArrayName="holidays">
           <div
             *ngFor="let holiday of getHolidays().controls; let i = index"
             class="holiday-item"
