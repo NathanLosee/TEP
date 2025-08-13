@@ -57,6 +57,7 @@ def test_add_employee_to_department_201(
     response = test_client.post(
         f"{BASE_URL}/{department["id"]}/employees/{employee["id"]}",
     )
+    employee["departments"] = [department]
 
     assert response.status_code == status.HTTP_201_CREATED
     assert employee in response.json()
@@ -154,6 +155,7 @@ def test_get_employees_by_department_200_nonempty_list(
     employee = create_employee(employee_data, test_client)
     department = create_department(department_data, test_client)
     create_department_membership(department["id"], employee["id"], test_client)
+    employee["departments"] = [department]
 
     response = test_client.get(f"{BASE_URL}/{department["id"]}/employees")
 

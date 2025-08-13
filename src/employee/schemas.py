@@ -10,7 +10,10 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.department.schemas import DepartmentExtended
 from src.employee.constants import NAME_REGEX
+from src.holiday_group.schemas import HolidayGroupExtended
+from src.org_unit.schemas import OrgUnitExtended
 
 
 class EmployeeBase(BaseModel):
@@ -42,8 +45,8 @@ class EmployeeBase(BaseModel):
     time_type: bool
     allow_clocking: bool
     allow_delete: bool
-    org_unit_id: int
     manager_id: Optional[int] = Field(default=None)
+    org_unit_id: int
     holiday_group_id: Optional[int] = Field(default=None)
 
     model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
@@ -58,6 +61,9 @@ class EmployeeExtended(EmployeeBase):
     """
 
     id: int
+    org_unit: OrgUnitExtended
+    holiday_group: Optional[HolidayGroupExtended] = Field(default=None)
+    departments: Optional[list[DepartmentExtended]] = Field(default=[])
 
     model_config = ConfigDict(from_attributes=True)
 

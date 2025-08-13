@@ -32,6 +32,9 @@ def test_create_employee_201(
     )
 
     employee_data["id"] = response.json()["id"]
+    employee_data["org_unit"] = org_unit
+    employee_data["holiday_group"] = None
+    employee_data["departments"] = []
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == employee_data
@@ -130,6 +133,7 @@ def test_search_for_employees_200_with_department(
     employee = create_employee(employee_data, test_client)
     department = create_department(department_data, test_client)
     create_department_membership(department["id"], employee["id"], test_client)
+    employee["departments"] = [department]
 
     response = test_client.get(
         f"{BASE_URL}/search",

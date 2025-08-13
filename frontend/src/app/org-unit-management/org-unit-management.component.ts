@@ -1,34 +1,26 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-interface OrgUnit {
-  id: number;
-  name: string;
-  description?: string;
-  employee_count?: number;
-  location?: string;
-  manager_name?: string;
-  employees?: any[];
-}
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-org-unit-management',
@@ -57,6 +49,7 @@ export class OrgUnitManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private orgUnitService = inject(OrgUnitService);
 
   orgUnits: OrgUnit[] = [];
   filteredOrgUnits: OrgUnit[] = [];
@@ -101,12 +94,17 @@ export class OrgUnitManagementComponent implements OnInit {
 
   loadOrgUnits() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.orgUnits = this.generateMockOrgUnits();
-      this.filteredOrgUnits = [...this.orgUnits];
-      this.isLoading = false;
-    }, 1000);
+    this.orgUnitService.getOrgUnits().subscribe({
+      next: (orgUnits) => {
+        this.orgUnits = orgUnits;
+        this.filteredOrgUnits = [...this.orgUnits];
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load organizational units', error);
+        this.isLoading = false;
+      },
+    });
   }
 
   filterOrgUnits() {
@@ -130,21 +128,28 @@ export class OrgUnitManagementComponent implements OnInit {
 
   addOrgUnit() {
     if (this.addOrgUnitForm.valid) {
-      const formValue = this.addOrgUnitForm.value;
-      const newOrgUnit: OrgUnit = {
-        id: this.orgUnits.length + 1,
-        name: formValue.name,
-        employee_count: 0,
+      this.isLoading = true;
+      const orgUnitData = {
+        name: this.addOrgUnitForm.get('name')?.value,
       };
 
-      this.orgUnits.push(newOrgUnit);
-      this.filterOrgUnits();
-      this.addOrgUnitForm.reset();
-      this.showAddForm = false;
-      this.showSnackBar(
-        `Org Unit "${newOrgUnit.name}" created successfully`,
-        'success'
-      );
+      this.orgUnitService.createOrgUnit(orgUnitData).subscribe({
+        next: (newOrgUnit) => {
+          this.orgUnits.push(newOrgUnit);
+          this.filterOrgUnits();
+          this.addOrgUnitForm.reset();
+          this.showAddForm = false;
+          this.showSnackBar(
+            `Org Unit "${newOrgUnit.name}" created successfully`,
+            'success'
+          );
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to create organizational unit', error);
+          this.isLoading = false;
+        },
+      });
     }
   }
 
@@ -163,7 +168,6 @@ export class OrgUnitManagementComponent implements OnInit {
     // Initialize edit form with org unit data
     this.editForm.patchValue({
       name: orgUnit.name,
-      description: orgUnit.description || '',
     });
   }
 
@@ -175,19 +179,26 @@ export class OrgUnitManagementComponent implements OnInit {
     if (confirmDelete) {
       this.isLoading = true;
 
-      // Remove org unit from the array (simulating API call)
-      setTimeout(() => {
-        const index = this.orgUnits.findIndex((unit) => unit.id === orgUnit.id);
-        if (index > -1) {
-          this.orgUnits.splice(index, 1);
-          this.filterOrgUnits();
-          this.showSnackBar(
-            `${orgUnit.name} has been deleted successfully`,
-            'success'
+      this.orgUnitService.deleteOrgUnit(orgUnit.id!).subscribe({
+        next: () => {
+          const index = this.orgUnits.findIndex(
+            (unit) => unit.id === orgUnit.id
           );
-        }
-        this.isLoading = false;
-      }, 1000);
+          if (index > -1) {
+            this.orgUnits.splice(index, 1);
+            this.filterOrgUnits();
+            this.showSnackBar(
+              `${orgUnit.name} has been deleted successfully`,
+              'success'
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to delete organizational unit', error);
+          this.isLoading = false;
+        },
+      });
     }
   }
 
@@ -195,25 +206,30 @@ export class OrgUnitManagementComponent implements OnInit {
     if (this.editForm && this.editForm.valid && this.selectedOrgUnit) {
       this.isLoading = true;
 
-      const formData = this.editForm.value;
+      const orgUnitData = {
+        name: this.editForm.get('name')?.value,
+      };
 
-      // Update org unit data (simulating API call)
-      setTimeout(() => {
-        const index = this.orgUnits.findIndex(
-          (unit) => unit.id === this.selectedOrgUnit!.id
-        );
-        if (index > -1) {
-          this.orgUnits[index] = {
-            ...this.orgUnits[index],
-            name: formData.name,
-            description: formData.description,
-          };
-          this.filterOrgUnits();
-          this.showSnackBar('Org Unit updated successfully', 'success');
-          this.cancelAction();
-        }
-        this.isLoading = false;
-      }, 1000);
+      this.orgUnitService
+        .updateOrgUnit(this.selectedOrgUnit.id!, orgUnitData)
+        .subscribe({
+          next: (updatedOrgUnit) => {
+            const index = this.orgUnits.findIndex(
+              (unit) => unit.id === this.selectedOrgUnit!.id
+            );
+            if (index > -1) {
+              this.orgUnits[index] = updatedOrgUnit;
+              this.filterOrgUnits();
+              this.showSnackBar('Org Unit updated successfully', 'success');
+              this.cancelAction();
+            }
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.handleError('Failed to update organizational unit', error);
+            this.isLoading = false;
+          },
+        });
     }
   }
 
@@ -234,38 +250,14 @@ export class OrgUnitManagementComponent implements OnInit {
     });
   }
 
-  private generateMockOrgUnits(): OrgUnit[] {
-    return [
-      {
-        id: 1,
-        name: 'Corporate Office',
-        employee_count: 15,
+  private handleError(message: string, error: any) {
+    console.error(message, error);
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Error',
+        message: `${message}. Please try again.`,
+        error: error?.error?.detail || error?.message || 'Unknown error',
       },
-      {
-        id: 2,
-        name: 'Manufacturing Plant',
-        employee_count: 25,
-      },
-      {
-        id: 3,
-        name: 'IT Department',
-        employee_count: 12,
-      },
-      {
-        id: 4,
-        name: 'Quality Control',
-        employee_count: 8,
-      },
-      {
-        id: 5,
-        name: 'Sales & Marketing',
-        employee_count: 10,
-      },
-      {
-        id: 6,
-        name: 'Research & Development',
-        employee_count: 18,
-      },
-    ];
+    });
   }
 }

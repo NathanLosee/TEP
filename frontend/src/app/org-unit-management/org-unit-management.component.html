@@ -312,21 +312,6 @@
       </mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div class="employee-summary">
-        <div class="summary-item">
-          <mat-icon>group</mat-icon>
-          <span>{{ selectedOrgUnit.employee_count || 0 }} Total Employees</span>
-        </div>
-        <div class="summary-item">
-          <mat-icon>location_on</mat-icon>
-          <span>{{ selectedOrgUnit.location || "No location specified" }}</span>
-        </div>
-        <div class="summary-item" *ngIf="selectedOrgUnit.manager_name">
-          <mat-icon>person</mat-icon>
-          <span>Manager: {{ selectedOrgUnit.manager_name }}</span>
-        </div>
-      </div>
-
       <div class="employee-placeholder">
         <mat-icon>people_outline</mat-icon>
         <p>Employee list integration coming soon</p>

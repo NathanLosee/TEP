@@ -18,13 +18,11 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-interface Department {
-  id: number;
-  name: string;
-  employee_count?: number;
-  employees?: any[];
-}
+import {
+  DepartmentService,
+  Department,
+} from '../../services/department.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-department-management',
@@ -52,27 +50,22 @@ export class DepartmentManagementComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private departmentService = inject(DepartmentService);
 
   departments: Department[] = [];
-  filteredDepartments: Department[] = [];
-  displayedColumns: string[] = ['name', 'employee_count', 'actions'];
+  selectedDepartment?: Department;
+  displayedColumns: string[] = ['name', 'actions'];
 
-  searchForm: FormGroup;
-  addDepartmentForm: FormGroup;
+  addForm: FormGroup;
   editForm: FormGroup;
 
   isLoading = false;
   showAddForm = false;
   showEditForm = false;
   showEmployeeList = false;
-  selectedDepartment: Department | null = null;
 
   constructor() {
-    this.searchForm = this.fb.group({
-      searchTerm: [''],
-    });
-
-    this.addDepartmentForm = this.fb.group({
+    this.addForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
     });
 
@@ -83,70 +76,75 @@ export class DepartmentManagementComponent implements OnInit {
 
   ngOnInit() {
     this.loadDepartments();
-    this.setupSearchForm();
-  }
-
-  setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.filterDepartments();
-    });
   }
 
   loadDepartments() {
     this.isLoading = true;
-    // Simulate API call - replace with actual service call
-    setTimeout(() => {
-      this.departments = this.generateMockDepartments();
-      this.filteredDepartments = [...this.departments];
-      this.isLoading = false;
-    }, 1000);
-  }
-
-  filterDepartments() {
-    const searchTerm =
-      this.searchForm.get('searchTerm')?.value?.toLowerCase() || '';
-
-    this.filteredDepartments = this.departments.filter((dept) =>
-      dept.name.toLowerCase().includes(searchTerm)
-    );
+    this.departmentService.getDepartments().subscribe({
+      next: (departments) => {
+        this.departments = departments.map((dept) => ({
+          ...dept,
+        }));
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load departments', error);
+        this.isLoading = false;
+      },
+    });
   }
 
   toggleAddForm() {
     this.showAddForm = !this.showAddForm;
     if (!this.showAddForm) {
-      this.addDepartmentForm.reset();
+      this.addForm.reset();
     }
   }
 
   addDepartment() {
-    if (this.addDepartmentForm.valid) {
-      const newDept: Department = {
-        id: this.departments.length + 1,
-        name: this.addDepartmentForm.get('name')?.value,
-        employee_count: 0,
+    if (this.addForm.valid) {
+      this.isLoading = true;
+      const departmentData = {
+        name: this.addForm.get('name')?.value,
       };
 
-      this.departments.push(newDept);
-      this.filterDepartments();
-      this.addDepartmentForm.reset();
-      this.showAddForm = false;
-      this.showSnackBar(
-        `Department "${newDept.name}" created successfully`,
-        'success'
-      );
+      this.departmentService.createDepartment(departmentData).subscribe({
+        next: (newDept) => {
+          this.departments.push({ ...newDept });
+          this.addForm.reset();
+          this.showAddForm = false;
+          this.showSnackBar(
+            `Department "${newDept.name}" created successfully`,
+            'success'
+          );
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to create department', error);
+          this.isLoading = false;
+        },
+      });
     }
   }
 
   // Action methods for buttons
   viewEmployees(department: Department) {
-    this.selectedDepartment = department;
+    this.isLoading = true;
     this.showEmployeeList = true;
     this.showEditForm = false;
-    this.showSnackBar(`Viewing employees for ${department.name}`, 'info');
+
+    this.departmentService.getEmployeesByDepartment(department.id!).subscribe({
+      next: (employees) => {
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to load department employees', error);
+        this.isLoading = false;
+      },
+    });
   }
 
   editDepartment(department: Department) {
-    this.selectedDepartment = department;
     this.showEditForm = true;
     this.showEmployeeList = false;
 
@@ -156,61 +154,43 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  deleteDepartment(department: Department) {
-    const confirmDelete = confirm(
-      `Are you sure you want to delete ${department.name}? This action cannot be undone.`
-    );
-
-    if (confirmDelete) {
-      this.isLoading = true;
-
-      // Remove department from the array (simulating API call)
-      setTimeout(() => {
-        const index = this.departments.findIndex(
-          (dept) => dept.id === department.id
-        );
-        if (index > -1) {
-          this.departments.splice(index, 1);
-          this.filterDepartments();
-          this.showSnackBar(
-            `${department.name} has been deleted successfully`,
-            'success'
-          );
-        }
-        this.isLoading = false;
-      }, 1000);
-    }
-  }
-
   saveDepartment() {
     if (this.editForm && this.editForm.valid && this.selectedDepartment) {
       this.isLoading = true;
 
-      const formData = this.editForm.value;
+      const departmentData = {
+        name: this.editForm.get('name')?.value,
+      };
 
-      // Update department data (simulating API call)
-      setTimeout(() => {
-        const index = this.departments.findIndex(
-          (dept) => dept.id === this.selectedDepartment!.id
-        );
-        if (index > -1) {
-          this.departments[index] = {
-            ...this.departments[index],
-            name: formData.name,
-          };
-          this.filterDepartments();
-          this.showSnackBar('Department updated successfully', 'success');
-          this.cancelEdit();
-        }
-        this.isLoading = false;
-      }, 1000);
+      this.departmentService
+        .updateDepartment(this.selectedDepartment.id!, departmentData)
+        .subscribe({
+          next: (updatedDept) => {
+            const index = this.departments.findIndex(
+              (dept) => dept.id === this.selectedDepartment!.id
+            );
+            if (index > -1) {
+              this.departments[index] = {
+                ...this.departments[index],
+                name: updatedDept.name,
+              };
+              this.showSnackBar('Department updated successfully', 'success');
+              this.cancelEdit();
+            }
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.handleError('Failed to update department', error);
+            this.isLoading = false;
+          },
+        });
     }
   }
 
   cancelEdit() {
     this.showEditForm = false;
     this.showEmployeeList = false;
-    this.selectedDepartment = null;
+    this.selectedDepartment = undefined;
     this.editForm?.reset();
   }
 
@@ -224,38 +204,44 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  private generateMockDepartments(): Department[] {
-    return [
-      {
-        id: 1,
-        name: 'Information Technology',
-        employee_count: 12,
+  deleteDepartment(department: Department) {
+    const confirmDelete = confirm(
+      `Are you sure you want to delete ${department.name}? This action cannot be undone.`
+    );
+
+    if (confirmDelete) {
+      this.isLoading = true;
+
+      this.departmentService.deleteDepartment(department.id!).subscribe({
+        next: () => {
+          const index = this.departments.findIndex(
+            (dept) => dept.id === department.id
+          );
+          if (index > -1) {
+            this.departments.splice(index, 1);
+            this.showSnackBar(
+              `${department.name} has been deleted successfully`,
+              'success'
+            );
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.handleError('Failed to delete department', error);
+          this.isLoading = false;
+        },
+      });
+    }
+  }
+
+  private handleError(message: string, error: any) {
+    console.error(message, error);
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Error',
+        message: `${message}. Please try again.`,
+        error: error?.error?.detail || error?.message || 'Unknown error',
       },
-      {
-        id: 2,
-        name: 'Human Resources',
-        employee_count: 5,
-      },
-      {
-        id: 3,
-        name: 'Production',
-        employee_count: 25,
-      },
-      {
-        id: 4,
-        name: 'Quality Assurance',
-        employee_count: 8,
-      },
-      {
-        id: 5,
-        name: 'Administration',
-        employee_count: 6,
-      },
-      {
-        id: 6,
-        name: 'Sales & Marketing',
-        employee_count: 15,
-      },
-    ];
+    });
   }
 }

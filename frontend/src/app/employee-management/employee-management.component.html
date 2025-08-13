@@ -73,7 +73,7 @@
   <mat-card class="table-card">
     <mat-card-content>
       <div class="table-header">
-        <h2>Employees ({{ filteredEmployees.length }})</h2>
+        <h2>Employees ({{ employees.length }})</h2>
         <div class="table-actions">
           <button
             mat-icon-button
@@ -88,7 +88,7 @@
       <div class="table-container" *ngIf="!isLoading">
         <table
           mat-table
-          [dataSource]="filteredEmployees"
+          [dataSource]="employees"
           class="employee-table"
           matSort
         >
@@ -240,10 +240,7 @@
       </div>
 
       <!-- Empty State -->
-      <div
-        *ngIf="!isLoading && filteredEmployees.length === 0"
-        class="empty-state"
-      >
+      <div *ngIf="!isLoading && employees.length === 0" class="empty-state">
         <mat-icon class="empty-icon">people_outline</mat-icon>
         <h3>No employees found</h3>
         <p>Try adjusting your search criteria or add a new employee.</p>
@@ -398,7 +395,7 @@
           <h3>Organization</h3>
           <div class="detail-item">
             <label>Organizational Unit:</label>
-            <span>{{ selectedEmployee.org_unit?.name || "N/A" }}</span>
+            <span>{{ selectedEmployee.org_unit.name || "N/A" }}</span>
           </div>
           <div class="detail-item">
             <label>Departments:</label>

@@ -29,7 +29,7 @@ import {
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 interface TimeclockEntryListing {
-  id: number;
+  id?: number;
   badgeNumber: string;
   employeeName?: string;
   clockIn: Date;

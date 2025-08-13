@@ -1,5 +1,5 @@
-import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export interface AccessResponse {
@@ -8,7 +8,7 @@ export interface AccessResponse {
 }
 
 export interface User {
-  id: number;
+  id?: number;
   badge_number: string;
 }
 
@@ -24,7 +24,7 @@ export interface UserPasswordChange {
 }
 
 export interface AuthRole {
-  id: number;
+  id?: number;
   name: string;
   permissions: Array<{ resource: string }>;
 }

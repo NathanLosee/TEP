@@ -20,67 +20,11 @@
     </div>
   </div>
 
-  <!-- Add Holiday Group Form -->
-  <mat-card *ngIf="showAddForm" class="add-form-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>add_circle</mat-icon>
-        Create New Holiday Group
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form
-        [formGroup]="addGroupForm"
-        (ngSubmit)="addHolidayGroup()"
-        class="add-form"
-      >
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Group Name</mat-label>
-            <input
-              matInput
-              formControlName="name"
-              placeholder="Enter holiday group name"
-            />
-            <mat-icon matSuffix>event</mat-icon>
-            <mat-error *ngIf="addGroupForm.get('name')?.hasError('required')">
-              Group name is required
-            </mat-error>
-            <mat-error *ngIf="addGroupForm.get('name')?.hasError('minlength')">
-              Name must be at least 2 characters
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Description (Optional)</mat-label>
-            <textarea
-              matInput
-              formControlName="description"
-              rows="2"
-              placeholder="Group description"
-            ></textarea>
-            <mat-icon matSuffix>description</mat-icon>
-          </mat-form-field>
-        </div>
-
-        <div class="form-actions">
-          <button
-            mat-raised-button
-            color="primary"
-            type="submit"
-            [disabled]="addGroupForm.invalid"
-          >
-            <mat-icon>save</mat-icon>
-            Create Holiday Group
-          </button>
-          <button mat-button type="button" (click)="toggleAddForm()">
-            <mat-icon>cancel</mat-icon>
-            Cancel
-          </button>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+  <app-holiday-form
+    *ngIf="showAddForm"
+    (formSubmitted)="saveHolidayGroup($event)"
+    (formCancelled)="cancelAction()"
+  ></app-holiday-form>
 
   <!-- Content Tabs -->
   <mat-card class="content-card">
@@ -95,7 +39,7 @@
                 <mat-label>Search holiday groups</mat-label>
                 <input
                   matInput
-                  formControlName="searchTerm"
+                  formControlName="name"
                   placeholder="Group name or description"
                 />
                 <mat-icon matSuffix>search</mat-icon>
@@ -105,20 +49,17 @@
 
           <!-- Holiday Groups Table -->
           <div class="table-container" *ngIf="!isLoading">
-            <table mat-table [dataSource]="filteredGroups" class="groups-table">
+            <table mat-table [dataSource]="holidayGroups" class="groups-table">
               <!-- Name Column -->
               <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef>
-                  Group Name ({{ filteredGroups.length }})
+                  Group Name ({{ holidayGroups.length }})
                 </th>
                 <td mat-cell *matCellDef="let group">
                   <div class="group-cell">
                     <mat-icon class="group-icon">event</mat-icon>
                     <div class="group-info">
                       <div class="group-name">{{ group.name }}</div>
-                      <div class="group-description" *ngIf="group.description">
-                        {{ group.description }}
-                      </div>
                     </div>
                   </div>
                 </td>
@@ -132,32 +73,6 @@
                     <mat-icon class="count-icon">calendar_today</mat-icon>
                     <span class="count-value">{{ group.holidays.length }}</span>
                     <span class="count-label">holidays</span>
-                  </div>
-                </td>
-              </ng-container>
-
-              <!-- Employee Count Column -->
-              <ng-container matColumnDef="employee_count">
-                <th mat-header-cell *matHeaderCellDef>Employees</th>
-                <td mat-cell *matCellDef="let group">
-                  <div class="count-cell">
-                    <mat-icon class="count-icon">people</mat-icon>
-                    <span class="count-value">{{ group.employee_count }}</span>
-                    <span class="count-label">employees</span>
-                  </div>
-                </td>
-              </ng-container>
-
-              <!-- Total Days Column -->
-              <ng-container matColumnDef="total_days">
-                <th mat-header-cell *matHeaderCellDef>Total Days</th>
-                <td mat-cell *matCellDef="let group">
-                  <div class="count-cell">
-                    <mat-icon class="count-icon">today</mat-icon>
-                    <span class="count-value total-days">{{
-                      group.total_holiday_days
-                    }}</span>
-                    <span class="count-label">days</span>
                   </div>
                 </td>
               </ng-container>
@@ -209,7 +124,7 @@
 
             <mat-accordion class="holiday-accordion">
               <mat-expansion-panel
-                *ngFor="let group of filteredGroups"
+                *ngFor="let group of holidayGroups"
                 class="holiday-panel"
               >
                 <mat-expansion-panel-header>
@@ -218,8 +133,7 @@
                     {{ group.name }}
                   </mat-panel-title>
                   <mat-panel-description>
-                    {{ group.holidays.length }} holidays •
-                    {{ group.total_holiday_days }} total days
+                    {{ group.holidays.length }} holidays
                   </mat-panel-description>
                 </mat-expansion-panel-header>
 
@@ -236,34 +150,21 @@
                         <div class="holiday-name">{{ holiday.name }}</div>
                         <div class="holiday-dates">
                           {{ holiday.start_date | date : "MMM d, y" }}
-                          <span
-                            *ngIf="
-                              holiday.start_date.getTime() !==
-                              holiday.end_date.getTime()
-                            "
-                          >
+                          <span *ngIf="holiday.start_date !== holiday.end_date">
                             - {{ holiday.end_date | date : "MMM d, y" }}
                           </span>
                           <mat-chip class="duration-chip"
-                            >{{ holiday.days_count }} day{{
-                              holiday.days_count > 1 ? "s" : ""
+                            >{{
+                              (holiday.end_date.getTime() -
+                                holiday.start_date.getTime()) /
+                                (1000 * 3600 * 24)
+                            }}
+                            day{{
+                              holiday.start_date !== holiday.end_date ? "s" : ""
                             }}</mat-chip
-                          >
-                          <mat-chip
-                            *ngIf="holiday.is_recurring"
-                            class="recurring-chip"
-                            >Recurring</mat-chip
                           >
                         </div>
                       </div>
-                      <button
-                        mat-icon-button
-                        matTooltip="Remove Holiday"
-                        (click)="removeHoliday(group, i)"
-                        class="remove-holiday-btn"
-                      >
-                        <mat-icon>close</mat-icon>
-                      </button>
                     </div>
                   </div>
 
@@ -272,96 +173,6 @@
                       <mat-icon>event_busy</mat-icon>
                       <p>No holidays defined for this group</p>
                     </div>
-                  </ng-template>
-
-                  <!-- Add Holiday Form -->
-                  *ngIf="selectedGroup?.id === group.id; else addHolidayButton"
-                  *ngIf="selectedGroup?.id === group.id; else addHolidayButton"
-                  <div
-                    class="add-holiday-section"
-                    *ngIf="
-                      selectedGroup?.id === group.id;
-                      else addHolidayButton
-                    "
-                  >
-                    <form
-                      [formGroup]="addHolidayForm"
-                      (ngSubmit)="addHoliday(group.id)"
-                      class="add-holiday-form"
-                    >
-                      <div class="holiday-form-row">
-                        <mat-form-field appearance="outline">
-                          <mat-label>Holiday Name</mat-label>
-                          <input
-                            matInput
-                            formControlName="name"
-                            placeholder="Enter holiday name"
-                          />
-                        </mat-form-field>
-
-                        <mat-form-field appearance="outline">
-                          <mat-label>Start Date</mat-label>
-                          <input
-                            matInput
-                            [matDatepicker]="startPicker"
-                            formControlName="start_date"
-                          />
-                          <mat-datepicker-toggle
-                            matSuffix
-                            [for]="startPicker"
-                          ></mat-datepicker-toggle>
-                          <mat-datepicker #startPicker></mat-datepicker>
-                        </mat-form-field>
-
-                        <mat-form-field appearance="outline">
-                          <mat-label>End Date</mat-label>
-                          <input
-                            matInput
-                            [matDatepicker]="endPicker"
-                            formControlName="end_date"
-                          />
-                          <mat-datepicker-toggle
-                            matSuffix
-                            [for]="endPicker"
-                          ></mat-datepicker-toggle>
-                          <mat-datepicker #endPicker></mat-datepicker>
-                        </mat-form-field>
-                      </div>
-
-                      <div class="holiday-form-actions">
-                        <button
-                          mat-raised-button
-                          color="primary"
-                          type="submit"
-                          [disabled]="addHolidayForm.invalid"
-                        >
-                          <mat-icon>add</mat-icon>
-                          Add Holiday
-                        </button>
-                        (click)="selectedGroup = null" (click)="selectedGroup =
-                        null"
-                        <button
-                          mat-button
-                          type="button"
-                          (click)="selectedGroup = null"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                  <ng-template #addHolidayButton>
-                    (click)="selectedGroup = group" (click)="selectedGroup =
-                    group"
-                    <button
-                      mat-stroked-button
-                      (click)="selectedGroup = group"
-                      class="add-holiday-btn"
-                    >
-                      <mat-icon>add</mat-icon>
-                      Add Holiday
-                    </button>
                   </ng-template>
                 </div>
               </mat-expansion-panel>
@@ -378,147 +189,14 @@
           </div>
         </div>
       </mat-tab>
-
-      <!-- Upcoming Holidays Tab -->
-      <mat-tab label="Upcoming Holidays">
-        <div class="tab-content">
-          <div class="upcoming-holidays-section">
-            <h3 class="section-title">
-              <mat-icon>upcoming</mat-icon>
-              Next 5 Upcoming Holidays
-            </h3>
-
-            <div class="upcoming-holidays-list">
-              <mat-card
-                *ngFor="let holiday of getUpcomingHolidays()"
-                class="upcoming-holiday-card"
-              >
-                <div class="holiday-card-content">
-                  <div class="holiday-icon-section">
-                    <mat-icon class="holiday-icon">event</mat-icon>
-                  </div>
-                  <div class="holiday-details">
-                    <div class="holiday-name">{{ holiday.name }}</div>
-                    <div class="holiday-date">
-                      {{ holiday.start_date | date : "EEEE, MMMM d, y" }}
-                    </div>
-                    <div
-                      class="holiday-duration"
-                      *ngIf="holiday.days_count > 1"
-                    >
-                      {{ holiday.days_count }} days
-                    </div>
-                  </div>
-                  <div class="holiday-badges">
-                    <mat-chip
-                      *ngIf="holiday.is_recurring"
-                      class="recurring-badge"
-                      >Recurring</mat-chip
-                    >
-                  </div>
-                </div>
-              </mat-card>
-            </div>
-          </div>
-        </div>
-      </mat-tab>
     </mat-tab-group>
   </mat-card>
 
-  <!-- Edit Holiday Group Form -->
-  <mat-card *ngIf="showEditForm && selectedGroup" class="edit-form-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>edit</mat-icon>
-        Edit Holiday Group: {{ selectedGroup.name }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="editForm" (ngSubmit)="saveGroup()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Group Name</mat-label>
-          <input
-            matInput
-            formControlName="name"
-            placeholder="Enter group name"
-          />
-          <mat-error *ngIf="editForm.get('name')?.hasError('required')">
-            Group name is required
-          </mat-error>
-          <mat-error *ngIf="editForm.get('name')?.hasError('minlength')">
-            Group name must be at least 2 characters
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
-          <textarea
-            matInput
-            formControlName="description"
-            placeholder="Enter description"
-            rows="3"
-          ></textarea>
-        </mat-form-field>
-
-        <div class="current-holidays">
-          <h3>Current Holidays ({{ selectedGroup.holidays.length }})</h3>
-          <div class="holidays-list">
-            <div
-              *ngFor="let holiday of selectedGroup.holidays; let i = index"
-              class="holiday-item"
-            >
-              <div class="holiday-info">
-                <div class="holiday-name">{{ holiday.name }}</div>
-                <div class="holiday-dates">
-                  {{ holiday.start_date | date : "mediumDate" }} -
-                  {{ holiday.end_date | date : "mediumDate" }}
-                </div>
-                <div class="holiday-meta">
-                  {{ holiday.days_count }} days
-                  <mat-chip *ngIf="holiday.is_recurring" class="recurring-chip"
-                    >Recurring</mat-chip
-                  >
-                </div>
-              </div>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="removeHoliday(selectedGroup!, i)"
-                matTooltip="Remove Holiday"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-            <div
-              *ngIf="selectedGroup.holidays.length === 0"
-              class="no-holidays"
-            >
-              <mat-icon>event_busy</mat-icon>
-              <span>No holidays defined</span>
-            </div>
-          </div>
-        </div>
-      </form>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-button (click)="cancelAction()" [disabled]="isLoading">
-        Cancel
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="saveGroup()"
-        [disabled]="editForm.invalid || isLoading"
-      >
-        <mat-progress-spinner
-          *ngIf="isLoading"
-          diameter="20"
-          mode="indeterminate"
-        ></mat-progress-spinner>
-        <span *ngIf="!isLoading">Save Changes</span>
-      </button>
-    </mat-card-actions>
-  </mat-card>
+  <app-holiday-form
+    *ngIf="showEditForm && selectedGroup"
+    (formSubmitted)="saveHolidayGroup($event)"
+    (formCancelled)="cancelAction()"
+  ></app-holiday-form>
 
   <!-- Employee List View -->
   <mat-card
@@ -532,60 +210,6 @@
       </mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div class="group-summary">
-        <div class="summary-item">
-          <mat-icon>group</mat-icon>
-          <span>{{ selectedGroup.employee_count }} Assigned Employees</span>
-        </div>
-        <div class="summary-item">
-          <mat-icon>event</mat-icon>
-          <span>{{ selectedGroup.holidays.length }} Holidays</span>
-        </div>
-        <div class="summary-item">
-          <mat-icon>today</mat-icon>
-          <span>{{ selectedGroup.total_holiday_days }} Total Days</span>
-        </div>
-      </div>
-
-      <div class="holidays-overview">
-        <h3>Holiday Schedule</h3>
-        <div class="holiday-cards">
-          <div
-            *ngFor="let holiday of selectedGroup.holidays"
-            class="holiday-card"
-          >
-            <div class="holiday-header">
-              <h4>{{ holiday.name }}</h4>
-              <mat-chip *ngIf="holiday.is_recurring" class="recurring-chip"
-                >Recurring</mat-chip
-              >
-            </div>
-            <div class="holiday-dates">
-              <mat-icon>date_range</mat-icon>
-              <span
-                >{{ holiday.start_date | date : "mediumDate" }} -
-                {{ holiday.end_date | date : "mediumDate" }}</span
-              >
-            </div>
-            <div class="holiday-duration">
-              <mat-icon>schedule</mat-icon>
-              <span
-                >{{ holiday.days_count }} day{{
-                  holiday.days_count !== 1 ? "s" : ""
-                }}</span
-              >
-            </div>
-          </div>
-          <div
-            *ngIf="selectedGroup.holidays.length === 0"
-            class="no-holidays-message"
-          >
-            <mat-icon>event_busy</mat-icon>
-            <p>No holidays defined for this group</p>
-          </div>
-        </div>
-      </div>
-
       <div class="employee-placeholder">
         <mat-icon>people_outline</mat-icon>
         <p>Employee assignment integration coming soon</p>

@@ -2,12 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { User } from './user.service';
+
 export interface Permission {
   resource: string;
 }
 
 export interface AuthRole {
-  id: number;
+  id?: number;
   name: string;
   permissions: Permission[];
 }
@@ -15,11 +17,6 @@ export interface AuthRole {
 export interface AuthRoleBase {
   name: string;
   permissions: Permission[];
-}
-
-export interface UserResponse {
-  id: number;
-  badge_number: string;
 }
 
 /**
@@ -54,8 +51,8 @@ export class AuthRoleService {
   /**
    * Get users assigned to an auth role
    */
-  getUsersByAuthRole(authRoleId: number): Observable<UserResponse[]> {
-    return this.http.get<UserResponse[]>(`${this.baseUrl}/${authRoleId}/users`);
+  getUsersByAuthRole(authRoleId: number): Observable<User[]> {
+    return this.http.get<User[]>(`${this.baseUrl}/${authRoleId}/users`);
   }
 
   /**
@@ -75,11 +72,8 @@ export class AuthRoleService {
   /**
    * Assign user to auth role
    */
-  assignUserToRole(
-    authRoleId: number,
-    userId: number
-  ): Observable<UserResponse[]> {
-    return this.http.post<UserResponse[]>(
+  assignUserToRole(authRoleId: number, userId: number): Observable<User[]> {
+    return this.http.post<User[]>(
       `${this.baseUrl}/${authRoleId}/users/${userId}`,
       {}
     );
@@ -88,11 +82,8 @@ export class AuthRoleService {
   /**
    * Remove user from auth role
    */
-  removeUserFromRole(
-    authRoleId: number,
-    userId: number
-  ): Observable<UserResponse[]> {
-    return this.http.delete<UserResponse[]>(
+  removeUserFromRole(authRoleId: number, userId: number): Observable<User[]> {
+    return this.http.delete<User[]>(
       `${this.baseUrl}/${authRoleId}/users/${userId}`
     );
   }
