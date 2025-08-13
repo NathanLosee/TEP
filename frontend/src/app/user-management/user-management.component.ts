@@ -1,35 +1,35 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
   Validators,
-} from "@angular/forms";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatTableModule } from "@angular/material/table";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatSelectModule } from "@angular/material/select";
-import { MatChipsModule } from "@angular/material/chips";
-import { MatDialogModule } from "@angular/material/dialog";
-import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
-import { MatTabsModule } from "@angular/material/tabs";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { MatDividerModule } from "@angular/material/divider";
-import { MatSlideToggleModule } from "@angular/material/slide-toggle";
+} from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { AuthRoleService } from '../../services/auth-role.service';
 import {
-  UserService,
+  AuthRole,
   User,
   UserBase,
   UserPasswordChange,
-  AuthRole,
-} from "../../services/user.service";
-import { AuthRoleService } from "../../services/auth-role.service";
+  UserService,
+} from '../../services/user.service';
 
 interface Employee {
   badge_number: string;
@@ -37,7 +37,7 @@ interface Employee {
 }
 
 @Component({
-  selector: "app-user-management",
+  selector: 'app-user-management',
   standalone: true,
   imports: [
     CommonModule,
@@ -59,8 +59,8 @@ interface Employee {
     MatDividerModule,
     MatSlideToggleModule,
   ],
-  templateUrl: "./user-management.component.html",
-  styleUrl: "./user-management.component.scss",
+  templateUrl: './user-management.component.html',
+  styleUrl: './user-management.component.scss',
 })
 export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
@@ -82,27 +82,27 @@ export class UserManagementComponent implements OnInit {
 
   // UI State
   isLoading = false;
-  searchTerm = "";
+  searchTerm = '';
   showCreateForm = false;
   showPasswordForm = false;
   editingUser: User | null = null;
 
   // Table columns
-  displayedColumns = ["badge_number", "roles", "actions"];
+  displayedColumns = ['badge_number', 'roles', 'actions'];
 
   constructor() {
     this.userForm = this.formBuilder.group({
-      badge_number: ["", [Validators.required, Validators.minLength(1)]],
-      password: ["", [Validators.required, Validators.minLength(6)]],
+      badge_number: ['', [Validators.required, Validators.minLength(1)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
 
     this.passwordForm = this.formBuilder.group(
       {
-        current_password: ["", [Validators.required]],
-        new_password: ["", [Validators.required, Validators.minLength(6)]],
-        confirm_password: ["", [Validators.required]],
+        current_password: ['', [Validators.required]],
+        new_password: ['', [Validators.required, Validators.minLength(6)]],
+        confirm_password: ['', [Validators.required]],
       },
-      { validators: this.passwordMatchValidator },
+      { validators: this.passwordMatchValidator }
     );
   }
 
@@ -113,8 +113,8 @@ export class UserManagementComponent implements OnInit {
   }
 
   passwordMatchValidator(group: FormGroup) {
-    const newPassword = group.get("new_password")?.value;
-    const confirmPassword = group.get("confirm_password")?.value;
+    const newPassword = group.get('new_password')?.value;
+    const confirmPassword = group.get('confirm_password')?.value;
     return newPassword === confirmPassword ? null : { passwordMismatch: true };
   }
 
@@ -128,8 +128,8 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to load users: " + (error.error?.detail || error.message),
-          "error",
+          'Failed to load users: ' + (error.error?.detail || error.message),
+          'error'
         );
         this.isLoading = false;
       },
@@ -143,9 +143,9 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to load auth roles: " +
+          'Failed to load auth roles: ' +
             (error.error?.detail || error.message),
-          "error",
+          'error'
         );
       },
     });
@@ -154,16 +154,16 @@ export class UserManagementComponent implements OnInit {
   loadEmployees() {
     // Mock employee data - in real app, this would come from employee service
     this.employees = [
-      { badge_number: "ADMIN001", name: "System Administrator" },
-      { badge_number: "MGR001", name: "Manager One" },
-      { badge_number: "EMP001", name: "Employee One" },
-      { badge_number: "EMP002", name: "Employee Two" },
-      { badge_number: "SUP001", name: "Supervisor One" },
-      { badge_number: "HR001", name: "HR Representative" },
-      { badge_number: "IT001", name: "IT Support" },
-      { badge_number: "FIN001", name: "Finance Manager" },
-      { badge_number: "OP001", name: "Operations Lead" },
-      { badge_number: "QA001", name: "Quality Assurance" },
+      { badge_number: 'ADMIN001', name: 'System Administrator' },
+      { badge_number: 'MGR001', name: 'Manager One' },
+      { badge_number: 'EMP001', name: 'Employee One' },
+      { badge_number: 'EMP002', name: 'Employee Two' },
+      { badge_number: 'SUP001', name: 'Supervisor One' },
+      { badge_number: 'HR001', name: 'HR Representative' },
+      { badge_number: 'IT001', name: 'IT Support' },
+      { badge_number: 'FIN001', name: 'Finance Manager' },
+      { badge_number: 'OP001', name: 'Operations Lead' },
+      { badge_number: 'QA001', name: 'Quality Assurance' },
     ];
   }
 
@@ -174,9 +174,9 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to load user roles: " +
+          'Failed to load user roles: ' +
             (error.error?.detail || error.message),
-          "error",
+          'error'
         );
       },
     });
@@ -188,7 +188,7 @@ export class UserManagementComponent implements OnInit {
     } else {
       const term = this.searchTerm.toLowerCase();
       this.filteredUsers = this.users.filter((user) =>
-        user.badge_number.toLowerCase().includes(term),
+        user.badge_number.toLowerCase().includes(term)
       );
     }
   }
@@ -214,8 +214,8 @@ export class UserManagementComponent implements OnInit {
   onSubmit() {
     if (this.userForm.invalid) {
       this.showSnackBar(
-        "Please fill in all required fields correctly",
-        "error",
+        'Please fill in all required fields correctly',
+        'error'
       );
       return;
     }
@@ -230,15 +230,15 @@ export class UserManagementComponent implements OnInit {
 
     this.userService.createUser(userData).subscribe({
       next: (newUser) => {
-        this.showSnackBar("User account created successfully", "success");
+        this.showSnackBar('User account created successfully', 'success');
         this.loadUsers();
         this.cancelForm();
         this.isLoading = false;
       },
       error: (error) => {
         this.showSnackBar(
-          "Failed to create user: " + (error.error?.detail || error.message),
-          "error",
+          'Failed to create user: ' + (error.error?.detail || error.message),
+          'error'
         );
         this.isLoading = false;
       },
@@ -254,14 +254,14 @@ export class UserManagementComponent implements OnInit {
   onPasswordSubmit() {
     if (this.passwordForm.invalid || !this.selectedUser) {
       this.showSnackBar(
-        "Please fill in all required fields correctly",
-        "error",
+        'Please fill in all required fields correctly',
+        'error'
       );
       return;
     }
 
-    if (this.passwordForm.hasError("passwordMismatch")) {
-      this.showSnackBar("New passwords do not match", "error");
+    if (this.passwordForm.hasError('passwordMismatch')) {
+      this.showSnackBar('New passwords do not match', 'error');
       return;
     }
 
@@ -278,15 +278,15 @@ export class UserManagementComponent implements OnInit {
       .updateUserPassword(this.selectedUser.badge_number, passwordData)
       .subscribe({
         next: (updatedUser) => {
-          this.showSnackBar("Password updated successfully", "success");
+          this.showSnackBar('Password updated successfully', 'success');
           this.cancelForm();
           this.isLoading = false;
         },
         error: (error) => {
           this.showSnackBar(
-            "Failed to update password: " +
+            'Failed to update password: ' +
               (error.error?.detail || error.message),
-            "error",
+            'error'
           );
           this.isLoading = false;
         },
@@ -296,20 +296,20 @@ export class UserManagementComponent implements OnInit {
   deleteUser(user: User) {
     if (
       confirm(
-        `Are you sure you want to delete the user account for "${user.badge_number}"? This action cannot be undone.`,
+        `Are you sure you want to delete the user account for "${user.badge_number}"? This action cannot be undone.`
       )
     ) {
       this.isLoading = true;
-      this.userService.deleteUser(user.id).subscribe({
+      this.userService.deleteUser(user.id!).subscribe({
         next: () => {
-          this.showSnackBar("User account deleted successfully", "success");
+          this.showSnackBar('User account deleted successfully', 'success');
           this.loadUsers();
           this.isLoading = false;
         },
         error: (error) => {
           this.showSnackBar(
-            "Failed to delete user: " + (error.error?.detail || error.message),
-            "error",
+            'Failed to delete user: ' + (error.error?.detail || error.message),
+            'error'
           );
           this.isLoading = false;
         },
@@ -319,23 +319,23 @@ export class UserManagementComponent implements OnInit {
 
   viewUserDetails(user: User) {
     this.selectedUser = user;
-    this.loadUserRoles(user.id);
+    this.loadUserRoles(user.id!);
   }
 
   assignRoleToUser(roleId: number) {
     if (!this.selectedUser) return;
 
     this.authRoleService
-      .assignUserToRole(roleId, this.selectedUser.id)
+      .assignUserToRole(roleId, this.selectedUser.id!)
       .subscribe({
         next: () => {
-          this.showSnackBar("Role assigned successfully", "success");
-          this.loadUserRoles(this.selectedUser!.id);
+          this.showSnackBar('Role assigned successfully', 'success');
+          this.loadUserRoles(this.selectedUser!.id!);
         },
         error: (error) => {
           this.showSnackBar(
-            "Failed to assign role: " + (error.error?.detail || error.message),
-            "error",
+            'Failed to assign role: ' + (error.error?.detail || error.message),
+            'error'
           );
         },
       });
@@ -344,19 +344,19 @@ export class UserManagementComponent implements OnInit {
   removeRoleFromUser(roleId: number) {
     if (!this.selectedUser) return;
 
-    if (confirm("Are you sure you want to remove this role from the user?")) {
+    if (confirm('Are you sure you want to remove this role from the user?')) {
       this.authRoleService
-        .removeUserFromRole(roleId, this.selectedUser.id)
+        .removeUserFromRole(roleId, this.selectedUser.id!)
         .subscribe({
           next: () => {
-            this.showSnackBar("Role removed successfully", "success");
-            this.loadUserRoles(this.selectedUser!.id);
+            this.showSnackBar('Role removed successfully', 'success');
+            this.loadUserRoles(this.selectedUser!.id!);
           },
           error: (error) => {
             this.showSnackBar(
-              "Failed to remove role: " +
+              'Failed to remove role: ' +
                 (error.error?.detail || error.message),
-              "error",
+              'error'
             );
           },
         });
@@ -370,9 +370,9 @@ export class UserManagementComponent implements OnInit {
 
   getEmployeeName(badgeNumber: string): string {
     const employee = this.employees.find(
-      (emp) => emp.badge_number === badgeNumber,
+      (emp) => emp.badge_number === badgeNumber
     );
-    return employee ? employee.name : "Unknown Employee";
+    return employee ? employee.name : 'Unknown Employee';
   }
 
   getUserRoleNames(user: User): string[] {
@@ -384,7 +384,7 @@ export class UserManagementComponent implements OnInit {
   getTotalPermissions(): number {
     return this.authRoles.reduce(
       (total, role) => total + role.permissions.length,
-      0,
+      0
     );
   }
 
@@ -395,9 +395,9 @@ export class UserManagementComponent implements OnInit {
 
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info",
+    type: 'success' | 'error' | 'info' = 'info'
   ) {
-    this.snackBar.open(message, "Close", {
+    this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });

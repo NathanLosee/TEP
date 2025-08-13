@@ -1,25 +1,25 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { OrgUnitService, OrgUnit, OrgUnitWithEmployees } from '../../services/org-unit.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
@@ -53,7 +53,6 @@ export class OrgUnitManagementComponent implements OnInit {
 
   orgUnits: OrgUnit[] = [];
   filteredOrgUnits: OrgUnit[] = [];
-  selectedOrgUnitDetails: OrgUnitWithEmployees | null = null;
   displayedColumns: string[] = ['name', 'employee_count', 'actions'];
 
   searchForm: FormGroup;
@@ -104,7 +103,7 @@ export class OrgUnitManagementComponent implements OnInit {
       error: (error) => {
         this.handleError('Failed to load organizational units', error);
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -131,7 +130,7 @@ export class OrgUnitManagementComponent implements OnInit {
     if (this.addOrgUnitForm.valid) {
       this.isLoading = true;
       const orgUnitData = {
-        name: this.addOrgUnitForm.get('name')?.value
+        name: this.addOrgUnitForm.get('name')?.value,
       };
 
       this.orgUnitService.createOrgUnit(orgUnitData).subscribe({
@@ -149,7 +148,7 @@ export class OrgUnitManagementComponent implements OnInit {
         error: (error) => {
           this.handleError('Failed to create organizational unit', error);
           this.isLoading = false;
-        }
+        },
       });
     }
   }
@@ -169,7 +168,6 @@ export class OrgUnitManagementComponent implements OnInit {
     // Initialize edit form with org unit data
     this.editForm.patchValue({
       name: orgUnit.name,
-      description: orgUnit.description || '',
     });
   }
 
@@ -181,9 +179,11 @@ export class OrgUnitManagementComponent implements OnInit {
     if (confirmDelete) {
       this.isLoading = true;
 
-      this.orgUnitService.deleteOrgUnit(orgUnit.id).subscribe({
+      this.orgUnitService.deleteOrgUnit(orgUnit.id!).subscribe({
         next: () => {
-          const index = this.orgUnits.findIndex((unit) => unit.id === orgUnit.id);
+          const index = this.orgUnits.findIndex(
+            (unit) => unit.id === orgUnit.id
+          );
           if (index > -1) {
             this.orgUnits.splice(index, 1);
             this.filterOrgUnits();
@@ -197,7 +197,7 @@ export class OrgUnitManagementComponent implements OnInit {
         error: (error) => {
           this.handleError('Failed to delete organizational unit', error);
           this.isLoading = false;
-        }
+        },
       });
     }
   }
@@ -207,27 +207,29 @@ export class OrgUnitManagementComponent implements OnInit {
       this.isLoading = true;
 
       const orgUnitData = {
-        name: this.editForm.get('name')?.value
+        name: this.editForm.get('name')?.value,
       };
 
-      this.orgUnitService.updateOrgUnit(this.selectedOrgUnit.id, orgUnitData).subscribe({
-        next: (updatedOrgUnit) => {
-          const index = this.orgUnits.findIndex(
-            (unit) => unit.id === this.selectedOrgUnit!.id
-          );
-          if (index > -1) {
-            this.orgUnits[index] = updatedOrgUnit;
-            this.filterOrgUnits();
-            this.showSnackBar('Org Unit updated successfully', 'success');
-            this.cancelAction();
-          }
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.handleError('Failed to update organizational unit', error);
-          this.isLoading = false;
-        }
-      });
+      this.orgUnitService
+        .updateOrgUnit(this.selectedOrgUnit.id!, orgUnitData)
+        .subscribe({
+          next: (updatedOrgUnit) => {
+            const index = this.orgUnits.findIndex(
+              (unit) => unit.id === this.selectedOrgUnit!.id
+            );
+            if (index > -1) {
+              this.orgUnits[index] = updatedOrgUnit;
+              this.filterOrgUnits();
+              this.showSnackBar('Org Unit updated successfully', 'success');
+              this.cancelAction();
+            }
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.handleError('Failed to update organizational unit', error);
+            this.isLoading = false;
+          },
+        });
     }
   }
 
@@ -254,8 +256,8 @@ export class OrgUnitManagementComponent implements OnInit {
       data: {
         title: 'Error',
         message: `${message}. Please try again.`,
-        error: error?.error?.detail || error?.message || 'Unknown error'
-      }
+        error: error?.error?.detail || error?.message || 'Unknown error',
+      },
     });
   }
 }

@@ -28,7 +28,6 @@ import {
   AuthRole,
   AuthRoleBase,
   Permission,
-  UserResponse,
 } from '../../services/auth-role.service';
 import { UserService, User } from '../../services/user.service';
 
@@ -71,7 +70,7 @@ export class AuthRoleManagementComponent implements OnInit {
   users: User[] = [];
   filteredAuthRoles: AuthRole[] = [];
   selectedRole: AuthRole | null = null;
-  selectedRoleUsers: UserResponse[] = [];
+  selectedRoleUsers: User[] = [];
 
   // Forms
   roleForm: FormGroup;
@@ -243,7 +242,7 @@ export class AuthRoleManagementComponent implements OnInit {
       };
 
       this.authRoleService
-        .updateAuthRole(this.editingRole.id, updateData)
+        .updateAuthRole(this.editingRole.id!, updateData)
         .subscribe({
           next: (updatedRole) => {
             this.showSnackBar('Auth role updated successfully', 'success');
@@ -288,7 +287,7 @@ export class AuthRoleManagementComponent implements OnInit {
       )
     ) {
       this.isLoading = true;
-      this.authRoleService.deleteAuthRole(role.id).subscribe({
+      this.authRoleService.deleteAuthRole(role.id!).subscribe({
         next: () => {
           this.showSnackBar('Auth role deleted successfully', 'success');
           this.loadAuthRoles();
@@ -308,14 +307,14 @@ export class AuthRoleManagementComponent implements OnInit {
 
   viewRoleDetails(role: AuthRole) {
     this.selectedRole = role;
-    this.loadRoleUsers(role.id);
+    this.loadRoleUsers(role.id!);
   }
 
   assignUserToRole(userId: number) {
     if (!this.selectedRole) return;
 
     this.authRoleService
-      .assignUserToRole(this.selectedRole.id, userId)
+      .assignUserToRole(this.selectedRole.id!, userId)
       .subscribe({
         next: (users) => {
           this.selectedRoleUsers = users;
@@ -335,7 +334,7 @@ export class AuthRoleManagementComponent implements OnInit {
 
     if (confirm('Are you sure you want to remove this user from the role?')) {
       this.authRoleService
-        .removeUserFromRole(this.selectedRole.id, userId)
+        .removeUserFromRole(this.selectedRole.id!, userId)
         .subscribe({
           next: (users) => {
             this.selectedRoleUsers = users;

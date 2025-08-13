@@ -8,7 +8,7 @@ export interface Timeclock {
 }
 
 export interface TimeclockEntry {
-  id: number;
+  id?: number;
   clockIn: Date;
   clockOut: Date;
   badgeNumber: string;
@@ -42,6 +42,7 @@ export class TimeclockService {
   checkStatus(badgeNumber: string): Observable<Timeclock> {
     return this.http.get<Timeclock>(`${this.baseUrl}/${badgeNumber}/status`);
   }
+
   /**
    * Get timeclock entries within a date range
    * @param startDate Optional start date of the range, first day of the month by default
