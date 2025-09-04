@@ -1,19 +1,19 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import {
-  MatDialog,
   MAT_DIALOG_DATA,
+  MatDialog,
   MatDialogContent,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { TimeclockService } from '../../services/timeclock.service';
 import { interval, Subscription } from 'rxjs';
+import { TimeclockService } from '../../services/timeclock.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 @Component({
@@ -70,7 +70,7 @@ export class TimeclockComponent implements OnInit, OnDestroy {
         this.badgeNumber = '';
       },
       error: (error) => {
-        this.errorDialog.openErrorDialog(error);
+        this.errorDialog.openErrorDialog('Failed to clock in/out', error);
       },
     });
   }
@@ -85,7 +85,7 @@ export class TimeclockComponent implements OnInit, OnDestroy {
         this.openTimeclockDialog(this.badgeNumber, response.message);
       },
       error: (error) => {
-        this.errorDialog.openErrorDialog(error);
+        this.errorDialog.openErrorDialog('Failed to check status', error);
       },
     });
   }

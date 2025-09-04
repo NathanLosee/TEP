@@ -1,20 +1,16 @@
-import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { User } from './user.service';
 
 export interface Permission {
   resource: string;
+  description: string;
 }
 
 export interface AuthRole {
   id?: number;
-  name: string;
-  permissions: Permission[];
-}
-
-export interface AuthRoleBase {
   name: string;
   permissions: Permission[];
 }
@@ -30,8 +26,11 @@ export class AuthRoleService {
   /**
    * Create a new auth role
    */
-  createAuthRole(authRole: AuthRoleBase): Observable<AuthRole> {
-    return this.http.post<AuthRole>(`${this.baseUrl}`, authRole);
+  createAuthRole(authRole: AuthRole): Observable<AuthRole> {
+    return this.http.post<AuthRole>(`${this.baseUrl}`, {
+      name: authRole.name,
+      permissions: authRole.permissions,
+    });
   }
 
   /**
@@ -91,61 +90,64 @@ export class AuthRoleService {
   /**
    * Get all available resource scopes for permissions
    */
-  getAvailableResourceScopes(): { [key: string]: string } {
-    return {
-      'auth_role.create': 'Create Auth Role',
-      'auth_role.read': 'Read Auth Role',
-      'auth_role.update': 'Update Auth Role',
-      'auth_role.delete': 'Delete Auth Role',
-      'auth_role.assign': 'Assign Auth Role',
-      'auth_role.unassign': 'Unassign Auth Role',
-      'department.create': 'Create Department',
-      'department.read': 'Read Department',
-      'department.update': 'Update Department',
-      'department.delete': 'Delete Department',
-      'department.assign': 'Assign Department',
-      'department.unassign': 'Unassign Department',
-      'employee.create': 'Create Employee',
-      'employee.read': 'Read Employee',
-      'employee.update': 'Update Employee',
-      'employee.update.badge_number': 'Update Employee Badge Number',
-      'employee.delete': 'Delete Employee',
-      'event_log.create': 'Create Event Log',
-      'event_log.read': 'Read Event Log',
-      'event_log.delete': 'Delete Event Log',
-      'holiday_group.create': 'Create Holiday Group',
-      'holiday_group.read': 'Read Holiday Group',
-      'holiday_group.update': 'Update Holiday Group',
-      'holiday_group.delete': 'Delete Holiday Group',
-      'org_unit.create': 'Create Org Unit',
-      'org_unit.read': 'Read Org Unit',
-      'org_unit.update': 'Update Org Unit',
-      'org_unit.delete': 'Delete Org Unit',
-      'timeclock.update': 'Update Timeclock entry',
-      'timeclock.read': 'Read Timeclock entry',
-      'timeclock.delete': 'Delete Timeclock entry',
-      'user.create': 'Create User',
-      'user.read': 'Read User',
-      'user.update': 'Update User',
-      'user.delete': 'Delete User',
-    };
+  getAvailableResourceScopes(): Permission[] {
+    return [
+      { resource: 'auth_role.create', description: 'Create Auth Role' },
+      { resource: 'auth_role.read', description: 'Read Auth Role' },
+      { resource: 'auth_role.update', description: 'Update Auth Role' },
+      { resource: 'auth_role.delete', description: 'Delete Auth Role' },
+      { resource: 'auth_role.assign', description: 'Assign Auth Role' },
+      { resource: 'auth_role.unassign', description: 'Unassign Auth Role' },
+      { resource: 'department.create', description: 'Create Department' },
+      { resource: 'department.read', description: 'Read Department' },
+      { resource: 'department.update', description: 'Update Department' },
+      { resource: 'department.delete', description: 'Delete Department' },
+      { resource: 'department.assign', description: 'Assign Department' },
+      { resource: 'department.unassign', description: 'Unassign Department' },
+      { resource: 'employee.create', description: 'Create Employee' },
+      { resource: 'employee.read', description: 'Read Employee' },
+      { resource: 'employee.update', description: 'Update Employee' },
+      {
+        resource: 'employee.update.badge_number',
+        description: 'Update Employee Badge Number',
+      },
+      { resource: 'employee.delete', description: 'Delete Employee' },
+      { resource: 'event_log.create', description: 'Create Event Log' },
+      { resource: 'event_log.read', description: 'Read Event Log' },
+      { resource: 'event_log.delete', description: 'Delete Event Log' },
+      { resource: 'holiday_group.create', description: 'Create Holiday Group' },
+      { resource: 'holiday_group.read', description: 'Read Holiday Group' },
+      { resource: 'holiday_group.update', description: 'Update Holiday Group' },
+      { resource: 'holiday_group.delete', description: 'Delete Holiday Group' },
+      { resource: 'org_unit.create', description: 'Create Org Unit' },
+      { resource: 'org_unit.read', description: 'Read Org Unit' },
+      { resource: 'org_unit.update', description: 'Update Org Unit' },
+      { resource: 'org_unit.delete', description: 'Delete Org Unit' },
+      { resource: 'timeclock.update', description: 'Update Timeclock entry' },
+      { resource: 'timeclock.read', description: 'Read Timeclock entry' },
+      { resource: 'timeclock.delete', description: 'Delete Timeclock entry' },
+      { resource: 'user.create', description: 'Create User' },
+      { resource: 'user.read', description: 'Read User' },
+      { resource: 'user.update', description: 'Update User' },
+      { resource: 'user.delete', description: 'Delete User' },
+    ];
   }
 
   /**
    * Group permissions by category for better UX
    */
   getPermissionsByCategory(): {
-    [category: string]: { [key: string]: string };
+    [category: string]: Permission[];
   } {
     const scopes = this.getAvailableResourceScopes();
-    const categories: { [category: string]: { [key: string]: string } } = {};
+    const categories: { [category: string]: Permission[] } = {};
 
-    Object.entries(scopes).forEach(([key, value]) => {
-      const category = key.split('.')[0];
+    scopes.forEach((scope) => {
+      const category = scope.resource.split('.')[0];
       if (!categories[category]) {
-        categories[category] = {};
+        categories[category] = [];
       }
-      categories[category][key] = value;
+      categories[category].push(scope);
     });
 
     return categories;

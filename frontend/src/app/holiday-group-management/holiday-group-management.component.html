@@ -10,134 +10,130 @@
         <button
           mat-raised-button
           color="primary"
-          (click)="toggleAddForm()"
+          (click)="toggleForm()"
+          [disabled]="isLoading"
           class="add-btn"
         >
-          <mat-icon>{{ showAddForm ? "close" : "add" }}</mat-icon>
-          {{ showAddForm ? "Cancel" : "Add Holiday Group" }}
+          <mat-icon>{{ showForm ? "close" : "add" }}</mat-icon>
+          {{ showForm ? "Cancel" : "Add Holiday Group" }}
         </button>
       </div>
     </div>
   </div>
 
   <app-holiday-form
-    *ngIf="showAddForm"
+    *ngIf="showForm"
     (formSubmitted)="saveHolidayGroup($event)"
     (formCancelled)="cancelAction()"
   ></app-holiday-form>
 
-  <!-- Content Tabs -->
+  <!-- Main Content Tabs -->
   <mat-card class="content-card">
-    <mat-tab-group class="content-tabs">
-      <!-- Holiday Groups Tab -->
-      <mat-tab label="Holiday Groups">
-        <div class="tab-content">
-          <!-- Search -->
-          <div class="search-section">
-            <form [formGroup]="searchForm" class="search-form">
-              <mat-form-field appearance="outline" class="search-field">
-                <mat-label>Search holiday groups</mat-label>
-                <input
-                  matInput
-                  formControlName="name"
-                  placeholder="Group name or description"
-                />
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-            </form>
-          </div>
+    <!-- Search -->
+    <div class="search-section">
+      <form [formGroup]="searchForm" class="search-form">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search holiday groups</mat-label>
+          <input matInput formControlName="name" placeholder="Group name" />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </form>
+    </div>
 
-          <!-- Holiday Groups Table -->
-          <div class="table-container" *ngIf="!isLoading">
-            <table mat-table [dataSource]="holidayGroups" class="groups-table">
-              <!-- Name Column -->
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>
-                  Group Name ({{ holidayGroups.length }})
-                </th>
-                <td mat-cell *matCellDef="let group">
-                  <div class="group-cell">
-                    <mat-icon class="group-icon">event</mat-icon>
-                    <div class="group-info">
-                      <div class="group-name">{{ group.name }}</div>
-                    </div>
+    <!-- Holiday Groups Table -->
+    <mat-card class="table-card" *ngIf="!isLoading">
+      <mat-card-header>
+        <mat-card-title
+          >Holiday Groups ({{ filteredGroups.length }})</mat-card-title
+        >
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="filteredGroups" class="groups-table">
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Group Name</th>
+              <td mat-cell *matCellDef="let group">
+                <div class="group-cell">
+                  <mat-icon class="group-icon">event</mat-icon>
+                  <div class="group-info">
+                    <div class="group-name">{{ group.name }}</div>
                   </div>
-                </td>
-              </ng-container>
+                </div>
+              </td>
+            </ng-container>
 
-              <!-- Holidays Count Column -->
-              <ng-container matColumnDef="holidays_count">
-                <th mat-header-cell *matHeaderCellDef>Holidays</th>
-                <td mat-cell *matCellDef="let group">
-                  <div class="count-cell">
-                    <mat-icon class="count-icon">calendar_today</mat-icon>
-                    <span class="count-value">{{ group.holidays.length }}</span>
-                    <span class="count-label">holidays</span>
-                  </div>
-                </td>
-              </ng-container>
+            <!-- Holidays Count Column -->
+            <ng-container matColumnDef="holidays_count">
+              <th mat-header-cell *matHeaderCellDef>Holidays</th>
+              <td mat-cell *matCellDef="let group">
+                <div class="count-cell">
+                  <mat-icon class="count-icon">calendar_today</mat-icon>
+                  <span class="count-value">{{ group.holidays.length }}</span>
+                  <span class="count-label"
+                    >holiday{{ group.holidays.length === 1 ? "" : "s" }}</span
+                  >
+                </div>
+              </td>
+            </ng-container>
 
-              <!-- Actions Column -->
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let group">
-                  <div class="action-buttons">
-                    <button
-                      mat-icon-button
-                      matTooltip="View Employees"
-                      (click)="viewEmployees(group)"
-                      class="view-btn"
-                    >
-                      <mat-icon>people</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      matTooltip="Edit Group"
-                      (click)="editGroup(group)"
-                    >
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      matTooltip="Delete Group"
-                      (click)="deleteGroup(group)"
-                      [disabled]="group.employee_count > 0"
-                      class="delete-btn"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let group">
+                <div class="action-buttons">
+                  <button
+                    mat-icon-button
+                    matTooltip="View Employees"
+                    (click)="viewEmployees(group)"
+                    class="view-btn"
+                  >
+                    <mat-icon>people</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    matTooltip="Edit Group"
+                    color="primary"
+                    (click)="editGroup(group)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    matTooltip="Delete Group"
+                    color="warn"
+                    (click)="deleteGroup(group)"
+                    [disabled]="group.employee_count > 0"
+                    class="delete-btn"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    matTooltip="View Details"
+                    (click)="toggleExpansion(group); $event.stopPropagation()"
+                    class="expansion-toggle-button"
+                    [class.expansion-toggle-button-expanded]="isExpanded(group)"
+                  >
+                    <mat-icon>keyboard_arrow_down</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
-          </div>
-
-          <!-- Holiday Details Expansion Panels -->
-          <div class="holiday-details-section" *ngIf="!isLoading">
-            <h3 class="section-title">
-              <mat-icon>event_note</mat-icon>
-              Holiday Details
-            </h3>
-
-            <mat-accordion class="holiday-accordion">
-              <mat-expansion-panel
-                *ngFor="let group of holidayGroups"
-                class="holiday-panel"
+            <!-- Expanded Content Column -->
+            <ng-container matColumnDef="expanded_detail">
+              <td
+                mat-cell
+                *matCellDef="let group"
+                [attr.colspan]="displayedColumns.length"
               >
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <mat-icon class="panel-icon">event</mat-icon>
-                    {{ group.name }}
-                  </mat-panel-title>
-                  <mat-panel-description>
-                    {{ group.holidays.length }} holidays
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
-
-                <div class="holiday-content">
+                <div
+                  class="holiday-content"
+                  class="entity-detail-wrapper"
+                  [class.entity-detail-wrapper-expanded]="isExpanded(group)"
+                >
                   <div
                     class="holidays-list"
                     *ngIf="group.holidays.length > 0; else noHolidays"
@@ -147,8 +143,8 @@
                       class="holiday-item"
                     >
                       <div class="holiday-info">
-                        <div class="holiday-name">{{ holiday.name }}</div>
-                        <div class="holiday-dates">
+                        <span class="holiday-name">{{ holiday.name }}</span>
+                        <span class="holiday-dates">
                           {{ holiday.start_date | date : "MMM d, y" }}
                           <span *ngIf="holiday.start_date !== holiday.end_date">
                             - {{ holiday.end_date | date : "MMM d, y" }}
@@ -163,7 +159,7 @@
                               holiday.start_date !== holiday.end_date ? "s" : ""
                             }}</mat-chip
                           >
-                        </div>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -175,28 +171,48 @@
                     </div>
                   </ng-template>
                 </div>
-              </mat-expansion-panel>
-            </mat-accordion>
-          </div>
+              </td>
+            </ng-container>
 
-          <!-- Loading State -->
-          <div *ngIf="isLoading" class="loading-container">
-            <mat-progress-spinner
-              mode="indeterminate"
-              diameter="60"
-            ></mat-progress-spinner>
-            <p>Loading holiday groups...</p>
-          </div>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
         </div>
-      </mat-tab>
-    </mat-tab-group>
-  </mat-card>
 
-  <app-holiday-form
-    *ngIf="showEditForm && selectedGroup"
-    (formSubmitted)="saveHolidayGroup($event)"
-    (formCancelled)="cancelAction()"
-  ></app-holiday-form>
+        <!-- Empty State -->
+        <div
+          *ngIf="filteredGroups.length === 0 && !isLoading"
+          class="empty-state"
+        >
+          <h3>No holiday groups found</h3>
+          <p *ngIf="searchForm.get('name')?.value">
+            Try adjusting your search criteria
+          </p>
+          <p *ngIf="!searchForm.get('name')?.value">
+            Create your first holiday group to get started
+          </p>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="toggleForm()"
+            *ngIf="!searchForm.get('name')?.value"
+          >
+            <mat-icon>add</mat-icon>
+            Create Holiday Group
+          </button>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-progress-spinner
+            mode="indeterminate"
+            diameter="60"
+          ></mat-progress-spinner>
+          <p>Loading holiday groups...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </mat-card>
 
   <!-- Employee List View -->
   <mat-card

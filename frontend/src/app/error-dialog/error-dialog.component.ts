@@ -1,10 +1,11 @@
-import { Component, Inject, inject, Injectable } from '@angular/core';
+import { Component, inject, Injectable } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import {
-  MatDialog,
   MAT_DIALOG_DATA,
+  MatDialog,
   MatDialogActions,
-  MatDialogContent,
   MatDialogClose,
+  MatDialogContent,
   MatDialogTitle,
 } from '@angular/material/dialog';
 
@@ -18,8 +19,8 @@ export class ErrorDialogComponent {
    * Open the dialog to display the error message
    * @param errorMessage The error message to display
    */
-  openErrorDialog(error: any): void {
-    console.error('Error:', error);
+  openErrorDialog(msg: string, error: any): void {
+    console.error(msg, error);
     this.dialog.open(ErrorDialog, {
       height: '300px',
       width: '300px',
@@ -36,7 +37,13 @@ export class ErrorDialogComponent {
 @Component({
   selector: 'app-error-dialog',
   standalone: true,
-  imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose],
+  imports: [
+    MatButtonModule,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose,
+  ],
   templateUrl: './error-dialog.component.html',
   styleUrl: './error-dialog.component.scss',
 })

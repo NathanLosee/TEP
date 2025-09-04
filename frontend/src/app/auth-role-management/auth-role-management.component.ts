@@ -1,111 +1,95 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
-  Validators,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import {
-  AuthRoleService,
-  AuthRole,
-  AuthRoleBase,
-  Permission,
-} from '../../services/auth-role.service';
-import { UserService, User } from '../../services/user.service';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { PartialObserver } from 'rxjs';
+import { AuthRole, AuthRoleService } from '../../services/auth-role.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { AuthRoleFormComponent } from './auth-role-form/auth-role-form.component';
 
 @Component({
   selector: 'app-auth-role-management',
   standalone: true,
   imports: [
+    AuthRoleFormComponent,
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
     MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatChipsModule,
+    MatCardModule,
     MatCheckboxModule,
+    MatChipsModule,
     MatDialogModule,
-    MatSnackBarModule,
-    MatTabsModule,
-    MatExpansionModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
     MatDividerModule,
+    MatExpansionModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
+    MatSnackBarModule,
+    MatTableModule,
+    MatTabsModule,
+    MatTooltipModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './auth-role-management.component.html',
   styleUrl: './auth-role-management.component.scss',
 })
 export class AuthRoleManagementComponent implements OnInit {
-  private authRoleService = inject(AuthRoleService);
-  private userService = inject(UserService);
   private formBuilder = inject(FormBuilder);
+  private errorDialog = inject(ErrorDialogComponent);
   private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
+
+  private authRoleService = inject(AuthRoleService);
+  private authRoleFormComponent = new AuthRoleFormComponent();
 
   // Data
   authRoles: AuthRole[] = [];
-  users: User[] = [];
-  filteredAuthRoles: AuthRole[] = [];
+  filteredRoles: AuthRole[] = [];
   selectedRole: AuthRole | null = null;
-  selectedRoleUsers: User[] = [];
 
   // Forms
+  searchForm: FormGroup;
   roleForm: FormGroup;
 
   // UI State
   isLoading = false;
-  searchTerm = '';
-  showCreateForm = false;
-  editingRole: AuthRole | null = null;
-
-  // Permissions
-  availablePermissions: { [category: string]: { [key: string]: string } } = {};
-  selectedPermissions: Set<string> = new Set();
+  showForm = false;
+  showUsersList = false;
 
   // Table columns
-  displayedColumns = ['name', 'permissions', 'users', 'actions'];
+  displayedColumns = ['name', 'permissions', 'actions'];
 
   constructor() {
-    this.roleForm = this.formBuilder.group({
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(2),
-          Validators.maxLength(50),
-        ],
-      ],
-      permissions: [[]],
+    this.searchForm = this.formBuilder.group({
+      name: [''],
     });
+    this.roleForm = this.authRoleFormComponent.authRoleForm;
   }
 
   ngOnInit() {
     this.loadAuthRoles();
-    this.loadUsers();
-    this.availablePermissions = this.authRoleService.getPermissionsByCategory();
+    this.setupSearchForm();
   }
 
   loadAuthRoles() {
@@ -113,247 +97,139 @@ export class AuthRoleManagementComponent implements OnInit {
     this.authRoleService.getAuthRoles().subscribe({
       next: (roles) => {
         this.authRoles = roles;
-        this.applySearchFilter();
+        this.filterRoles();
         this.isLoading = false;
       },
       error: (error) => {
-        this.showSnackBar(
-          'Failed to load auth roles: ' +
-            (error.error?.detail || error.message),
-          'error'
-        );
+        this.errorDialog.openErrorDialog('Failed to load auth roles: ', error);
         this.isLoading = false;
       },
     });
   }
 
-  loadUsers() {
-    this.userService.getUsers().subscribe({
+  setupSearchForm() {
+    this.searchForm.valueChanges.subscribe(() => {
+      this.filterRoles();
+    });
+  }
+
+  viewUsers(role: AuthRole) {
+    this.selectedRole = role;
+    this.showUsersList = true;
+    this.showForm = false;
+
+    this.authRoleService.getUsersByAuthRole(role.id!).subscribe({
       next: (users) => {
-        this.users = users;
+        this.isLoading = false;
       },
       error: (error) => {
-        this.showSnackBar(
-          'Failed to load users: ' + (error.error?.detail || error.message),
-          'error'
+        this.errorDialog.openErrorDialog(
+          'Failed to load users for auth role',
+          error
         );
+        this.isLoading = false;
       },
     });
   }
 
-  loadRoleUsers(roleId: number) {
-    this.authRoleService.getUsersByAuthRole(roleId).subscribe({
-      next: (users) => {
-        this.selectedRoleUsers = users;
-      },
-      error: (error) => {
-        this.showSnackBar(
-          'Failed to load role users: ' +
-            (error.error?.detail || error.message),
-          'error'
-        );
-      },
-    });
-  }
+  filterRoles() {
+    const searchTerm =
+      this.searchForm.get('name')?.value?.toLowerCase().trim() || '';
 
-  applySearchFilter() {
-    if (!this.searchTerm.trim()) {
-      this.filteredAuthRoles = [...this.authRoles];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredAuthRoles = this.authRoles.filter(
-        (role) =>
-          role.name.toLowerCase().includes(term) ||
-          role.permissions.some((p) => p.resource.toLowerCase().includes(term))
-      );
+    if (!searchTerm) {
+      this.filteredRoles = [...this.authRoles];
+      return;
     }
+    this.filteredRoles = this.authRoles.filter((role) =>
+      role.name.toLowerCase().includes(searchTerm)
+    );
   }
 
-  onSearchChange() {
-    this.applySearchFilter();
-  }
-
-  showCreateRoleForm() {
-    this.showCreateForm = true;
-    this.editingRole = null;
-    this.selectedPermissions.clear();
-    this.roleForm.reset();
-    this.roleForm.patchValue({ permissions: [] });
+  toggleForm() {
+    this.showForm = !this.showForm;
+    if (!this.showForm) {
+      this.authRoleFormComponent.resetForm();
+    }
   }
 
   editRole(role: AuthRole) {
-    this.editingRole = role;
-    this.showCreateForm = true;
-    this.selectedPermissions = new Set(role.permissions.map((p) => p.resource));
-    this.roleForm.patchValue({
-      name: role.name,
-      permissions: role.permissions.map((p) => p.resource),
-    });
+    this.selectedRole = role;
+    this.showForm = true;
+    this.showUsersList = false;
+    this.roleForm.patchValue(role);
   }
 
-  cancelForm() {
-    this.showCreateForm = false;
-    this.editingRole = null;
-    this.selectedPermissions.clear();
-    this.roleForm.reset();
+  cancelAction() {
+    this.showForm = false;
+    this.showUsersList = false;
+    this.selectedRole = null;
   }
 
-  togglePermission(resource: string) {
-    if (this.selectedPermissions.has(resource)) {
-      this.selectedPermissions.delete(resource);
-    } else {
-      this.selectedPermissions.add(resource);
-    }
-
-    // Update form control
-    this.roleForm.patchValue({
-      permissions: Array.from(this.selectedPermissions),
-    });
-  }
-
-  isPermissionSelected(resource: string): boolean {
-    return this.selectedPermissions.has(resource);
-  }
-
-  onSubmit() {
-    if (this.roleForm.invalid) {
-      this.showSnackBar(
-        'Please fill in all required fields correctly',
-        'error'
-      );
-      return;
-    }
-
-    const formValue = this.roleForm.value;
-    const roleData: AuthRoleBase = {
-      name: formValue.name,
-      permissions: Array.from(this.selectedPermissions).map((resource) => ({
-        resource,
-      })),
+  saveAuthRole(authRole: AuthRole) {
+    this.authRoleFormComponent.isLoading = true;
+    const observer: PartialObserver<AuthRole> = {
+      next: (updatedRole) => {
+        if (this.selectedRole) {
+          // Replace existing role
+          const index = this.authRoles.findIndex(
+            (r) => r.id === this.selectedRole!.id
+          );
+          if (index > -1) {
+            this.authRoles[index] = updatedRole;
+          }
+        } else {
+          // Add new role
+          this.authRoles.push(updatedRole);
+        }
+        this.filterRoles();
+        this.showSnackBar('Auth role saved successfully', 'success');
+        this.authRoleFormComponent.resetForm();
+        this.cancelAction();
+        this.authRoleFormComponent.isLoading = false;
+      },
+      error: (error) => {
+        this.errorDialog.openErrorDialog('Failed to update auth role', error);
+        this.authRoleFormComponent.isLoading = false;
+      },
     };
 
-    this.isLoading = true;
-
-    if (this.editingRole) {
+    if (this.selectedRole) {
       // Update existing role
-      const updateData: AuthRole = {
-        ...roleData,
-        id: this.editingRole.id,
-      };
-
       this.authRoleService
-        .updateAuthRole(this.editingRole.id!, updateData)
-        .subscribe({
-          next: (updatedRole) => {
-            this.showSnackBar('Auth role updated successfully', 'success');
-            this.loadAuthRoles();
-            this.cancelForm();
-            this.isLoading = false;
-          },
-          error: (error) => {
-            this.showSnackBar(
-              'Failed to update auth role: ' +
-                (error.error?.detail || error.message),
-              'error'
-            );
-            this.isLoading = false;
-          },
-        });
+        .updateAuthRole(this.selectedRole.id!, authRole)
+        .subscribe(observer);
     } else {
       // Create new role
-      this.authRoleService.createAuthRole(roleData).subscribe({
-        next: (newRole) => {
-          this.showSnackBar('Auth role created successfully', 'success');
-          this.loadAuthRoles();
-          this.cancelForm();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.showSnackBar(
-            'Failed to create auth role: ' +
-              (error.error?.detail || error.message),
-            'error'
-          );
-          this.isLoading = false;
-        },
-      });
+      this.authRoleService.createAuthRole(authRole).subscribe(observer);
     }
   }
 
   deleteRole(role: AuthRole) {
     if (
       confirm(
-        `Are you sure you want to delete the auth role "${role.name}"? This action cannot be undone.`
+        `Are you sure you want to delete "${role.name}"? This action cannot be undone.`
       )
     ) {
       this.isLoading = true;
       this.authRoleService.deleteAuthRole(role.id!).subscribe({
         next: () => {
-          this.showSnackBar('Auth role deleted successfully', 'success');
-          this.loadAuthRoles();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.showSnackBar(
-            'Failed to delete auth role: ' +
-              (error.error?.detail || error.message),
-            'error'
-          );
-          this.isLoading = false;
-        },
-      });
-    }
-  }
-
-  viewRoleDetails(role: AuthRole) {
-    this.selectedRole = role;
-    this.loadRoleUsers(role.id!);
-  }
-
-  assignUserToRole(userId: number) {
-    if (!this.selectedRole) return;
-
-    this.authRoleService
-      .assignUserToRole(this.selectedRole.id!, userId)
-      .subscribe({
-        next: (users) => {
-          this.selectedRoleUsers = users;
-          this.showSnackBar('User assigned to role successfully', 'success');
-        },
-        error: (error) => {
-          this.showSnackBar(
-            'Failed to assign user: ' + (error.error?.detail || error.message),
-            'error'
-          );
-        },
-      });
-  }
-
-  removeUserFromRole(userId: number) {
-    if (!this.selectedRole) return;
-
-    if (confirm('Are you sure you want to remove this user from the role?')) {
-      this.authRoleService
-        .removeUserFromRole(this.selectedRole.id!, userId)
-        .subscribe({
-          next: (users) => {
-            this.selectedRoleUsers = users;
-            this.showSnackBar('User removed from role successfully', 'success');
-          },
-          error: (error) => {
+          const index = this.authRoles.findIndex((r) => r.id === role.id);
+          if (index > -1) {
+            this.authRoles.splice(index, 1);
+            this.filterRoles();
             this.showSnackBar(
-              'Failed to remove user: ' +
-                (error.error?.detail || error.message),
-              'error'
+              `${role.name} has been deleted successfully`,
+              'success'
             );
-          },
-        });
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.errorDialog.openErrorDialog('Failed to delete auth role', error);
+          this.isLoading = false;
+        },
+      });
     }
-  }
-
-  getUnassignedUsers(): User[] {
-    const assignedUserIds = new Set(this.selectedRoleUsers.map((u) => u.id));
-    return this.users.filter((user) => !assignedUserIds.has(user.id));
   }
 
   getCategoryName(category: string): string {
@@ -386,32 +262,11 @@ export class AuthRoleManagementComponent implements OnInit {
     return icons[category] || 'settings';
   }
 
-  getSelectedPermissionsCount(category: string): number {
-    const categoryPermissions = Object.keys(
-      this.availablePermissions[category] || {}
-    );
-    return categoryPermissions.filter((p) => this.selectedPermissions.has(p))
-      .length;
-  }
-
-  // Make Array and Object available in template
-  Array = Array;
-  Object = Object;
-
   getPermissionCount(): number {
     return this.authRoles.reduce(
       (total, role) => total + role.permissions.length,
       0
     );
-  }
-
-  getUserCount(): number {
-    const userIds = new Set();
-    this.authRoles.forEach((role) => {
-      // Note: We would need to load users for each role to get accurate count
-      // For now, return total unique users
-    });
-    return this.users.length;
   }
 
   private showSnackBar(

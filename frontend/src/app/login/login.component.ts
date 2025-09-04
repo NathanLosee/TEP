@@ -67,10 +67,10 @@ export class LoginComponent {
         this.router.navigate(['/admin']);
       },
       error: (error) => {
-        console.error('Login failed:', error);
         this.isLoading = false;
         this.errorDialog.openErrorDialog(
-          'Login failed. Please check your credentials.'
+          'Login failed. Please check your credentials.',
+          error
         );
       },
     });

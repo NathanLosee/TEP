@@ -47,7 +47,7 @@ import { HolidayGroup } from '../../../services/holiday-group.service';
   templateUrl: './holiday-form.component.html',
 })
 export class HolidayFormComponent {
-  private fb = inject(FormBuilder);
+  private formBuilder = inject(FormBuilder);
 
   holidayForm: FormGroup;
   isLoading = false;
@@ -56,9 +56,9 @@ export class HolidayFormComponent {
   @Output() formCancelled = new EventEmitter<void>();
 
   constructor() {
-    this.holidayForm = this.fb.group({
+    this.holidayForm = this.formBuilder.group({
       name: ['', [Validators.required]],
-      holidays: this.fb.array([]),
+      holidays: this.formBuilder.array([]),
     });
   }
 
@@ -68,7 +68,7 @@ export class HolidayFormComponent {
 
   addHoliday() {
     this.getHolidays().push(
-      this.fb.group({
+      this.formBuilder.group({
         name: ['', Validators.required],
         start_date: ['', Validators.required],
         end_date: ['', Validators.required],
@@ -84,9 +84,16 @@ export class HolidayFormComponent {
     const holidays = this.getHolidays().controls.map(
       (control) => control.value
     );
+    holidays.forEach((holiday: any) => {
+      // Convert to Date only strings
+      holiday.start_date = new Date(holiday.start_date)
+        .toISOString()
+        .split('T')[0];
+      holiday.end_date = new Date(holiday.end_date).toISOString().split('T')[0];
+    });
     return {
       name: this.holidayForm.get('name')?.value,
-      holidays,
+      holidays: holidays,
     };
   }
 
@@ -97,7 +104,7 @@ export class HolidayFormComponent {
     this.getHolidays().clear();
     group.holidays.forEach((holiday) => {
       this.getHolidays().push(
-        this.fb.group({
+        this.formBuilder.group({
           name: [holiday.name, Validators.required],
           start_date: [holiday.start_date, Validators.required],
           end_date: [holiday.end_date, Validators.required],
@@ -114,6 +121,7 @@ export class HolidayFormComponent {
 
   cancelForm() {
     this.formCancelled.emit();
+    this.resetForm();
   }
 
   resetForm(): void {
