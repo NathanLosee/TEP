@@ -183,6 +183,11 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   toggleExpansion(group: HolidayGroup) {
     this.expandedEntity = this.isExpanded(group) ? null : group;
+    if (this.isExpanded(group)) {
+      this.displayedColumns.push('expanded_detail');
+    } else {
+      this.displayedColumns.pop();
+    }
   }
 
   saveHolidayGroup(holidayGroupData: HolidayGroup) {

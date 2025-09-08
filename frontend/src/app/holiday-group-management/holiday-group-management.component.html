@@ -50,7 +50,12 @@
 
       <mat-card-content>
         <div class="table-container">
-          <table mat-table [dataSource]="filteredGroups" class="groups-table">
+          <table
+            mat-table
+            [dataSource]="filteredGroups"
+            multiTemplateDataRows
+            class="groups-table"
+          >
             <!-- Name Column -->
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Group Name</th>
@@ -175,7 +180,16 @@
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let group; columns: displayedColumns"
+              (click)="toggleExpansion(group)"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: ['expanded_detail']"
+              class="entity-detail-row"
+            ></tr>
           </table>
         </div>
 
