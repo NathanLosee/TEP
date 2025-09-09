@@ -74,6 +74,7 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   // UI State
   isLoading = false;
+  showForm = false;
   showEmployeeList = false;
 
   // Table columns
@@ -153,7 +154,10 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   toggleForm() {
-    this.openHolidayFormDialog();
+    this.showForm = !this.showForm;
+    if (this.showForm) {
+      this.openHolidayFormDialog();
+    }
   }
 
   openHolidayFormDialog(editGroup?: HolidayGroup) {
@@ -180,6 +184,7 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   cancelAction() {
+    this.showForm = false;
     this.showEmployeeList = false;
     this.selectedGroup = null;
   }
