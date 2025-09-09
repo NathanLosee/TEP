@@ -79,6 +79,14 @@
                 <div class="action-buttons">
                   <button
                     mat-icon-button
+                    matTooltip="View Details"
+                    (click)="viewHolidayDetails(group)"
+                    class="view-details-btn"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
                     matTooltip="View Employees"
                     (click)="viewEmployees(group)"
                     class="view-btn"
@@ -102,14 +110,6 @@
                     class="delete-btn"
                   >
                     <mat-icon>delete</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    matTooltip="View Details"
-                    (click)="viewHolidayDetails(group)"
-                    class="view-details-btn"
-                  >
-                    <mat-icon>visibility</mat-icon>
                   </button>
                 </div>
               </td>

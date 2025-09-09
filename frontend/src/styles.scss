@@ -47,7 +47,7 @@ $tep-frontend-theme: mat.define-theme(
 /* You can add global styles to this file, and also import other style files */
 
 // Import Google Fonts (commented out due to network restrictions)
-// @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap");
 
 html,
 body {
@@ -165,8 +165,7 @@ body {
 }
 
 .mat-mdc-raised-button {
-  --mdc-filled-button-label-text-font:
-    600 0.875rem / 1.25rem Roboto, sans-serif;
+  --mdc-filled-button-label-text-font: 600 0.875rem / 1.25rem Roboto, sans-serif;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 
