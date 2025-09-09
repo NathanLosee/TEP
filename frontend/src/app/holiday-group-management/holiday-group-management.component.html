@@ -23,6 +23,7 @@
 
   <app-holiday-form
     *ngIf="showForm"
+    [editGroup]="selectedGroup"
     (formSubmitted)="saveHolidayGroup($event)"
     (formCancelled)="cancelAction()"
   ></app-holiday-form>
@@ -50,12 +51,7 @@
 
       <mat-card-content>
         <div class="table-container">
-          <table
-            mat-table
-            [dataSource]="filteredGroups"
-            multiTemplateDataRows
-            class="groups-table"
-          >
+          <table mat-table [dataSource]="filteredGroups" class="groups-table">
             <!-- Name Column -->
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Group Name</th>
@@ -117,79 +113,17 @@
                   <button
                     mat-icon-button
                     matTooltip="View Details"
-                    (click)="toggleExpansion(group); $event.stopPropagation()"
-                    class="expansion-toggle-button"
-                    [class.expansion-toggle-button-expanded]="isExpanded(group)"
+                    (click)="viewHolidayDetails(group)"
+                    class="view-details-btn"
                   >
-                    <mat-icon>keyboard_arrow_down</mat-icon>
+                    <mat-icon>visibility</mat-icon>
                   </button>
                 </div>
               </td>
             </ng-container>
 
-            <!-- Expanded Content Column -->
-            <ng-container matColumnDef="expanded_detail">
-              <td
-                mat-cell
-                *matCellDef="let group"
-                [attr.colspan]="displayedColumns.length"
-              >
-                <div
-                  class="holiday-content"
-                  class="entity-detail-wrapper"
-                  [class.entity-detail-wrapper-expanded]="isExpanded(group)"
-                >
-                  <div
-                    class="holidays-list"
-                    *ngIf="group.holidays.length > 0; else noHolidays"
-                  >
-                    <div
-                      *ngFor="let holiday of group.holidays; let i = index"
-                      class="holiday-item"
-                    >
-                      <div class="holiday-info">
-                        <span class="holiday-name">{{ holiday.name }}</span>
-                        <span class="holiday-dates">
-                          {{ holiday.start_date | date : "MMM d, y" }}
-                          <span *ngIf="holiday.start_date !== holiday.end_date">
-                            - {{ holiday.end_date | date : "MMM d, y" }}
-                          </span>
-                          <mat-chip class="duration-chip"
-                            >{{
-                              (holiday.end_date.getTime() -
-                                holiday.start_date.getTime()) /
-                                (1000 * 3600 * 24)
-                            }}
-                            day{{
-                              holiday.start_date !== holiday.end_date ? "s" : ""
-                            }}</mat-chip
-                          >
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <ng-template #noHolidays>
-                    <div class="no-holidays">
-                      <mat-icon>event_busy</mat-icon>
-                      <p>No holidays defined for this group</p>
-                    </div>
-                  </ng-template>
-                </div>
-              </td>
-            </ng-container>
-
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr
-              mat-row
-              *matRowDef="let group; columns: displayedColumns"
-              (click)="toggleExpansion(group)"
-            ></tr>
-            <tr
-              mat-row
-              *matRowDef="let row; columns: ['expanded_detail']"
-              class="entity-detail-row"
-            ></tr>
+            <tr mat-row *matRowDef="let group; columns: displayedColumns"></tr>
           </table>
         </div>
 

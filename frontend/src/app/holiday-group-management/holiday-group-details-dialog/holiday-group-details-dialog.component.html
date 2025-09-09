@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>
+  <mat-icon>event</mat-icon>
+  {{ holidayGroup.name }} - Holiday Details
+</h2>
+
+<mat-dialog-content>
+  <div class="holiday-content">
+    <div
+      class="holidays-list"
+      *ngIf="holidayGroup.holidays.length > 0; else noHolidays"
+    >
+      <div
+        *ngFor="let holiday of holidayGroup.holidays; let i = index"
+        class="holiday-item"
+      >
+        <div class="holiday-info">
+          <span class="holiday-name">{{ holiday.name }}</span>
+          <span class="holiday-dates">
+            {{ holiday.start_date | date : "MMM d, y" }}
+            <span *ngIf="holiday.start_date !== holiday.end_date">
+              - {{ holiday.end_date | date : "MMM d, y" }}
+            </span>
+            <mat-chip class="duration-chip"
+              >{{
+                (holiday.end_date.getTime() -
+                  holiday.start_date.getTime()) /
+                  (1000 * 3600 * 24)
+              }}
+              day{{
+                holiday.start_date !== holiday.end_date ? "s" : ""
+              }}</mat-chip
+            >
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noHolidays>
+      <div class="no-holidays">
+        <mat-icon>event_busy</mat-icon>
+        <p>No holidays defined for this group</p>
+      </div>
+    </ng-template>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

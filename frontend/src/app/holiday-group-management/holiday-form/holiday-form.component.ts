@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject,
+} from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -46,10 +53,13 @@ import { HolidayGroup } from '../../../services/holiday-group.service';
   ],
   templateUrl: './holiday-form.component.html',
 })
-export class HolidayFormComponent {
+export class HolidayFormComponent implements OnInit {
+  @Input() editGroup: HolidayGroup | null = null;
+
   private formBuilder = inject(FormBuilder);
 
   holidayForm: FormGroup;
+  isEditMode = false;
   isLoading = false;
 
   @Output() formSubmitted = new EventEmitter<HolidayGroup>();
@@ -60,6 +70,25 @@ export class HolidayFormComponent {
       name: ['', [Validators.required]],
       holidays: this.formBuilder.array([]),
     });
+  }
+
+  ngOnInit() {
+    if (this.editGroup) {
+      this.isEditMode = true;
+      this.holidayForm = this.formBuilder.group({
+        name: [this.editGroup.name, [Validators.required]],
+        holidays: this.formBuilder.array([]),
+      });
+      this.editGroup.holidays.forEach((holiday) => {
+        this.getHolidays().push(
+          this.formBuilder.group({
+            name: [holiday.name, Validators.required],
+            start_date: [new Date(holiday.start_date), Validators.required],
+            end_date: [new Date(holiday.end_date), Validators.required],
+          })
+        );
+      });
+    }
   }
 
   getHolidays(): FormArray {
@@ -97,29 +126,15 @@ export class HolidayFormComponent {
     };
   }
 
-  patchForm(group: HolidayGroup): void {
-    this.holidayForm.patchValue({
-      name: group.name,
-    });
-    this.getHolidays().clear();
-    group.holidays.forEach((holiday) => {
-      this.getHolidays().push(
-        this.formBuilder.group({
-          name: [holiday.name, Validators.required],
-          start_date: [holiday.start_date, Validators.required],
-          end_date: [holiday.end_date, Validators.required],
-        })
-      );
-    });
-  }
-
   submitForm() {
+    this.isEditMode = false;
     if (this.holidayForm.valid) {
       this.formSubmitted.emit(this.getFormData());
     }
   }
 
   cancelForm() {
+    this.isEditMode = false;
     this.formCancelled.emit();
     this.resetForm();
   }
