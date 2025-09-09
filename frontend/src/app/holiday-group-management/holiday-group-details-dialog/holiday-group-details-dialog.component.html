@@ -16,18 +16,16 @@
         <div class="holiday-info">
           <span class="holiday-name">{{ holiday.name }}</span>
           <span class="holiday-dates">
-            {{ holiday.start_date | date : "MMM d, y" }}
-            <span *ngIf="holiday.start_date !== holiday.end_date">
-              - {{ holiday.end_date | date : "MMM d, y" }}
+            {{ getStartDate(holiday) | date : "MMM d, y" }}
+            <span *ngIf="getStartDate(holiday).getTime() !== getEndDate(holiday).getTime()">
+              - {{ getEndDate(holiday) | date : "MMM d, y" }}
             </span>
             <mat-chip class="duration-chip"
               >{{
-                (holiday.end_date.getTime() -
-                  holiday.start_date.getTime()) /
-                  (1000 * 3600 * 24)
+                getDurationDays(holiday)
               }}
               day{{
-                holiday.start_date !== holiday.end_date ? "s" : ""
+                getDurationDays(holiday) !== 1 ? "s" : ""
               }}</mat-chip
             >
           </span>

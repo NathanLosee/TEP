@@ -14,19 +14,12 @@
           [disabled]="isLoading"
           class="add-btn"
         >
-          <mat-icon>{{ showForm ? "close" : "add" }}</mat-icon>
-          {{ showForm ? "Cancel" : "Add Holiday Group" }}
+          <mat-icon>add</mat-icon>
+          Add Holiday Group
         </button>
       </div>
     </div>
   </div>
-
-  <app-holiday-form
-    *ngIf="showForm"
-    [editGroup]="selectedGroup"
-    (formSubmitted)="saveHolidayGroup($event)"
-    (formCancelled)="cancelAction()"
-  ></app-holiday-form>
 
   <!-- Main Content Tabs -->
   <mat-card class="content-card">
@@ -142,7 +135,7 @@
           <button
             mat-raised-button
             color="primary"
-            (click)="toggleForm()"
+            (click)="openHolidayFormDialog()"
             *ngIf="!searchForm.get('name')?.value"
           >
             <mat-icon>add</mat-icon>
