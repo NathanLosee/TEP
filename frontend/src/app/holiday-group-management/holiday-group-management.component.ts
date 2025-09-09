@@ -29,6 +29,7 @@ import {
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { HolidayFormDialogComponent } from './holiday-form-dialog/holiday-form-dialog.component';
 import { HolidayGroupDetailsDialogComponent } from './holiday-group-details-dialog/holiday-group-details-dialog.component';
+import { HolidayGroupEmployeesDialogComponent } from './holiday-group-employees-dialog/holiday-group-employees-dialog.component';
 
 @Component({
   selector: 'app-holiday-group-management',
@@ -136,20 +137,12 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   viewEmployees(group: HolidayGroup) {
-    this.selectedGroup = group;
-    this.showEmployeeList = true;
-
-    this.holidayGroupService.getEmployeesByHolidayGroup(group.id!).subscribe({
-      next: (employees) => {
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorDialog.openErrorDialog(
-          'Failed to load holiday group employees',
-          error
-        );
-        this.isLoading = false;
-      },
+    this.dialog.open(HolidayGroupEmployeesDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: { holidayGroup: group },
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
     });
   }
 
