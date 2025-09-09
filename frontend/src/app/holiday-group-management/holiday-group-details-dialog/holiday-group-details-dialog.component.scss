@@ -1,0 +1,79 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--sys-on-surface);
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  mat-icon {
+    color: var(--sys-primary);
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+.holiday-content {
+  .holidays-list {
+    margin-bottom: 16px;
+
+    .holiday-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      background: var(--sys-surface-variant);
+
+      .holiday-info {
+        flex: 1;
+
+        .holiday-name {
+          font-weight: 600;
+          color: var(--sys-on-surface);
+          margin-bottom: 4px;
+          display: block;
+        }
+
+        .holiday-dates {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.875rem;
+          color: var(--sys-on-surface-variant);
+
+          .duration-chip {
+            background: var(--sys-tertiary-container);
+            color: var(--sys-on-tertiary-container);
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+
+  .no-holidays {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--sys-on-surface-variant);
+
+    mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+mat-dialog-actions {
+  justify-content: flex-end;
+}

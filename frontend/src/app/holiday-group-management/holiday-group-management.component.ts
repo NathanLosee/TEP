@@ -11,7 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +28,7 @@ import {
 } from '../../services/holiday-group.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { HolidayFormComponent } from './holiday-form/holiday-form.component';
+import { HolidayGroupDetailsDialogComponent } from './holiday-group-details-dialog/holiday-group-details-dialog.component';
 
 @Component({
   selector: 'app-holiday-group-management',
@@ -60,6 +61,7 @@ export class HolidayGroupManagementComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
   private errorDialog = inject(ErrorDialogComponent);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   private holidayGroupService = inject(HolidayGroupService);
   private holidayFormComponent = new HolidayFormComponent();
@@ -77,7 +79,6 @@ export class HolidayGroupManagementComponent implements OnInit {
   isLoading = false;
   showForm = false;
   showEmployeeList = false;
-  expandedEntity: HolidayGroup | null = null;
 
   // Table columns
   displayedColumns: string[] = ['name', 'holidays_count', 'actions'];
@@ -177,17 +178,13 @@ export class HolidayGroupManagementComponent implements OnInit {
     this.selectedGroup = null;
   }
 
-  isExpanded(group: HolidayGroup): boolean {
-    return this.expandedEntity === group;
-  }
-
-  toggleExpansion(group: HolidayGroup) {
-    this.expandedEntity = this.isExpanded(group) ? null : group;
-    if (this.isExpanded(group)) {
-      this.displayedColumns.push('expanded_detail');
-    } else {
-      this.displayedColumns.pop();
-    }
+  viewHolidayDetails(group: HolidayGroup) {
+    this.dialog.open(HolidayGroupDetailsDialogComponent, {
+      width: '600px',
+      data: { holidayGroup: group },
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
+    });
   }
 
   saveHolidayGroup(holidayGroupData: HolidayGroup) {
