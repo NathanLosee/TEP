@@ -46,6 +46,9 @@ $tep-frontend-theme: mat.define-theme(
 // @include mat.color-variants-backwards-compatibility($tep-frontend-theme);
 /* You can add global styles to this file, and also import other style files */
 
+// Import Google Fonts
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap");
+
 html,
 body {
   height: 100%;
