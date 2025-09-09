@@ -167,9 +167,8 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   editGroup(group: HolidayGroup) {
     this.selectedGroup = group;
-    this.showForm = true;
+    this.toggleForm();
     this.showEmployeeList = false;
-    this.holidayFormComponent.patchForm(group);
   }
 
   cancelAction() {
@@ -189,6 +188,9 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   saveHolidayGroup(holidayGroupData: HolidayGroup) {
     this.holidayFormComponent.isLoading = true;
+    if (this.selectedGroup) {
+      holidayGroupData.id = this.selectedGroup.id;
+    }
     console.log('Saving holiday group:', holidayGroupData);
     const observer: PartialObserver<HolidayGroup> = {
       next: (returnedGroup) => {
