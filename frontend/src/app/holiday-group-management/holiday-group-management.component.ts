@@ -27,14 +27,13 @@ import {
   HolidayGroupService,
 } from '../../services/holiday-group.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-import { HolidayFormComponent } from './holiday-form/holiday-form.component';
+import { HolidayFormDialogComponent } from './holiday-form-dialog/holiday-form-dialog.component';
 import { HolidayGroupDetailsDialogComponent } from './holiday-group-details-dialog/holiday-group-details-dialog.component';
 
 @Component({
   selector: 'app-holiday-group-management',
   standalone: true,
   imports: [
-    HolidayFormComponent,
     CommonModule,
     FormsModule,
     MatButtonModule,
@@ -64,7 +63,6 @@ export class HolidayGroupManagementComponent implements OnInit {
   private dialog = inject(MatDialog);
 
   private holidayGroupService = inject(HolidayGroupService);
-  private holidayFormComponent = new HolidayFormComponent();
 
   // Data
   holidayGroups: HolidayGroup[] = [];
@@ -73,11 +71,9 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   // Forms
   searchForm: FormGroup;
-  holidayForm: FormGroup;
 
   // UI State
   isLoading = false;
-  showForm = false;
   showEmployeeList = false;
 
   // Table columns
@@ -87,7 +83,6 @@ export class HolidayGroupManagementComponent implements OnInit {
     this.searchForm = this.formBuilder.group({
       name: [''],
     });
-    this.holidayForm = this.holidayFormComponent.holidayForm;
   }
 
   ngOnInit() {
@@ -142,7 +137,6 @@ export class HolidayGroupManagementComponent implements OnInit {
   viewEmployees(group: HolidayGroup) {
     this.selectedGroup = group;
     this.showEmployeeList = true;
-    this.showForm = false;
 
     this.holidayGroupService.getEmployeesByHolidayGroup(group.id!).subscribe({
       next: (employees) => {
@@ -159,20 +153,33 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   toggleForm() {
-    this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.holidayFormComponent.resetForm();
-    }
+    this.openHolidayFormDialog();
+  }
+
+  openHolidayFormDialog(editGroup?: HolidayGroup) {
+    const dialogRef = this.dialog.open(HolidayFormDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: { editGroup },
+      disableClose: true,
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
+    });
+
+    dialogRef.afterClosed().subscribe((result: HolidayGroup | undefined) => {
+      if (result) {
+        this.saveHolidayGroup(result);
+      }
+    });
   }
 
   editGroup(group: HolidayGroup) {
     this.selectedGroup = group;
-    this.toggleForm();
+    this.openHolidayFormDialog(group);
     this.showEmployeeList = false;
   }
 
   cancelAction() {
-    this.showForm = false;
     this.showEmployeeList = false;
     this.selectedGroup = null;
   }
@@ -187,13 +194,20 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   saveHolidayGroup(holidayGroupData: HolidayGroup) {
-    this.holidayFormComponent.isLoading = true;
+    this.isLoading = true;
     if (this.selectedGroup) {
       holidayGroupData.id = this.selectedGroup.id;
     }
     console.log('Saving holiday group:', holidayGroupData);
     const observer: PartialObserver<HolidayGroup> = {
       next: (returnedGroup) => {
+        // Ensure dates are properly parsed as Date objects
+        returnedGroup.holidays = returnedGroup.holidays.map((holiday) => ({
+          ...holiday,
+          start_date: new Date(holiday.start_date),
+          end_date: new Date(holiday.end_date),
+        }));
+
         if (this.selectedGroup) {
           // Replace existing group
           const index = this.holidayGroups.findIndex(
@@ -208,16 +222,15 @@ export class HolidayGroupManagementComponent implements OnInit {
         }
         this.filterGroups();
         this.showSnackBar('Holiday Group updated successfully', 'success');
-        this.holidayFormComponent.resetForm();
-        this.cancelAction();
-        this.holidayFormComponent.isLoading = false;
+        this.selectedGroup = null;
+        this.isLoading = false;
       },
       error: (error) => {
         this.errorDialog.openErrorDialog(
           'Failed to update holiday group',
           error
         );
-        this.holidayFormComponent.isLoading = false;
+        this.isLoading = false;
       },
     };
 
