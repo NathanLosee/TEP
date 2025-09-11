@@ -22,6 +22,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import {
   TimeclockEntry,
   TimeclockService,
@@ -61,6 +62,7 @@ interface TimeclockEntryListing {
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatChipsModule,
+    MatTabsModule,
   ],
   templateUrl: './timeclock-entries-management.component.html',
   styleUrl: './timeclock-entries-management.component.scss',
