@@ -5,7 +5,6 @@ import {
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,14 +14,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { PartialObserver } from 'rxjs';
 import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-import { OrgUnitFormDialogComponent } from './org-unit-management-form-dialog/org-unit-form-dialog.component';
+import { OrgUnitEmployeesDialogComponent } from './org-unit-employees-dialog/org-unit-employees-dialog.component';
+import { OrgUnitFormDialogComponent } from './org-unit-form-dialog/org-unit-form-dialog.component';
 
 @Component({
   selector: 'app-org-unit-management',
@@ -49,28 +50,35 @@ import { OrgUnitFormDialogComponent } from './org-unit-management-form-dialog/or
   styleUrl: './org-unit-management.component.scss',
 })
 export class OrgUnitManagementComponent implements OnInit {
-  private dialog = inject(MatDialog);
+  private formBuilder = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
-  private orgUnitService = inject(OrgUnitService);
-  private fb = inject(FormBuilder);
+  private dialog = inject(MatDialog);
 
+  private orgUnitService = inject(OrgUnitService);
+
+  // Data
   orgUnits: OrgUnit[] = [];
   filteredOrgUnits: OrgUnit[] = [];
-  displayedColumns: string[] = ['name', 'employee_count', 'actions'];
+  selectedUnit: OrgUnit | null = null;
 
+  // Forms
   searchForm: FormGroup;
+
+  // UI State
   isLoading = false;
 
+  // Table columns
+  displayedColumns: string[] = ['name', 'actions'];
+
   constructor() {
-    this.searchForm = this.fb.group({
-      searchTerm: [''],
-      location: [''],
+    this.searchForm = this.formBuilder.group({
+      name: [''],
     });
   }
 
   ngOnInit() {
-    this.loadOrgUnits();
     this.setupSearchForm();
+    this.loadOrgUnits();
   }
 
   setupSearchForm() {
@@ -97,74 +105,107 @@ export class OrgUnitManagementComponent implements OnInit {
   filterOrgUnits() {
     const filters = this.searchForm.value;
 
+    if (!filters.name) {
+      this.filteredOrgUnits = [...this.orgUnits];
+      return;
+    }
     this.filteredOrgUnits = this.orgUnits.filter((unit) => {
-      const searchTerm = filters.searchTerm?.toLowerCase() || '';
+      const searchName = filters.name?.toLowerCase() || '';
       const matchesSearch =
-        !searchTerm || unit.name.toLowerCase().includes(searchTerm);
+        !searchName || unit.name.toLowerCase().includes(searchName);
 
       return matchesSearch;
     });
   }
 
-  addOrgUnit() {
+  viewEmployees(unit: OrgUnit) {
+    this.dialog.open(OrgUnitEmployeesDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: { orgUnit: unit },
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
+    });
+  }
+
+  openOrgUnitFormDialog(editUnit?: OrgUnit) {
     const dialogRef = this.dialog.open(OrgUnitFormDialogComponent, {
-      width: '600px',
-      data: {
-        orgUnits: this.orgUnits, // For parent org unit selection
-      },
+      width: '700px',
+      maxWidth: '90vw',
+      data: { editUnit },
+      disableClose: true,
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((result: OrgUnit | undefined) => {
       if (result) {
-        this.orgUnits.push(result);
+        this.saveOrgUnit(result);
+      }
+    });
+  }
+
+  saveOrgUnit(orgUnitData: OrgUnit) {
+    this.isLoading = true;
+    if (this.selectedUnit) {
+      orgUnitData.id = this.selectedUnit.id;
+    }
+    console.log('Saving organizational unit:', orgUnitData);
+    const observer: PartialObserver<OrgUnit> = {
+      next: (returnedUnit) => {
+        if (this.selectedUnit) {
+          // Replace existing unit
+          const index = this.orgUnits.findIndex(
+            (u) => u.id === this.selectedUnit!.id
+          );
+          if (index > -1) {
+            this.orgUnits[index] = returnedUnit;
+          }
+        } else {
+          // Add new unit
+          this.orgUnits.push(returnedUnit);
+        }
         this.filterOrgUnits();
         this.showSnackBar(
-          `Org Unit "${result.name}" created successfully`,
+          'Organizational Unit updated successfully',
           'success'
         );
-      }
-    });
-  }
-
-  editOrgUnit(orgUnit: OrgUnit) {
-    const dialogRef = this.dialog.open(OrgUnitFormDialogComponent, {
-      width: '600px',
-      data: {
-        editOrgUnit: orgUnit,
-        orgUnits: this.orgUnits,
+        this.selectedUnit = null;
+        this.isLoading = false;
       },
-    });
+      error: (error) => {
+        this.handleError('Failed to update organizational unit', error);
+        this.isLoading = false;
+      },
+    };
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        const index = this.orgUnits.findIndex((unit) => unit.id === orgUnit.id);
-        if (index > -1) {
-          this.orgUnits[index] = result;
-          this.filterOrgUnits();
-          this.showSnackBar('Organizational unit updated successfully', 'success');
-        }
-      }
-    });
+    if (this.selectedUnit) {
+      // Editing an existing unit
+      this.orgUnitService
+        .updateOrgUnit(this.selectedUnit.id!, orgUnitData)
+        .subscribe(observer);
+    } else {
+      // Creating a new unit
+      this.orgUnitService.createOrgUnit(orgUnitData).subscribe(observer);
+    }
   }
 
-  deleteOrgUnit(orgUnit: OrgUnit) {
+  deleteOrgUnit(unit: OrgUnit) {
     const confirmDelete = confirm(
-      `Are you sure you want to delete ${orgUnit.name}? This action cannot be undone.`
+      `Are you sure you want to delete ${unit.name}? This action cannot be undone.`
     );
 
     if (confirmDelete) {
       this.isLoading = true;
 
-      this.orgUnitService.deleteOrgUnit(orgUnit.id!).subscribe({
+      this.orgUnitService.deleteOrgUnit(unit.id!).subscribe({
         next: () => {
-          const index = this.orgUnits.findIndex(
-            (unit) => unit.id === orgUnit.id
-          );
+          const index = this.orgUnits.findIndex((u) => u.id === unit.id);
           if (index > -1) {
             this.orgUnits.splice(index, 1);
             this.filterOrgUnits();
             this.showSnackBar(
-              `${orgUnit.name} has been deleted successfully`,
+              `${unit.name} has been deleted successfully`,
               'success'
             );
           }

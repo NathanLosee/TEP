@@ -37,14 +37,6 @@
       display: flex;
       gap: 12px;
 
-      .hierarchy-btn {
-        border: 2px solid var(--sys-outline);
-
-        mat-icon {
-          margin-right: 8px;
-        }
-      }
-
       .add-btn {
         mat-icon {
           margin-right: 8px;
@@ -389,14 +381,6 @@
     min-width: auto;
     width: 36px;
     height: 36px;
-
-    &.hierarchy-btn {
-      color: var(--sys-tertiary);
-
-      &:hover {
-        background: rgba(var(--sys-tertiary-rgb), 0.08);
-      }
-    }
 
     &.view-btn {
       color: var(--sys-primary);

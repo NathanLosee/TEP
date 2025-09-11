@@ -6,7 +6,6 @@
 <mat-dialog-content>
   <form [formGroup]="orgUnitForm" (ngSubmit)="submitForm()">
     <div class="form-section">
-      <h3>Basic Information</h3>
       <div class="form-row">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Unit Name</mat-label>
@@ -18,33 +17,6 @@
           <mat-error *ngIf="orgUnitForm.get('name')?.hasError('required')">
             Unit name is required
           </mat-error>
-        </mat-form-field>
-      </div>
-      
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
-          <textarea
-            matInput
-            formControlName="description"
-            placeholder="Enter unit description (optional)"
-            rows="3"
-          ></textarea>
-        </mat-form-field>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3>Hierarchy</h3>
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Parent Unit</mat-label>
-          <mat-select formControlName="parent_id">
-            <mat-option value="">None (Top Level)</mat-option>
-            <mat-option *ngFor="let unit of availableParents" [value]="unit.id">
-              {{ unit.name }}
-            </mat-option>
-          </mat-select>
         </mat-form-field>
       </div>
     </div>
@@ -66,6 +38,8 @@
       diameter="20"
       mode="indeterminate"
     ></mat-progress-spinner>
-    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Unit' }}</span>
+    <span *ngIf="!isLoading">{{
+      isEditMode ? "Save Changes" : "Create Unit"
+    }}</span>
   </button>
 </mat-dialog-actions>
