@@ -26,7 +26,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { EmployeeService, Employee } from '../../services/employee.service';
+import { DepartmentService, Department } from '../../services/department.service';
+import { OrgUnitService, OrgUnit } from '../../services/org-unit.service';
+import { HolidayGroupService, HolidayGroup } from '../../services/holiday-group.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { EmployeeFormDialogComponent } from './employee-form-dialog/employee-form-dialog.component';
+import { EmployeeDetailsDialogComponent } from './employee-details-dialog/employee-details-dialog.component';
 
 @Component({
   selector: 'app-employee-management',
@@ -62,8 +67,16 @@ export class EmployeeManagementComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private employeeService = inject(EmployeeService);
+  private departmentService = inject(DepartmentService);
+  private orgUnitService = inject(OrgUnitService);
+  private holidayGroupService = inject(HolidayGroupService);
 
   employees: Employee[] = [];
+  departments: Department[] = [];
+  orgUnits: OrgUnit[] = [];
+  holidayGroups: HolidayGroup[] = [];
+  managers: Employee[] = [];
+  
   displayedColumns: string[] = [
     'badge_number',
     'name',
@@ -76,13 +89,7 @@ export class EmployeeManagementComponent implements OnInit {
   ];
 
   searchForm: FormGroup;
-  addForm: FormGroup;
-  editForm: FormGroup;
   isLoading = false;
-  showAddForm = false;
-  showEditForm = false;
-  showViewDetails = false;
-  selectedEmployee: Employee | null = null;
 
   // Search filters
   searchFilters = {
@@ -95,48 +102,57 @@ export class EmployeeManagementComponent implements OnInit {
 
   constructor() {
     this.searchForm = this.fb.group({
-      badge_number: [''],
-      first_name: [''],
-      last_name: [''],
-      department_name: [''],
-      org_unit_name: [''],
-      holiday_group_name: [''],
-    });
-
-    this.addForm = this.fb.group({
-      badge_number: ['', [Validators.required]],
-      first_name: ['', [Validators.required]],
-      last_name: ['', [Validators.required]],
-      payroll_type: ['', [Validators.required]],
-      payroll_sync: [new Date(), [Validators.required]],
-      workweek_type: ['', [Validators.required]],
-      time_type: [true],
-      allow_clocking: [true],
-      allow_delete: [true],
-      holiday_group_id: [''],
-      org_unit_id: ['', [Validators.required]],
-      manager_id: [''],
-    });
-
-    this.editForm = this.fb.group({
-      badge_number: ['', [Validators.required]],
-      first_name: ['', [Validators.required]],
-      last_name: ['', [Validators.required]],
-      payroll_type: ['', [Validators.required]],
-      payroll_sync: ['', [Validators.required]],
-      workweek_type: ['', [Validators.required]],
-      time_type: [true],
-      allow_clocking: [true],
-      allow_delete: [true],
-      holiday_group_id: [''],
-      org_unit_id: ['', [Validators.required]],
-      manager_id: [''],
+      searchTerm: [''],
+      department: [''],
     });
   }
 
   ngOnInit() {
     this.loadEmployees();
+    this.loadFormData();
     this.setupSearchForm();
+  }
+
+  private loadFormData() {
+    // Load departments
+    this.departmentService.getDepartments().subscribe({
+      next: (departments) => {
+        this.departments = departments;
+      },
+      error: (error) => {
+        console.error('Error loading departments:', error);
+      },
+    });
+
+    // Load org units
+    this.orgUnitService.getOrgUnits().subscribe({
+      next: (orgUnits) => {
+        this.orgUnits = orgUnits;
+      },
+      error: (error) => {
+        console.error('Error loading org units:', error);
+      },
+    });
+
+    // Load holiday groups
+    this.holidayGroupService.getHolidayGroups().subscribe({
+      next: (holidayGroups) => {
+        this.holidayGroups = holidayGroups;
+      },
+      error: (error) => {
+        console.error('Error loading holiday groups:', error);
+      },
+    });
+
+    // Load managers (employees who can be managers)
+    this.employeeService.getEmployees().subscribe({
+      next: (employees) => {
+        this.managers = employees;
+      },
+      error: (error) => {
+        console.error('Error loading managers:', error);
+      },
+    });
   }
 
   setupSearchForm() {
@@ -161,113 +177,67 @@ export class EmployeeManagementComponent implements OnInit {
       });
   }
 
-  toggleAddForm() {
-    this.showAddForm = !this.showAddForm;
-    if (!this.showAddForm) {
-      this.addForm.reset();
-    }
-  }
 
   addEmployee() {
-    if (this.addForm.valid) {
-      this.isLoading = true;
-      const employeeData = {
-        ...this.addForm.value,
-        payroll_sync: this.addForm
-          .get('payroll_sync')
-          ?.value?.toISOString()
-          .split('T')[0],
-      };
+    const dialogRef = this.dialog.open(EmployeeFormDialogComponent, {
+      width: '900px',
+      data: {
+        departments: this.departments,
+        orgUnits: this.orgUnits,
+        holidayGroups: this.holidayGroups,
+        managers: this.managers,
+      },
+    });
 
-      this.employeeService.createEmployee(employeeData).subscribe({
-        next: (newEmployee) => {
-          this.employees.push(newEmployee);
-          this.addForm.reset();
-          this.showAddForm = false;
-          this.showSnackBar(
-            `Employee "${newEmployee.first_name} ${newEmployee.last_name}" created successfully`,
-            'success'
-          );
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.handleError('Failed to create employee', error);
-          this.isLoading = false;
-        },
-      });
-    }
-  }
-
-  editEmployee(employee: Employee) {
-    this.selectedEmployee = employee;
-    this.showEditForm = true;
-    this.showViewDetails = false;
-
-    // Initialize edit form with employee data
-    this.editForm.patchValue({
-      badge_number: employee.badge_number,
-      first_name: employee.first_name,
-      last_name: employee.last_name,
-      payroll_type: employee.payroll_type,
-      payroll_sync: employee.payroll_sync,
-      workweek_type: employee.workweek_type,
-      time_type: employee.time_type,
-      allow_clocking: employee.allow_clocking,
-      allow_delete: employee.allow_delete,
-      holiday_group_id: employee.holiday_group?.id,
-      org_unit_id: employee.org_unit.id,
-      manager_id: employee.manager?.id,
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.employees.push(result);
+        this.showSnackBar(
+          `Employee "${result.first_name} ${result.last_name}" created successfully`,
+          'success'
+        );
+      }
     });
   }
 
-  saveEmployee() {
-    if (this.editForm && this.editForm.valid && this.selectedEmployee) {
-      this.isLoading = true;
+  editEmployee(employee: Employee) {
+    const dialogRef = this.dialog.open(EmployeeFormDialogComponent, {
+      width: '900px',
+      data: {
+        editEmployee: employee,
+        departments: this.departments,
+        orgUnits: this.orgUnits,
+        holidayGroups: this.holidayGroups,
+        managers: this.managers,
+      },
+    });
 
-      const employeeData = {
-        ...this.editForm.value,
-        payroll_sync:
-          typeof this.editForm.get('payroll_sync')?.value === 'string'
-            ? this.editForm.get('payroll_sync')?.value
-            : this.editForm
-                .get('payroll_sync')
-                ?.value?.toISOString()
-                .split('T')[0],
-      };
-
-      this.employeeService
-        .updateEmployee(this.selectedEmployee.id!, employeeData)
-        .subscribe({
-          next: (updatedEmployee) => {
-            const index = this.employees.findIndex(
-              (emp) => emp.id === this.selectedEmployee!.id
-            );
-            if (index > -1) {
-              this.employees[index] = updatedEmployee;
-              this.showSnackBar('Employee updated successfully', 'success');
-              this.cancelEdit();
-            }
-            this.isLoading = false;
-          },
-          error: (error) => {
-            this.handleError('Failed to update employee', error);
-            this.isLoading = false;
-          },
-        });
-    }
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const index = this.employees.findIndex((emp) => emp.id === employee.id);
+        if (index > -1) {
+          this.employees[index] = result;
+          this.showSnackBar('Employee updated successfully', 'success');
+        }
+      }
+    });
   }
 
-  cancelEdit() {
-    this.showEditForm = false;
-    this.showViewDetails = false;
-    this.selectedEmployee = null;
-    this.editForm?.reset();
-  }
+
 
   viewEmployee(employee: Employee) {
-    this.selectedEmployee = employee;
-    this.showViewDetails = true;
-    this.showEditForm = false;
+    const dialogRef = this.dialog.open(EmployeeDetailsDialogComponent, {
+      width: '700px',
+      data: { employee },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'edit') {
+        this.editEmployee(result.employee);
+      } else if (result?.action === 'delete') {
+        this.deleteEmployee(result.employee);
+      }
+    });
   }
 
   deleteEmployee(employee: Employee) {

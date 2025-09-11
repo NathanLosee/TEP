@@ -1,0 +1,56 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEditMode ? "edit" : "add" }}</mat-icon>
+  {{ isEditMode ? "Edit" : "Add" }} Department
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="departmentForm" (ngSubmit)="submitForm()">
+    <div class="form-section">
+      <h3>Department Information</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Department Name</mat-label>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="Enter department name"
+          />
+          <mat-error *ngIf="departmentForm.get('name')?.hasError('required')">
+            Department name is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            placeholder="Enter department description (optional)"
+            rows="3"
+          ></textarea>
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <div class="spacer"></div>
+  <button mat-button (click)="cancelForm()" type="button">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submitForm()"
+    [disabled]="departmentForm.invalid || isLoading"
+    type="button"
+  >
+    <mat-progress-spinner
+      *ngIf="isLoading"
+      diameter="20"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Department' }}</span>
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,116 @@
+<h2 mat-dialog-title>
+  <mat-icon>visibility</mat-icon>
+  Employee Details
+</h2>
+
+<mat-dialog-content>
+  <div class="employee-details">
+    <!-- Basic Information -->
+    <div class="detail-section">
+      <h3>Basic Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="label">Badge Number:</span>
+          <span class="value">{{ employee.badge_number }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Full Name:</span>
+          <span class="value">{{ employee.first_name }} {{ employee.last_name }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Employee ID:</span>
+          <span class="value">#{{ employee.id }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employment Details -->
+    <div class="detail-section">
+      <h3>Employment Details</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="label">Payroll Type:</span>
+          <span class="value">{{ employee.payroll_type }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Workweek Type:</span>
+          <span class="value">{{ employee.workweek_type }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Payroll Sync:</span>
+          <span class="value">{{ employee.payroll_sync || 'Not set' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Organization Unit:</span>
+          <span class="value">{{ employee.org_unit.name || 'Not assigned' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Holiday Group:</span>
+          <span class="value">{{ employee.holiday_group?.name || 'None' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Manager:</span>
+          <span class="value">{{ 
+            employee.manager ? 
+            (employee.manager.first_name + ' ' + employee.manager.last_name) : 
+            'None' 
+          }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Departments -->
+    <div class="detail-section" *ngIf="employee.departments && employee.departments.length > 0">
+      <h3>Department Memberships</h3>
+      <mat-chip-listbox class="department-chips" aria-label="Department memberships">
+        <mat-chip-option
+          *ngFor="let dept of employee.departments"
+          [selectable]="false"
+        >
+          {{ dept.name }}
+        </mat-chip-option>
+      </mat-chip-listbox>
+    </div>
+
+    <!-- Permissions -->
+    <div class="detail-section">
+      <h3>Permissions & Settings</h3>
+      <div class="permissions-grid">
+        <div class="permission-item" [class.enabled]="employee.time_type">
+          <mat-icon>{{ employee.time_type ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>Time Type Enabled</span>
+        </div>
+        <div class="permission-item" [class.enabled]="employee.allow_clocking">
+          <mat-icon>{{ employee.allow_clocking ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>Allow Clocking</span>
+        </div>
+        <div class="permission-item" [class.enabled]="employee.allow_delete">
+          <mat-icon>{{ employee.allow_delete ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>Allow Delete</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button
+    mat-icon-button
+    color="primary"
+    matTooltip="Edit Employee"
+    (click)="editEmployee()"
+  >
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    color="warn"
+    matTooltip="Delete Employee"
+    [disabled]="!employee.allow_delete"
+    (click)="deleteEmployee()"
+  >
+    <mat-icon>delete</mat-icon>
+  </button>
+  <div class="spacer"></div>
+  <button mat-button (click)="closeDialog()">Close</button>
+</mat-dialog-actions>

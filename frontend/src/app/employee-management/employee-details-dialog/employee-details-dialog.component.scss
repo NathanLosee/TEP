@@ -1,0 +1,138 @@
+// Employee details styling - consistent with holiday-group-management patterns
+.employee-details {
+  padding: 0;
+  max-width: 600px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low);
+  
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .value {
+    font-size: 14px;
+    color: var(--mat-sys-on-surface);
+    font-weight: 400;
+  }
+}
+
+.department-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--mat-sys-surface-container);
+  
+  &.enabled {
+    color: var(--mat-sys-primary);
+    
+    mat-icon {
+      color: var(--mat-sys-primary);
+    }
+  }
+  
+  &:not(.enabled) {
+    color: var(--mat-sys-on-surface-variant);
+    
+    mat-icon {
+      color: var(--mat-sys-error);
+    }
+  }
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  span {
+    font-size: 14px;
+    font-weight: 400;
+  }
+}
+
+// Dialog specific styling
+mat-dialog-content {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+mat-dialog-actions {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  
+  .spacer {
+    flex: 1;
+  }
+  
+  button {
+    margin-left: 8px;
+    
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}
+
+// Title styling
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 24px 24px 0 24px;
+  font-size: 20px;
+  font-weight: 500;
+  
+  mat-icon {
+    color: var(--mat-sys-primary);
+  }
+}
