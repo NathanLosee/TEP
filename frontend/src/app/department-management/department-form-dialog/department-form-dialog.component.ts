@@ -52,7 +52,7 @@ export class DepartmentFormDialogComponent {
   private dialogRef = inject(MatDialogRef<DepartmentFormDialogComponent>);
   public data = inject(MAT_DIALOG_DATA) as DepartmentFormDialogData;
 
-  departmentForm: FormGroup;
+  departmentForm!: FormGroup;
   isLoading = false;
   isEditMode = false;
 
@@ -66,9 +66,6 @@ export class DepartmentFormDialogComponent {
       name: [
         this.data.editDepartment?.name || '',
         [Validators.required],
-      ],
-      description: [
-        this.data.editDepartment?.description || '',
       ],
     });
   }

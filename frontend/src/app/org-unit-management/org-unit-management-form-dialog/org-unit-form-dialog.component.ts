@@ -73,12 +73,6 @@ export class OrgUnitFormDialogComponent {
         this.data.editOrgUnit?.name || '',
         [Validators.required],
       ],
-      description: [
-        this.data.editOrgUnit?.description || '',
-      ],
-      parent_id: [
-        this.data.editOrgUnit?.parent_id || null,
-      ],
     });
   }
 

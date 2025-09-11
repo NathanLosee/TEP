@@ -22,6 +22,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { OrgUnitFormDialogComponent } from './org-unit-management-form-dialog/org-unit-form-dialog.component';
 
 @Component({
   selector: 'app-org-unit-management',
@@ -48,38 +49,22 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
   styleUrl: './org-unit-management.component.scss',
 })
 export class OrgUnitManagementComponent implements OnInit {
-  private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private orgUnitService = inject(OrgUnitService);
+  private fb = inject(FormBuilder);
 
   orgUnits: OrgUnit[] = [];
   filteredOrgUnits: OrgUnit[] = [];
   displayedColumns: string[] = ['name', 'employee_count', 'actions'];
 
   searchForm: FormGroup;
-  addOrgUnitForm: FormGroup;
-  editForm: FormGroup;
   isLoading = false;
-  showAddForm = false;
-  showEditForm = false;
-  showEmployeeList = false;
-  selectedOrgUnit: OrgUnit | null = null;
 
   constructor() {
     this.searchForm = this.fb.group({
       searchTerm: [''],
       location: [''],
-    });
-
-    this.addOrgUnitForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
-    });
-
-    this.editForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
     });
   }
 
@@ -121,55 +106,44 @@ export class OrgUnitManagementComponent implements OnInit {
     });
   }
 
-  toggleAddForm() {
-    this.showAddForm = !this.showAddForm;
-    if (!this.showAddForm) {
-      this.addOrgUnitForm.reset();
-    }
-  }
-
   addOrgUnit() {
-    if (this.addOrgUnitForm.valid) {
-      this.isLoading = true;
-      const orgUnitData = {
-        name: this.addOrgUnitForm.get('name')?.value,
-      };
+    const dialogRef = this.dialog.open(OrgUnitFormDialogComponent, {
+      width: '600px',
+      data: {
+        orgUnits: this.orgUnits, // For parent org unit selection
+      },
+    });
 
-      this.orgUnitService.createOrgUnit(orgUnitData).subscribe({
-        next: (newOrgUnit) => {
-          this.orgUnits.push(newOrgUnit);
-          this.filterOrgUnits();
-          this.addOrgUnitForm.reset();
-          this.showAddForm = false;
-          this.showSnackBar(
-            `Org Unit "${newOrgUnit.name}" created successfully`,
-            'success'
-          );
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.handleError('Failed to create organizational unit', error);
-          this.isLoading = false;
-        },
-      });
-    }
-  }
-
-  // Action methods for buttons
-  viewEmployees(orgUnit: OrgUnit) {
-    this.selectedOrgUnit = orgUnit;
-    this.showEmployeeList = true;
-    this.showEditForm = false;
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.orgUnits.push(result);
+        this.filterOrgUnits();
+        this.showSnackBar(
+          `Org Unit "${result.name}" created successfully`,
+          'success'
+        );
+      }
+    });
   }
 
   editOrgUnit(orgUnit: OrgUnit) {
-    this.selectedOrgUnit = orgUnit;
-    this.showEditForm = true;
-    this.showEmployeeList = false;
+    const dialogRef = this.dialog.open(OrgUnitFormDialogComponent, {
+      width: '600px',
+      data: {
+        editOrgUnit: orgUnit,
+        orgUnits: this.orgUnits,
+      },
+    });
 
-    // Initialize edit form with org unit data
-    this.editForm.patchValue({
-      name: orgUnit.name,
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const index = this.orgUnits.findIndex((unit) => unit.id === orgUnit.id);
+        if (index > -1) {
+          this.orgUnits[index] = result;
+          this.filterOrgUnits();
+          this.showSnackBar('Organizational unit updated successfully', 'success');
+        }
+      }
     });
   }
 
@@ -202,44 +176,6 @@ export class OrgUnitManagementComponent implements OnInit {
         },
       });
     }
-  }
-
-  saveOrgUnit() {
-    if (this.editForm && this.editForm.valid && this.selectedOrgUnit) {
-      this.isLoading = true;
-
-      const orgUnitData = {
-        name: this.editForm.get('name')?.value,
-      };
-
-      this.orgUnitService
-        .updateOrgUnit(this.selectedOrgUnit.id!, orgUnitData)
-        .subscribe({
-          next: (updatedOrgUnit) => {
-            const index = this.orgUnits.findIndex(
-              (unit) => unit.id === this.selectedOrgUnit!.id
-            );
-            if (index > -1) {
-              this.orgUnits[index] = updatedOrgUnit;
-              this.filterOrgUnits();
-              this.showSnackBar('Org Unit updated successfully', 'success');
-              this.cancelAction();
-            }
-            this.isLoading = false;
-          },
-          error: (error) => {
-            this.handleError('Failed to update organizational unit', error);
-            this.isLoading = false;
-          },
-        });
-    }
-  }
-
-  cancelAction() {
-    this.showEditForm = false;
-    this.showEmployeeList = false;
-    this.selectedOrgUnit = null;
-    this.editForm?.reset();
   }
 
   private showSnackBar(
