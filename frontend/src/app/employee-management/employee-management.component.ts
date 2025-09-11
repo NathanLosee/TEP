@@ -24,6 +24,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatTabsModule } from '@angular/material/tabs';
 import { EmployeeService, Employee } from '../../services/employee.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
@@ -51,6 +52,7 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
     MatSlideToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatTabsModule,
   ],
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss',

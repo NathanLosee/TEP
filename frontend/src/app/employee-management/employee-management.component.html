@@ -20,78 +20,72 @@
     </div>
   </div>
 
-  <!-- Search and Filters -->
-  <mat-card class="search-card">
-    <mat-card-content>
-      <form [formGroup]="searchForm" class="search-form">
-        <div class="search-row">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search employees</mat-label>
-            <input
-              matInput
-              formControlName="searchTerm"
-              placeholder="Name or badge number"
-            />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
+  <!-- Main Content Tabs -->
+  <mat-card class="content-card">
+    <mat-tab-group class="main-tabs">
+      <!-- Employees Tab -->
+      <mat-tab label="Employees" [disabled]="isLoading">
+        <div class="tab-content">
+          <!-- Search -->
+          <div class="search-section">
+            <form [formGroup]="searchForm" class="search-form">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search employees</mat-label>
+                <input
+                  matInput
+                  formControlName="searchTerm"
+                  placeholder="Name or badge number"
+                />
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Department</mat-label>
+                <mat-select formControlName="department">
+                  <mat-option value="">All Departments</mat-option>
+                  <mat-option value="IT">IT</mat-option>
+                  <mat-option value="HR">HR</mat-option>
+                  <mat-option value="Production">Production</mat-option>
+                  <mat-option value="Admin">Admin</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Department</mat-label>
-            <mat-select formControlName="department">
-              <mat-option value="">All Departments</mat-option>
-              <mat-option value="IT">IT</mat-option>
-              <mat-option value="HR">HR</mat-option>
-              <mat-option value="Production">Production</mat-option>
-              <mat-option value="Admin">Admin</mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Org Unit</mat-label>
+                <mat-select formControlName="org_unit">
+                  <mat-option value="">All Units</mat-option>
+                  <mat-option value="Corporate">Corporate</mat-option>
+                  <mat-option value="Manufacturing">Manufacturing</mat-option>
+                  <mat-option value="Sales">Sales</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Org Unit</mat-label>
-            <mat-select formControlName="org_unit">
-              <mat-option value="">All Units</mat-option>
-              <mat-option value="Corporate">Corporate</mat-option>
-              <mat-option value="Manufacturing">Manufacturing</mat-option>
-              <mat-option value="Sales">Sales</mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="">All Status</mat-option>
+                  <mat-option value="active">Active</mat-option>
+                  <mat-option value="inactive">Inactive</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </form>
+          </div>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="">All Status</mat-option>
-              <mat-option value="active">Active</mat-option>
-              <mat-option value="inactive">Inactive</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+          <!-- Employee Table -->
+          <mat-card class="table-card">
+            <mat-card-header>
+              <mat-card-title>Employees ({{ employees.length }})</mat-card-title>
+            </mat-card-header>
 
-  <!-- Employee Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-header">
-        <h2>Employees ({{ employees.length }})</h2>
-        <div class="table-actions">
-          <button
-            mat-icon-button
-            matTooltip="Refresh"
-            (click)="loadEmployees()"
-          >
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="table-container" *ngIf="!isLoading">
-        <table
-          mat-table
-          [dataSource]="employees"
-          class="employee-table"
-          matSort
-        >
+            <mat-card-content>
+              <div class="table-container">
+                <table
+                  mat-table
+                  [dataSource]="employees"
+                  class="employee-table"
+                  matSort
+                  *ngIf="!isLoading"
+                >
           <!-- Badge Number Column -->
           <ng-container matColumnDef="badge_number">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Badge #</th>
@@ -228,28 +222,35 @@
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
-      </div>
 
-      <!-- Loading State -->
-      <div *ngIf="isLoading" class="loading-container">
-        <mat-progress-spinner
-          mode="indeterminate"
-          diameter="60"
-        ></mat-progress-spinner>
-        <p>Loading employees...</p>
-      </div>
+        <!-- Empty State -->
+        <div
+          class="empty-state"
+          *ngIf="employees.length === 0 && !isLoading"
+        >
+          <mat-icon class="empty-icon">people_outline</mat-icon>
+          <h3>No employees found</h3>
+          <p>Try adjusting your search criteria or add a new employee.</p>
+          <button mat-raised-button color="primary" (click)="addEmployee()">
+            <mat-icon>person_add</mat-icon>
+            Add First Employee
+          </button>
+        </div>
 
-      <!-- Empty State -->
-      <div *ngIf="!isLoading && employees.length === 0" class="empty-state">
-        <mat-icon class="empty-icon">people_outline</mat-icon>
-        <h3>No employees found</h3>
-        <p>Try adjusting your search criteria or add a new employee.</p>
-        <button mat-raised-button color="primary" (click)="addEmployee()">
-          <mat-icon>person_add</mat-icon>
-          Add First Employee
-        </button>
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-progress-spinner
+            mode="indeterminate"
+            diameter="60"
+          ></mat-progress-spinner>
+          <p>Loading employees...</p>
+        </div>
       </div>
     </mat-card-content>
+  </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </mat-card>
 
   <!-- Edit Employee Form -->
