@@ -18,11 +18,14 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import {
   DepartmentService,
   Department,
 } from '../../services/department.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { DepartmentFormDialogComponent } from './department-form-dialog/department-form-dialog.component';
+import { DepartmentDetailsDialogComponent } from './department-details-dialog/department-details-dialog.component';
 
 @Component({
   selector: 'app-department-management',
@@ -42,37 +45,20 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
     MatChipsModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
   ],
   templateUrl: './department-management.component.html',
   styleUrl: './department-management.component.scss',
 })
 export class DepartmentManagementComponent implements OnInit {
-  private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private departmentService = inject(DepartmentService);
 
   departments: Department[] = [];
-  selectedDepartment?: Department;
   displayedColumns: string[] = ['name', 'actions'];
 
-  addForm: FormGroup;
-  editForm: FormGroup;
-
   isLoading = false;
-  showAddForm = false;
-  showEditForm = false;
-  showEmployeeList = false;
-
-  constructor() {
-    this.addForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-    });
-
-    this.editForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-    });
-  }
 
   ngOnInit() {
     this.loadDepartments();
@@ -94,104 +80,55 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  toggleAddForm() {
-    this.showAddForm = !this.showAddForm;
-    if (!this.showAddForm) {
-      this.addForm.reset();
-    }
-  }
-
   addDepartment() {
-    if (this.addForm.valid) {
-      this.isLoading = true;
-      const departmentData = {
-        name: this.addForm.get('name')?.value,
-      };
+    const dialogRef = this.dialog.open(DepartmentFormDialogComponent, {
+      width: '600px',
+    });
 
-      this.departmentService.createDepartment(departmentData).subscribe({
-        next: (newDept) => {
-          this.departments.push({ ...newDept });
-          this.addForm.reset();
-          this.showAddForm = false;
-          this.showSnackBar(
-            `Department "${newDept.name}" created successfully`,
-            'success'
-          );
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.handleError('Failed to create department', error);
-          this.isLoading = false;
-        },
-      });
-    }
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.departments.push(result);
+        this.showSnackBar(
+          `Department "${result.name}" created successfully`,
+          'success'
+        );
+      }
+    });
   }
 
   // Action methods for buttons
-  viewEmployees(department: Department) {
-    this.isLoading = true;
-    this.showEmployeeList = true;
-    this.showEditForm = false;
+  viewDepartment(department: Department) {
+    const dialogRef = this.dialog.open(DepartmentDetailsDialogComponent, {
+      width: '700px',
+      data: { department },
+    });
 
-    this.departmentService.getEmployeesByDepartment(department.id!).subscribe({
-      next: (employees) => {
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.handleError('Failed to load department employees', error);
-        this.isLoading = false;
-      },
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'edit') {
+        this.editDepartment(result.department);
+      } else if (result?.action === 'delete') {
+        this.deleteDepartment(result.department);
+      }
     });
   }
 
   editDepartment(department: Department) {
-    this.showEditForm = true;
-    this.showEmployeeList = false;
-
-    // Initialize edit form with department data
-    this.editForm.patchValue({
-      name: department.name,
+    const dialogRef = this.dialog.open(DepartmentFormDialogComponent, {
+      width: '600px',
+      data: {
+        editDepartment: department,
+      },
     });
-  }
 
-  saveDepartment() {
-    if (this.editForm && this.editForm.valid && this.selectedDepartment) {
-      this.isLoading = true;
-
-      const departmentData = {
-        name: this.editForm.get('name')?.value,
-      };
-
-      this.departmentService
-        .updateDepartment(this.selectedDepartment.id!, departmentData)
-        .subscribe({
-          next: (updatedDept) => {
-            const index = this.departments.findIndex(
-              (dept) => dept.id === this.selectedDepartment!.id
-            );
-            if (index > -1) {
-              this.departments[index] = {
-                ...this.departments[index],
-                name: updatedDept.name,
-              };
-              this.showSnackBar('Department updated successfully', 'success');
-              this.cancelEdit();
-            }
-            this.isLoading = false;
-          },
-          error: (error) => {
-            this.handleError('Failed to update department', error);
-            this.isLoading = false;
-          },
-        });
-    }
-  }
-
-  cancelEdit() {
-    this.showEditForm = false;
-    this.showEmployeeList = false;
-    this.selectedDepartment = undefined;
-    this.editForm?.reset();
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const index = this.departments.findIndex((dept) => dept.id === department.id);
+        if (index > -1) {
+          this.departments[index] = result;
+          this.showSnackBar('Department updated successfully', 'success');
+        }
+      }
+    });
   }
 
   private showSnackBar(

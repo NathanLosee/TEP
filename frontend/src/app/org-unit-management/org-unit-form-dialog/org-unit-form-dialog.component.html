@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEditMode ? "edit" : "add" }}</mat-icon>
+  {{ isEditMode ? "Edit" : "Add" }} Organizational Unit
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="orgUnitForm" (ngSubmit)="submitForm()">
+    <div class="form-section">
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Unit Name</mat-label>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="Enter organizational unit name"
+          />
+          <mat-error *ngIf="orgUnitForm.get('name')?.hasError('required')">
+            Unit name is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <div class="spacer"></div>
+  <button mat-button (click)="cancelForm()" type="button">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submitForm()"
+    [disabled]="orgUnitForm.invalid || isLoading"
+    type="button"
+  >
+    <mat-progress-spinner
+      *ngIf="isLoading"
+      diameter="20"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+    <span *ngIf="!isLoading">{{
+      isEditMode ? "Save Changes" : "Create Unit"
+    }}</span>
+  </button>
+</mat-dialog-actions>

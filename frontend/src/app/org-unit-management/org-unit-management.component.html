@@ -10,318 +10,156 @@
         <button
           mat-raised-button
           color="primary"
-          (click)="toggleAddForm()"
+          (click)="openOrgUnitFormDialog()"
           class="add-btn"
         >
-          <mat-icon>{{ showAddForm ? "close" : "add" }}</mat-icon>
-          {{ showAddForm ? "Cancel" : "Add Org Unit" }}
+          <mat-icon>add</mat-icon>
+          Add Org Unit
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Add Org Unit Form -->
-  <mat-card *ngIf="showAddForm" class="add-form-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>add_business</mat-icon>
-        Create New Organizational Unit
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form
-        [formGroup]="addOrgUnitForm"
-        (ngSubmit)="addOrgUnit()"
-        class="add-form"
-      >
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Unit Name</mat-label>
-            <input
-              matInput
-              formControlName="name"
-              placeholder="Enter org unit name"
-            />
-            <mat-icon matSuffix>business</mat-icon>
-            <mat-error *ngIf="addOrgUnitForm.get('name')?.hasError('required')">
-              Org unit name is required
-            </mat-error>
-            <mat-error
-              *ngIf="addOrgUnitForm.get('name')?.hasError('minlength')"
-            >
-              Name must be at least 2 characters
-            </mat-error>
-          </mat-form-field>
+  <!-- Main Content Tabs -->
+  <mat-card class="content-card">
+    <mat-tab-group class="main-tabs">
+      <!-- Org Units Tab -->
+      <mat-tab label="Org Units" [disabled]="isLoading">
+        <div class="tab-content">
+          <!-- Search -->
+          <div class="search-section">
+            <form [formGroup]="searchForm" class="search-form">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search org units</mat-label>
+                <input
+                  matInput
+                  formControlName="searchTerm"
+                  placeholder="Org unit name"
+                />
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+            </form>
+          </div>
 
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Parent Unit</mat-label>
-            <mat-select formControlName="parent_id">
-              <mat-option [value]="">None (Top Level)</mat-option>
-              <mat-option *ngFor="let unit of orgUnits" [value]="unit.id">
-                {{ unit.name }}
-              </mat-option>
-            </mat-select>
-            <mat-icon matSuffix>account_tree</mat-icon>
-          </mat-form-field>
-        </div>
+          <!-- Org Units Table -->
+          <mat-card class="table-card">
+            <mat-card-header>
+              <mat-card-title
+                >Organizational Units ({{
+                  filteredOrgUnits.length
+                }})</mat-card-title
+              >
+            </mat-card-header>
 
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Location</mat-label>
-            <input
-              matInput
-              formControlName="location"
-              placeholder="City, State"
-            />
-            <mat-icon matSuffix>location_on</mat-icon>
-          </mat-form-field>
+            <mat-card-content>
+              <div class="table-container">
+                <table
+                  mat-table
+                  [dataSource]="filteredOrgUnits"
+                  class="org-units-table"
+                >
+                  <!-- Name Column -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Unit Name</th>
+                    <td mat-cell *matCellDef="let orgUnit">
+                      <div class="unit-cell">
+                        <mat-icon class="unit-icon">account_tree</mat-icon>
+                        <div class="unit-info">
+                          <div class="unit-name">{{ orgUnit.name }}</div>
+                          <div
+                            class="unit-description"
+                            *ngIf="orgUnit.description"
+                          >
+                            {{ orgUnit.description }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </ng-container>
 
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Manager Name</mat-label>
-            <input
-              matInput
-              formControlName="manager_name"
-              placeholder="Unit manager"
-            />
-            <mat-icon matSuffix>person</mat-icon>
-          </mat-form-field>
-        </div>
+                  <!-- Employee Count Column -->
+                  <ng-container matColumnDef="employee_count">
+                    <th mat-header-cell *matHeaderCellDef>Employees</th>
+                    <td mat-cell *matCellDef="let orgUnit">
+                      <div class="count-cell">
+                        <mat-icon class="count-icon">people</mat-icon>
+                        <span class="count-value">{{
+                          orgUnit.employee_count || 0
+                        }}</span>
+                      </div>
+                    </td>
+                  </ng-container>
 
-        <mat-form-field appearance="outline" class="form-field full-width">
-          <mat-label>Description</mat-label>
-          <textarea
-            matInput
-            formControlName="description"
-            placeholder="Unit description"
-            rows="2"
-          ></textarea>
-          <mat-icon matSuffix>description</mat-icon>
-        </mat-form-field>
+                  <!-- Actions Column -->
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Actions</th>
+                    <td mat-cell *matCellDef="let orgUnit">
+                      <div class="action-buttons">
+                        <button
+                          mat-icon-button
+                          matTooltip="View Employees"
+                          (click)="viewEmployees(orgUnit)"
+                          class="view-btn"
+                        >
+                          <mat-icon>people</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          matTooltip="Edit Unit"
+                          (click)="openOrgUnitFormDialog(orgUnit)"
+                        >
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          matTooltip="Delete Unit"
+                          (click)="deleteOrgUnit(orgUnit)"
+                          class="delete-btn"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
 
-        <div class="form-actions">
-          <button
-            mat-raised-button
-            color="primary"
-            type="submit"
-            [disabled]="addOrgUnitForm.invalid"
-          >
-            <mat-icon>save</mat-icon>
-            Create Org Unit
-          </button>
-          <button mat-button type="button" (click)="toggleAddForm()">
-            <mat-icon>cancel</mat-icon>
-            Cancel
-          </button>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Search and Filters -->
-  <mat-card class="search-card">
-    <mat-card-content>
-      <form [formGroup]="searchForm" class="search-form">
-        <div class="search-row">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search org units</mat-label>
-            <input
-              matInput
-              formControlName="searchTerm"
-              placeholder="Org unit name"
-            />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Org Units Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-header">
-        <h2>Organizational Units ({{ filteredOrgUnits.length }})</h2>
-        <div class="table-actions">
-          <button mat-icon-button matTooltip="Refresh" (click)="loadOrgUnits()">
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="table-container" *ngIf="!isLoading">
-        <table
-          mat-table
-          [dataSource]="filteredOrgUnits"
-          class="org-units-table"
-        >
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Unit Name</th>
-            <td mat-cell *matCellDef="let orgUnit">
-              <div class="unit-cell">
-                <mat-icon class="unit-icon">account_tree</mat-icon>
-                <div class="unit-info">
-                  <div class="unit-name">{{ orgUnit.name }}</div>
-                  <div class="unit-description" *ngIf="orgUnit.description">
-                    {{ orgUnit.description }}
-                  </div>
-                </div>
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedColumns"
+                  ></tr>
+                </table>
               </div>
-            </td>
-          </ng-container>
 
-          <!-- Employee Count Column -->
-          <ng-container matColumnDef="employee_count">
-            <th mat-header-cell *matHeaderCellDef>Employees</th>
-            <td mat-cell *matCellDef="let orgUnit">
-              <div class="count-cell">
-                <mat-icon class="count-icon">people</mat-icon>
-                <span class="count-value">{{
-                  orgUnit.employee_count || 0
-                }}</span>
+              <!-- Loading State -->
+              <div *ngIf="isLoading" class="loading-container">
+                <mat-progress-spinner
+                  mode="indeterminate"
+                  diameter="60"
+                ></mat-progress-spinner>
+                <p>Loading organizational units...</p>
               </div>
-            </td>
-          </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let orgUnit">
-              <div class="action-buttons">
+              <!-- Empty State -->
+              <div
+                *ngIf="!isLoading && filteredOrgUnits.length === 0"
+                class="empty-state"
+              >
+                <mat-icon class="empty-icon">account_tree</mat-icon>
+                <h3>No organizational units found</h3>
+                <p>Get started by creating your first organizational unit.</p>
                 <button
-                  mat-icon-button
-                  matTooltip="View Employees"
-                  (click)="viewEmployees(orgUnit)"
-                  class="view-btn"
+                  mat-raised-button
+                  color="primary"
+                  (click)="openOrgUnitFormDialog()"
                 >
-                  <mat-icon>people</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="Edit Unit"
-                  (click)="editOrgUnit(orgUnit)"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="Delete Unit"
-                  (click)="deleteOrgUnit(orgUnit)"
-                  class="delete-btn"
-                >
-                  <mat-icon>delete</mat-icon>
+                  <mat-icon>add</mat-icon>
+                  Create First Org Unit
                 </button>
               </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-      </div>
-
-      <!-- Loading State -->
-      <div *ngIf="isLoading" class="loading-container">
-        <mat-progress-spinner
-          mode="indeterminate"
-          diameter="60"
-        ></mat-progress-spinner>
-        <p>Loading organizational units...</p>
-      </div>
-
-      <!-- Empty State -->
-      <div
-        *ngIf="!isLoading && filteredOrgUnits.length === 0"
-        class="empty-state"
-      >
-        <mat-icon class="empty-icon">account_tree</mat-icon>
-        <h3>No organizational units found</h3>
-        <p>Get started by creating your first organizational unit.</p>
-        <button mat-raised-button color="primary" (click)="toggleAddForm()">
-          <mat-icon>add</mat-icon>
-          Create First Org Unit
-        </button>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Edit Org Unit Form -->
-  <mat-card *ngIf="showEditForm && selectedOrgUnit" class="edit-form-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>edit</mat-icon>
-        Edit Org Unit: {{ selectedOrgUnit.name }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="editForm" (ngSubmit)="saveOrgUnit()">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Unit Name</mat-label>
-            <input
-              matInput
-              formControlName="name"
-              placeholder="Enter unit name"
-            />
-            <mat-error *ngIf="editForm.get('name')?.hasError('required')">
-              Unit name is required
-            </mat-error>
-          </mat-form-field>
+            </mat-card-content>
+          </mat-card>
         </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
-          <textarea
-            matInput
-            formControlName="description"
-            placeholder="Enter description"
-            rows="3"
-          ></textarea>
-        </mat-form-field>
-      </form>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-button (click)="cancelAction()" [disabled]="isLoading">
-        Cancel
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="saveOrgUnit()"
-        [disabled]="editForm.invalid || isLoading"
-      >
-        <mat-progress-spinner
-          *ngIf="isLoading"
-          diameter="20"
-          mode="indeterminate"
-        ></mat-progress-spinner>
-        <span *ngIf="!isLoading">Save Changes</span>
-      </button>
-    </mat-card-actions>
-  </mat-card>
-
-  <!-- Employee List View -->
-  <mat-card
-    *ngIf="showEmployeeList && selectedOrgUnit"
-    class="employee-list-card"
-  >
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>people</mat-icon>
-        Employees in {{ selectedOrgUnit.name }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="employee-placeholder">
-        <mat-icon>people_outline</mat-icon>
-        <p>Employee list integration coming soon</p>
-        <p class="placeholder-text">
-          This will show all employees assigned to this organizational unit
-        </p>
-      </div>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-button (click)="cancelAction()">Close</button>
-    </mat-card-actions>
+      </mat-tab>
+    </mat-tab-group>
   </mat-card>
 </div>

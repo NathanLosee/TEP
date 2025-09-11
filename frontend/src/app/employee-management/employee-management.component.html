@@ -20,78 +20,72 @@
     </div>
   </div>
 
-  <!-- Search and Filters -->
-  <mat-card class="search-card">
-    <mat-card-content>
-      <form [formGroup]="searchForm" class="search-form">
-        <div class="search-row">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search employees</mat-label>
-            <input
-              matInput
-              formControlName="searchTerm"
-              placeholder="Name or badge number"
-            />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
+  <!-- Main Content Tabs -->
+  <mat-card class="content-card">
+    <mat-tab-group class="main-tabs">
+      <!-- Employees Tab -->
+      <mat-tab label="Employees" [disabled]="isLoading">
+        <div class="tab-content">
+          <!-- Search -->
+          <div class="search-section">
+            <form [formGroup]="searchForm" class="search-form">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search employees</mat-label>
+                <input
+                  matInput
+                  formControlName="searchTerm"
+                  placeholder="Name or badge number"
+                />
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Department</mat-label>
+                <mat-select formControlName="department">
+                  <mat-option value="">All Departments</mat-option>
+                  <mat-option value="IT">IT</mat-option>
+                  <mat-option value="HR">HR</mat-option>
+                  <mat-option value="Production">Production</mat-option>
+                  <mat-option value="Admin">Admin</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Department</mat-label>
-            <mat-select formControlName="department">
-              <mat-option value="">All Departments</mat-option>
-              <mat-option value="IT">IT</mat-option>
-              <mat-option value="HR">HR</mat-option>
-              <mat-option value="Production">Production</mat-option>
-              <mat-option value="Admin">Admin</mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Org Unit</mat-label>
+                <mat-select formControlName="org_unit">
+                  <mat-option value="">All Units</mat-option>
+                  <mat-option value="Corporate">Corporate</mat-option>
+                  <mat-option value="Manufacturing">Manufacturing</mat-option>
+                  <mat-option value="Sales">Sales</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Org Unit</mat-label>
-            <mat-select formControlName="org_unit">
-              <mat-option value="">All Units</mat-option>
-              <mat-option value="Corporate">Corporate</mat-option>
-              <mat-option value="Manufacturing">Manufacturing</mat-option>
-              <mat-option value="Sales">Sales</mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="">All Status</mat-option>
+                  <mat-option value="active">Active</mat-option>
+                  <mat-option value="inactive">Inactive</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </form>
+          </div>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="">All Status</mat-option>
-              <mat-option value="active">Active</mat-option>
-              <mat-option value="inactive">Inactive</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+          <!-- Employee Table -->
+          <mat-card class="table-card">
+            <mat-card-header>
+              <mat-card-title>Employees ({{ employees.length }})</mat-card-title>
+            </mat-card-header>
 
-  <!-- Employee Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-header">
-        <h2>Employees ({{ employees.length }})</h2>
-        <div class="table-actions">
-          <button
-            mat-icon-button
-            matTooltip="Refresh"
-            (click)="loadEmployees()"
-          >
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="table-container" *ngIf="!isLoading">
-        <table
-          mat-table
-          [dataSource]="employees"
-          class="employee-table"
-          matSort
-        >
+            <mat-card-content>
+              <div class="table-container">
+                <table
+                  mat-table
+                  [dataSource]="employees"
+                  class="employee-table"
+                  matSort
+                  *ngIf="!isLoading"
+                >
           <!-- Badge Number Column -->
           <ng-container matColumnDef="badge_number">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Badge #</th>
@@ -228,242 +222,34 @@
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
-      </div>
 
-      <!-- Loading State -->
-      <div *ngIf="isLoading" class="loading-container">
-        <mat-progress-spinner
-          mode="indeterminate"
-          diameter="60"
-        ></mat-progress-spinner>
-        <p>Loading employees...</p>
-      </div>
+        <!-- Empty State -->
+        <div
+          class="empty-state"
+          *ngIf="employees.length === 0 && !isLoading"
+        >
+          <mat-icon class="empty-icon">people_outline</mat-icon>
+          <h3>No employees found</h3>
+          <p>Try adjusting your search criteria or add a new employee.</p>
+          <button mat-raised-button color="primary" (click)="addEmployee()">
+            <mat-icon>person_add</mat-icon>
+            Add First Employee
+          </button>
+        </div>
 
-      <!-- Empty State -->
-      <div *ngIf="!isLoading && employees.length === 0" class="empty-state">
-        <mat-icon class="empty-icon">people_outline</mat-icon>
-        <h3>No employees found</h3>
-        <p>Try adjusting your search criteria or add a new employee.</p>
-        <button mat-raised-button color="primary" (click)="addEmployee()">
-          <mat-icon>person_add</mat-icon>
-          Add First Employee
-        </button>
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-progress-spinner
+            mode="indeterminate"
+            diameter="60"
+          ></mat-progress-spinner>
+          <p>Loading employees...</p>
+        </div>
       </div>
     </mat-card-content>
   </mat-card>
-
-  <!-- Edit Employee Form -->
-  <mat-card *ngIf="showEditForm && selectedEmployee" class="edit-form-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>edit</mat-icon>
-        Edit Employee: {{ selectedEmployee.first_name }}
-        {{ selectedEmployee.last_name }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="editForm" (ngSubmit)="saveEmployee()">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Badge Number</mat-label>
-            <input
-              matInput
-              formControlName="badge_number"
-              placeholder="Enter badge number"
-            />
-            <mat-error
-              *ngIf="editForm.get('badge_number')?.hasError('required')"
-            >
-              Badge number is required
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>First Name</mat-label>
-            <input
-              matInput
-              formControlName="first_name"
-              placeholder="Enter first name"
-            />
-            <mat-error *ngIf="editForm.get('first_name')?.hasError('required')">
-              First name is required
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Last Name</mat-label>
-            <input
-              matInput
-              formControlName="last_name"
-              placeholder="Enter last name"
-            />
-            <mat-error *ngIf="editForm.get('last_name')?.hasError('required')">
-              Last name is required
-            </mat-error>
-          </mat-form-field>
         </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Payroll Type</mat-label>
-            <mat-select formControlName="payroll_type">
-              <mat-option value="Salary">Salary</mat-option>
-              <mat-option value="Hourly">Hourly</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Workweek Type</mat-label>
-            <mat-select formControlName="workweek_type">
-              <mat-option value="Standard">Standard</mat-option>
-              <mat-option value="Flexible">Flexible</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row toggles-row">
-          <mat-slide-toggle formControlName="time_type">
-            Time Type Enabled
-          </mat-slide-toggle>
-          <mat-slide-toggle formControlName="allow_clocking">
-            Allow Clocking
-          </mat-slide-toggle>
-          <mat-slide-toggle formControlName="allow_delete">
-            Allow Delete
-          </mat-slide-toggle>
-        </div>
-      </form>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-button (click)="cancelEdit()" [disabled]="isLoading">
-        Cancel
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="saveEmployee()"
-        [disabled]="editForm.invalid || isLoading"
-      >
-        <mat-progress-spinner
-          *ngIf="isLoading"
-          diameter="20"
-          mode="indeterminate"
-        ></mat-progress-spinner>
-        <span *ngIf="!isLoading">Save Changes</span>
-      </button>
-    </mat-card-actions>
-  </mat-card>
-
-  <!-- View Employee Details -->
-  <mat-card
-    *ngIf="showViewDetails && selectedEmployee"
-    class="view-details-card"
-  >
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>visibility</mat-icon>
-        Employee Details: {{ selectedEmployee.first_name }}
-        {{ selectedEmployee.last_name }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="details-grid">
-        <div class="detail-section">
-          <h3>Basic Information</h3>
-          <div class="detail-item">
-            <label>Badge Number:</label>
-            <span>{{ selectedEmployee.badge_number }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Full Name:</label>
-            <span
-              >{{ selectedEmployee.first_name }}
-              {{ selectedEmployee.last_name }}</span
-            >
-          </div>
-          <div class="detail-item">
-            <label>Payroll Type:</label>
-            <span>{{ selectedEmployee.payroll_type }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Workweek Type:</label>
-            <span>{{ selectedEmployee.workweek_type }}</span>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <h3>Organization</h3>
-          <div class="detail-item">
-            <label>Organizational Unit:</label>
-            <span>{{ selectedEmployee.org_unit.name || "N/A" }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Departments:</label>
-            <div class="departments-display">
-              <mat-chip-listbox>
-                <mat-chip *ngFor="let dept of selectedEmployee.departments">
-                  {{ dept.name }}
-                </mat-chip>
-              </mat-chip-listbox>
-            </div>
-          </div>
-          <div class="detail-item">
-            <label>Holiday Group:</label>
-            <span>{{ selectedEmployee.holiday_group?.name || "None" }}</span>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <h3>Settings</h3>
-          <div class="detail-item">
-            <label>Time Type:</label>
-            <span
-              [class]="
-                selectedEmployee.time_type
-                  ? 'status-enabled'
-                  : 'status-disabled'
-              "
-            >
-              {{ selectedEmployee.time_type ? "Enabled" : "Disabled" }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <label>Allow Clocking:</label>
-            <span
-              [class]="
-                selectedEmployee.allow_clocking
-                  ? 'status-enabled'
-                  : 'status-disabled'
-              "
-            >
-              {{ selectedEmployee.allow_clocking ? "Yes" : "No" }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <label>Allow Delete:</label>
-            <span
-              [class]="
-                selectedEmployee.allow_delete
-                  ? 'status-enabled'
-                  : 'status-disabled'
-              "
-            >
-              {{ selectedEmployee.allow_delete ? "Yes" : "No" }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-button (click)="cancelEdit()">Close</button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="editEmployee(selectedEmployee!)"
-      >
-        <mat-icon>edit</mat-icon>
-        Edit Employee
-      </button>
-    </mat-card-actions>
+      </mat-tab>
+    </mat-tab-group>
   </mat-card>
 </div>

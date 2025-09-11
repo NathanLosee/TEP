@@ -122,6 +122,28 @@
       .action-buttons {
         display: flex;
         gap: 8px;
+
+        button {
+          min-width: auto;
+          width: 36px;
+          height: 36px;
+
+          &.view-btn {
+            color: var(--sys-primary);
+
+            &:hover {
+              background: rgba(var(--sys-primary-rgb), 0.08);
+            }
+          }
+
+          &.delete-btn {
+            color: var(--sys-error);
+
+            &:hover {
+              background: rgba(var(--sys-error-rgb), 0.08);
+            }
+          }
+        }
       }
     }
 

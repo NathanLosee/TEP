@@ -119,7 +119,7 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   templateUrl: './timeclock-dialog.html',
   styleUrl: './timeclock-dialog.scss',
   standalone: true,
-  imports: [MatDialogTitle, MatDialogContent],
+  imports: [MatDialogTitle, MatDialogContent, MatIconModule],
 })
 export class TimeclockDialog {
   readonly data = inject(MAT_DIALOG_DATA);

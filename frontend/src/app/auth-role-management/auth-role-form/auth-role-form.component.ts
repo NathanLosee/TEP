@@ -50,6 +50,7 @@ import {
     MatTabsModule,
   ],
   templateUrl: './auth-role-form.component.html',
+  styleUrls: ['./auth-role-form.component.scss'],
 })
 export class AuthRoleFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);

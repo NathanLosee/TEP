@@ -1,0 +1,158 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEditMode ? "edit" : "person_add" }}</mat-icon>
+  {{ isEditMode ? "Edit" : "Add" }} Employee
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="employeeForm" (ngSubmit)="submitForm()">
+    <div class="form-section">
+      <h3>Personal Information</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Badge Number</mat-label>
+          <input
+            matInput
+            formControlName="badge_number"
+            placeholder="Enter badge number"
+          />
+          <mat-error *ngIf="employeeForm.get('badge_number')?.hasError('required')">
+            Badge number is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>First Name</mat-label>
+          <input
+            matInput
+            formControlName="first_name"
+            placeholder="Enter first name"
+          />
+          <mat-error *ngIf="employeeForm.get('first_name')?.hasError('required')">
+            First name is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Last Name</mat-label>
+          <input
+            matInput
+            formControlName="last_name"
+            placeholder="Enter last name"
+          />
+          <mat-error *ngIf="employeeForm.get('last_name')?.hasError('required')">
+            Last name is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Employment Settings</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Payroll Type</mat-label>
+          <mat-select formControlName="payroll_type">
+            <mat-option value="Hourly">Hourly</mat-option>
+            <mat-option value="Salary">Salary</mat-option>
+          </mat-select>
+          <mat-error *ngIf="employeeForm.get('payroll_type')?.hasError('required')">
+            Payroll type is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Workweek Type</mat-label>
+          <mat-select formControlName="workweek_type">
+            <mat-option value="Standard">Standard</mat-option>
+            <mat-option value="Flexible">Flexible</mat-option>
+          </mat-select>
+          <mat-error *ngIf="employeeForm.get('workweek_type')?.hasError('required')">
+            Workweek type is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Payroll Sync Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="payrollPicker"
+            formControlName="payroll_sync"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="payrollPicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #payrollPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Organization Unit</mat-label>
+          <mat-select formControlName="org_unit_id">
+            <mat-option *ngFor="let orgUnit of orgUnits" [value]="orgUnit.id">
+              {{ orgUnit.name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="employeeForm.get('org_unit_id')?.hasError('required')">
+            Organization unit is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Holiday Group</mat-label>
+          <mat-select formControlName="holiday_group_id">
+            <mat-option value="">None</mat-option>
+            <mat-option *ngFor="let group of holidayGroups" [value]="group.id">
+              {{ group.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Manager</mat-label>
+          <mat-select formControlName="manager_id">
+            <mat-option value="">None</mat-option>
+            <mat-option *ngFor="let manager of managers" [value]="manager.id">
+              {{ manager.first_name }} {{ manager.last_name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Permissions</h3>
+      <div class="checkbox-row">
+        <mat-checkbox formControlName="time_type">
+          Time Type Enabled
+        </mat-checkbox>
+        <mat-checkbox formControlName="allow_clocking">
+          Allow Clocking
+        </mat-checkbox>
+        <mat-checkbox formControlName="allow_delete">
+          Allow Delete
+        </mat-checkbox>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <div class="spacer"></div>
+  <button mat-button (click)="cancelForm()" type="button">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submitForm()"
+    [disabled]="employeeForm.invalid || isLoading"
+    type="button"
+  >
+    <mat-progress-spinner
+      *ngIf="isLoading"
+      diameter="20"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Employee' }}</span>
+  </button>
+</mat-dialog-actions>

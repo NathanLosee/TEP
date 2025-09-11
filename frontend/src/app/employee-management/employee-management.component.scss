@@ -77,9 +77,37 @@
   }
 }
 
+.main-tabs {
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .tab-content {
+    padding: 24px;
+  }
+}
+
+.search-section {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: flex-end;
+
+  .search-field {
+    flex: 1;
+    max-width: 400px;
+  }
+
+  .filter-field {
+    min-width: 150px;
+  }
+}
+
 .table-card {
+  background: var(--sys-surface);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 
   .table-header {
     display: flex;
@@ -102,6 +130,7 @@
 }
 
 .table-container {
+  min-height: 200px;
   width: 100%;
   overflow-x: auto;
 
@@ -125,6 +154,34 @@
 
     tr:hover {
       background: var(--sys-surface-variant);
+    }
+  }
+
+  .empty-state,
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: var(--sys-outline);
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      margin: 0 0 8px 0;
+      color: var(--sys-on-surface);
+    }
+
+    p {
+      color: var(--sys-on-surface-variant);
+      margin: 0 0 16px 0;
     }
   }
 }
@@ -372,13 +429,40 @@
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 
+  .form-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--sys-outline-variant);
+    border-radius: 8px;
+    background: var(--sys-surface-variant);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      margin: 0 0 1rem 0;
+      color: var(--sys-on-surface-variant);
+      font-weight: 500;
+      font-size: 0.9375rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
   .form-row {
     display: flex;
     gap: 16px;
     margin-bottom: 16px;
 
+    &:last-child {
+      margin-bottom: 0;
+    }
+
     .form-field {
       flex: 1;
+      min-width: 120px;
     }
 
     &.toggles-row {
@@ -456,11 +540,48 @@
   }
 }
 
-// Responsive design for new elements
+// Responsive design
 @media (max-width: 768px) {
+  .employee-management-container {
+    padding: 16px;
+  }
+
+  .search-section {
+    flex-direction: column;
+    align-items: stretch;
+
+    .search-field {
+      max-width: none;
+    }
+
+    .filter-field {
+      min-width: auto;
+    }
+  }
+
+  .page-header .header-content {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
   .edit-form-card,
   .view-details-card {
     margin: 16px 0;
+
+    .form-section {
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+
+      h3 {
+        font-size: 0.875rem;
+      }
+    }
 
     .form-row {
       flex-direction: column;

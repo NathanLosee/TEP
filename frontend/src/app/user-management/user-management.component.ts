@@ -10,7 +10,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,6 +30,8 @@ import {
   UserPasswordChange,
   UserService,
 } from '../../services/user.service';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { UserFormDialogComponent } from './user-management-form-dialog/user-form-dialog.component';
 
 interface Employee {
   badge_number: string;
@@ -65,7 +67,7 @@ interface Employee {
 export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
   private authRoleService = inject(AuthRoleService);
-  private formBuilder = inject(FormBuilder);
+  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   // Data
@@ -73,49 +75,18 @@ export class UserManagementComponent implements OnInit {
   authRoles: AuthRole[] = [];
   employees: Employee[] = [];
   filteredUsers: User[] = [];
-  selectedUser: User | null = null;
-  selectedUserRoles: AuthRole[] = [];
-
-  // Forms
-  userForm: FormGroup;
-  passwordForm: FormGroup;
 
   // UI State
   isLoading = false;
   searchTerm = '';
-  showCreateForm = false;
-  showPasswordForm = false;
-  editingUser: User | null = null;
 
   // Table columns
-  displayedColumns = ['badge_number', 'roles', 'actions'];
-
-  constructor() {
-    this.userForm = this.formBuilder.group({
-      badge_number: ['', [Validators.required, Validators.minLength(1)]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-    });
-
-    this.passwordForm = this.formBuilder.group(
-      {
-        current_password: ['', [Validators.required]],
-        new_password: ['', [Validators.required, Validators.minLength(6)]],
-        confirm_password: ['', [Validators.required]],
-      },
-      { validators: this.passwordMatchValidator }
-    );
-  }
+  displayedColumns = ['badge_number', 'actions'];
 
   ngOnInit() {
     this.loadUsers();
     this.loadAuthRoles();
     this.loadEmployees();
-  }
-
-  passwordMatchValidator(group: FormGroup) {
-    const newPassword = group.get('new_password')?.value;
-    const confirmPassword = group.get('confirm_password')?.value;
-    return newPassword === confirmPassword ? null : { passwordMismatch: true };
   }
 
   loadUsers() {
@@ -167,19 +138,12 @@ export class UserManagementComponent implements OnInit {
     ];
   }
 
-  loadUserRoles(userId: number) {
-    this.userService.getUserAuthRoles(userId).subscribe({
-      next: (roles) => {
-        this.selectedUserRoles = roles;
-      },
-      error: (error) => {
-        this.showSnackBar(
-          'Failed to load user roles: ' +
-            (error.error?.detail || error.message),
-          'error'
-        );
-      },
-    });
+  onSearchChange() {
+    this.applySearchFilter();
+  }
+
+  filterUsers() {
+    this.applySearchFilter();
   }
 
   applySearchFilter() {
@@ -193,104 +157,22 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  onSearchChange() {
-    this.applySearchFilter();
-  }
-
-  showCreateUserForm() {
-    this.showCreateForm = true;
-    this.editingUser = null;
-    this.userForm.reset();
-  }
-
-  cancelForm() {
-    this.showCreateForm = false;
-    this.showPasswordForm = false;
-    this.editingUser = null;
-    this.userForm.reset();
-    this.passwordForm.reset();
-  }
-
-  onSubmit() {
-    if (this.userForm.invalid) {
-      this.showSnackBar(
-        'Please fill in all required fields correctly',
-        'error'
-      );
-      return;
-    }
-
-    const formValue = this.userForm.value;
-    const userData: UserBase = {
-      badge_number: formValue.badge_number,
-      password: formValue.password,
-    };
-
-    this.isLoading = true;
-
-    this.userService.createUser(userData).subscribe({
-      next: (newUser) => {
-        this.showSnackBar('User account created successfully', 'success');
-        this.loadUsers();
-        this.cancelForm();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.showSnackBar(
-          'Failed to create user: ' + (error.error?.detail || error.message),
-          'error'
-        );
-        this.isLoading = false;
+  createUser() {
+    const dialogRef = this.dialog.open(UserFormDialogComponent, {
+      width: '600px',
+      data: {
+        authRoles: this.authRoles,
+        employees: this.employees,
       },
     });
-  }
 
-  showChangePasswordForm(user: User) {
-    this.selectedUser = user;
-    this.showPasswordForm = true;
-    this.passwordForm.reset();
-  }
-
-  onPasswordSubmit() {
-    if (this.passwordForm.invalid || !this.selectedUser) {
-      this.showSnackBar(
-        'Please fill in all required fields correctly',
-        'error'
-      );
-      return;
-    }
-
-    if (this.passwordForm.hasError('passwordMismatch')) {
-      this.showSnackBar('New passwords do not match', 'error');
-      return;
-    }
-
-    const formValue = this.passwordForm.value;
-    const passwordData: UserPasswordChange = {
-      badge_number: this.selectedUser.badge_number,
-      password: formValue.current_password,
-      new_password: formValue.new_password,
-    };
-
-    this.isLoading = true;
-
-    this.userService
-      .updateUserPassword(this.selectedUser.badge_number, passwordData)
-      .subscribe({
-        next: (updatedUser) => {
-          this.showSnackBar('Password updated successfully', 'success');
-          this.cancelForm();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.showSnackBar(
-            'Failed to update password: ' +
-              (error.error?.detail || error.message),
-            'error'
-          );
-          this.isLoading = false;
-        },
-      });
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        this.users.push(result);
+        this.filterUsers();
+        this.showSnackBar('User account created successfully', 'success');
+      }
+    });
   }
 
   deleteUser(user: User) {
@@ -317,57 +199,6 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  viewUserDetails(user: User) {
-    this.selectedUser = user;
-    this.loadUserRoles(user.id!);
-  }
-
-  assignRoleToUser(roleId: number) {
-    if (!this.selectedUser) return;
-
-    this.authRoleService
-      .assignUserToRole(roleId, this.selectedUser.id!)
-      .subscribe({
-        next: () => {
-          this.showSnackBar('Role assigned successfully', 'success');
-          this.loadUserRoles(this.selectedUser!.id!);
-        },
-        error: (error) => {
-          this.showSnackBar(
-            'Failed to assign role: ' + (error.error?.detail || error.message),
-            'error'
-          );
-        },
-      });
-  }
-
-  removeRoleFromUser(roleId: number) {
-    if (!this.selectedUser) return;
-
-    if (confirm('Are you sure you want to remove this role from the user?')) {
-      this.authRoleService
-        .removeUserFromRole(roleId, this.selectedUser.id!)
-        .subscribe({
-          next: () => {
-            this.showSnackBar('Role removed successfully', 'success');
-            this.loadUserRoles(this.selectedUser!.id!);
-          },
-          error: (error) => {
-            this.showSnackBar(
-              'Failed to remove role: ' +
-                (error.error?.detail || error.message),
-              'error'
-            );
-          },
-        });
-    }
-  }
-
-  getUnassignedRoles(): AuthRole[] {
-    const assignedRoleIds = new Set(this.selectedUserRoles.map((r) => r.id));
-    return this.authRoles.filter((role) => !assignedRoleIds.has(role.id));
-  }
-
   getEmployeeName(badgeNumber: string): string {
     const employee = this.employees.find(
       (emp) => emp.badge_number === badgeNumber
@@ -379,18 +210,6 @@ export class UserManagementComponent implements OnInit {
     // This would need to be populated from the backend or cached
     // For now, return empty array as roles are loaded separately
     return [];
-  }
-
-  getTotalPermissions(): number {
-    return this.authRoles.reduce(
-      (total, role) => total + role.permissions.length,
-      0
-    );
-  }
-
-  getActiveUsersCount(): number {
-    // In a real app, this would check last login or active status
-    return this.users.length;
   }
 
   private showSnackBar(

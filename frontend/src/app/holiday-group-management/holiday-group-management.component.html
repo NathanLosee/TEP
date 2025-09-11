@@ -10,12 +10,12 @@
         <button
           mat-raised-button
           color="primary"
-          (click)="toggleForm()"
+          (click)="openHolidayFormDialog()"
           [disabled]="isLoading"
           class="add-btn"
         >
-          <mat-icon>{{ showForm ? "close" : "add" }}</mat-icon>
-          {{ showForm ? "Cancel" : "Add Holiday Group" }}
+          <mat-icon>{{ "add" }}</mat-icon>
+          Add Holiday Group
         </button>
       </div>
     </div>
@@ -124,7 +124,7 @@
                           mat-icon-button
                           matTooltip="Edit Group"
                           color="primary"
-                          (click)="editGroup(group)"
+                          (click)="openHolidayFormDialog(group)"
                         >
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -165,7 +165,7 @@
                   <button
                     mat-raised-button
                     color="primary"
-                    (click)="toggleForm()"
+                    (click)="openHolidayFormDialog()"
                     *ngIf="!searchForm.get('name')?.value"
                   >
                     <mat-icon>add</mat-icon>

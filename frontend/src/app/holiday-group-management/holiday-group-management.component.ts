@@ -59,7 +59,6 @@ import { HolidayGroupEmployeesDialogComponent } from './holiday-group-employees-
 })
 export class HolidayGroupManagementComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
-  private errorDialog = inject(ErrorDialogComponent);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
@@ -75,8 +74,6 @@ export class HolidayGroupManagementComponent implements OnInit {
 
   // UI State
   isLoading = false;
-  showForm = false;
-  showEmployeeList = false;
 
   // Table columns
   displayedColumns: string[] = ['name', 'holidays_count', 'actions'];
@@ -88,8 +85,14 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadHolidayGroups();
     this.setupSearchForm();
+    this.loadHolidayGroups();
+  }
+
+  setupSearchForm() {
+    this.searchForm.valueChanges.subscribe(() => {
+      this.filterGroups();
+    });
   }
 
   loadHolidayGroups() {
@@ -108,32 +111,26 @@ export class HolidayGroupManagementComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorDialog.openErrorDialog(
-          'Failed to load holiday groups',
-          error
-        );
+        this.handleError('Failed to load holiday groups', error);
         this.isLoading = false;
       },
     });
   }
 
-  setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.filterGroups();
-    });
-  }
-
   filterGroups() {
-    const searchTerm =
-      this.searchForm.get('name')?.value?.toLowerCase().trim() || '';
+    const filters = this.searchForm.value;
 
-    if (!searchTerm) {
+    if (!filters.name) {
       this.filteredGroups = [...this.holidayGroups];
       return;
     }
-    this.filteredGroups = this.holidayGroups.filter((group) =>
-      group.name.toLowerCase().includes(searchTerm)
-    );
+    this.filteredGroups = this.holidayGroups.filter((group) => {
+      const searchName = filters.name?.toLowerCase() || '';
+      const matchesSearch =
+        !searchName || group.name.toLowerCase().includes(searchName);
+
+      return matchesSearch;
+    });
   }
 
   viewEmployees(group: HolidayGroup) {
@@ -144,13 +141,6 @@ export class HolidayGroupManagementComponent implements OnInit {
       enterAnimationDuration: 250,
       exitAnimationDuration: 250,
     });
-  }
-
-  toggleForm() {
-    this.showForm = !this.showForm;
-    if (this.showForm) {
-      this.openHolidayFormDialog();
-    }
   }
 
   openHolidayFormDialog(editGroup?: HolidayGroup) {
@@ -168,18 +158,6 @@ export class HolidayGroupManagementComponent implements OnInit {
         this.saveHolidayGroup(result);
       }
     });
-  }
-
-  editGroup(group: HolidayGroup) {
-    this.selectedGroup = group;
-    this.openHolidayFormDialog(group);
-    this.showEmployeeList = false;
-  }
-
-  cancelAction() {
-    this.showForm = false;
-    this.showEmployeeList = false;
-    this.selectedGroup = null;
   }
 
   viewHolidayDetails(group: HolidayGroup) {
@@ -224,10 +202,7 @@ export class HolidayGroupManagementComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorDialog.openErrorDialog(
-          'Failed to update holiday group',
-          error
-        );
+        this.handleError('Failed to update holiday group', error);
         this.isLoading = false;
       },
     };
@@ -266,10 +241,7 @@ export class HolidayGroupManagementComponent implements OnInit {
           this.isLoading = false;
         },
         error: (error) => {
-          this.errorDialog.openErrorDialog(
-            'Failed to delete holiday group',
-            error
-          );
+          this.handleError('Failed to delete holiday group', error);
           this.isLoading = false;
         },
       });
@@ -283,6 +255,17 @@ export class HolidayGroupManagementComponent implements OnInit {
     this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
+    });
+  }
+
+  private handleError(message: string, error: any) {
+    console.error(message, error);
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Error',
+        message: `${message}. Please try again.`,
+        error: error?.error?.detail || error?.message || 'Unknown error',
+      },
     });
   }
 }

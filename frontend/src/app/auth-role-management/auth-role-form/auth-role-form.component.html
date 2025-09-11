@@ -1,8 +1,7 @@
-<!-- Create/Edit Role Form -->
-<mat-card class="form-card">
+<mat-card class="edit-form-card">
   <mat-card-header>
     <mat-card-title>
-      <mat-icon>add</mat-icon>
+      <mat-icon>security</mat-icon>
       Create/Edit Auth Role
     </mat-card-title>
   </mat-card-header>
@@ -25,7 +24,7 @@
 
       <!-- Permissions Selection -->
       <div class="permissions-section">
-        <h3>Permissions</h3>
+        <h3>Permissions ({{ selectedPermissions.size }} selected)</h3>
         <p class="permissions-description">
           Select the permissions this role should have. Permissions are grouped
           by feature category.
@@ -43,7 +42,7 @@
               </mat-panel-title>
               <mat-panel-description>
                 {{ getSelectedPermissionsCount(category) }} /
-                {{ Object.keys(availablePermissions[category]).length }}
+                {{ availablePermissions[category].length }}
                 selected
               </mat-panel-description>
             </mat-expansion-panel-header>
@@ -57,12 +56,17 @@
                   [checked]="isPermissionSelected(permission)"
                   (change)="togglePermission(permission)"
                 >
-                  <span class="permission-code">{{ permission.resource }}</span>
-                  <span class="permission-description">{{
-                    permission.description
-                  }}</span>
+                  <div class="permission-content">
+                    <span class="permission-code">{{ permission.resource }}</span>
+                    <span class="permission-description">{{ permission.description }}</span>
+                  </div>
                 </mat-checkbox>
               </div>
+            </div>
+            
+            <div *ngIf="availablePermissions[category].length === 0" class="no-permissions">
+              <mat-icon>security</mat-icon>
+              <span>No permissions available in this category</span>
             </div>
           </mat-expansion-panel>
         </mat-accordion>
@@ -79,7 +83,7 @@
                 removable
                 (removed)="togglePermission(permission)"
               >
-                {{ permission }}
+                {{ permission.resource }}
                 <mat-icon matChipRemove>cancel</mat-icon>
               </mat-chip>
             </mat-chip-set>
@@ -108,9 +112,8 @@
         *ngIf="isLoading"
         diameter="20"
         mode="indeterminate"
-      >
-      </mat-progress-spinner>
-      <span *ngIf="!isLoading"> Create/Update Role </span>
+      ></mat-progress-spinner>
+      <span *ngIf="!isLoading">Create/Update Role</span>
     </button>
   </mat-card-actions>
 </mat-card>

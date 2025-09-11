@@ -20,45 +20,52 @@
     </div>
   </div>
 
-  <!-- Summary Stats -->
-  <div class="stats-section">
-    <div class="stats-grid">
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon">schedule</mat-icon>
-          <div class="stat-value">{{ timeEntries.length }}</div>
-          <div class="stat-label">Total Entries</div>
-        </div>
-      </mat-card>
+  <!-- Main Content Tabs -->
+  <mat-card class="content-card">
+    <mat-tab-group class="main-tabs">
+      <!-- Time Entries Tab -->
+      <mat-tab label="Time Entries" [disabled]="isLoading">
+        <div class="tab-content">
+          <!-- Summary Stats -->
+          <div class="stats-section">
+            <div class="stats-grid">
+              <mat-card class="stat-card">
+                <div class="stat-content">
+                  <mat-icon class="stat-icon">schedule</mat-icon>
+                  <div class="stat-value">{{ timeEntries.length }}</div>
+                  <div class="stat-label">Total Entries</div>
+                </div>
+              </mat-card>
 
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon active-icon">play_circle</mat-icon>
-          <div class="stat-value">{{ getActiveEntriesCount() }}</div>
-          <div class="stat-label">Currently Active</div>
-        </div>
-      </mat-card>
+              <mat-card class="stat-card">
+                <div class="stat-content">
+                  <mat-icon class="stat-icon active-icon">play_circle</mat-icon>
+                  <div class="stat-value">{{ getActiveEntriesCount() }}</div>
+                  <div class="stat-label">Currently Active</div>
+                </div>
+              </mat-card>
 
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon complete-icon">check_circle</mat-icon>
-          <div class="stat-value">{{ getCompletedEntriesCount() }}</div>
-          <div class="stat-label">Completed</div>
-        </div>
-      </mat-card>
+              <mat-card class="stat-card">
+                <div class="stat-content">
+                  <mat-icon class="stat-icon complete-icon">check_circle</mat-icon>
+                  <div class="stat-value">{{ getCompletedEntriesCount() }}</div>
+                  <div class="stat-label">Completed</div>
+                </div>
+              </mat-card>
 
-      <mat-card class="stat-card">
-        <div class="stat-content">
-          <mat-icon class="stat-icon warning-icon">warning</mat-icon>
-          <div class="stat-value">{{ getIncompleteEntriesCount() }}</div>
-          <div class="stat-label">Incomplete</div>
-        </div>
-      </mat-card>
-    </div>
-  </div>
+              <mat-card class="stat-card">
+                <div class="stat-content">
+                  <mat-icon class="stat-icon warning-icon">warning</mat-icon>
+                  <div class="stat-value">{{ getIncompleteEntriesCount() }}</div>
+                  <div class="stat-label">Incomplete</div>
+                </div>
+              </mat-card>
+            </div>
+          </div>
 
-  <!-- Filters -->
-  <mat-card class="filter-card">
+          <!-- Filters -->
+          <div class="filter-section">
+            <mat-card class="filter-card">
     <mat-card-content>
       <form [formGroup]="filterForm" class="filter-form">
         <div class="filter-row">
@@ -135,24 +142,16 @@
       </form>
     </mat-card-content>
   </mat-card>
+          </div>
 
-  <!-- Time Entries Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-header">
-        <h2>Time Entries ({{ timeEntries.length }})</h2>
-        <div class="table-actions">
-          <button
-            mat-icon-button
-            matTooltip="Refresh"
-            (click)="loadTimeEntries()"
-          >
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </div>
-      </div>
+          <!-- Time Entries Table -->
+          <mat-card class="table-card">
+            <mat-card-header>
+              <mat-card-title>Time Entries ({{ timeEntries.length }})</mat-card-title>
+            </mat-card-header>
 
-      <div class="table-container" *ngIf="!isLoading">
+            <mat-card-content>
+              <div class="table-container">
         <table
           mat-table
           [dataSource]="timeEntries"
@@ -312,5 +311,9 @@
         </button>
       </div>
     </mat-card-content>
+  </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </mat-card>
 </div>
