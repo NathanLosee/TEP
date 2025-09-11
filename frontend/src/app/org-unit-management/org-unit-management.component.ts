@@ -68,7 +68,7 @@ export class OrgUnitManagementComponent implements OnInit {
   isLoading = false;
 
   // Table columns
-  displayedColumns: string[] = ['name', 'employee_count', 'actions'];
+  displayedColumns: string[] = ['name', 'actions'];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
