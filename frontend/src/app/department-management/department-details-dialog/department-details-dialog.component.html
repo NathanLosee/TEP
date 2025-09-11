@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>
+  <mat-icon>visibility</mat-icon>
+  Department Details
+</h2>
+
+<mat-dialog-content>
+  <div class="department-details">
+    <!-- Basic Information -->
+    <div class="detail-section">
+      <h3>Department Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="label">Department Name:</span>
+          <span class="value">{{ department.name }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Department ID:</span>
+          <span class="value">#{{ department.id }}</span>
+        </div>
+        <div class="detail-item" *ngIf="department.description">
+          <span class="label">Description:</span>
+          <span class="value">{{ department.description }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employees -->
+    <div class="detail-section" *ngIf="employees.length > 0">
+      <h3>Department Members ({{ employees.length }})</h3>
+      <div class="employees-grid">
+        <div class="employee-card" *ngFor="let employee of employees">
+          <div class="employee-info">
+            <div class="employee-name">{{ employee.first_name }} {{ employee.last_name }}</div>
+            <div class="employee-badge">Badge: {{ employee.badge_number }}</div>
+            <div class="employee-role">{{ employee.payroll_type }}</div>
+          </div>
+          <div class="employee-status" [class.active]="employee.allow_clocking">
+            <mat-icon>{{ employee.allow_clocking ? 'check_circle' : 'cancel' }}</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state for employees -->
+    <div class="detail-section" *ngIf="employees.length === 0">
+      <h3>Department Members</h3>
+      <div class="empty-employees">
+        <mat-icon>people_outline</mat-icon>
+        <span>No employees assigned to this department</span>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button
+    mat-icon-button
+    color="primary"
+    matTooltip="Manage Employees"
+    (click)="manageEmployees()"
+  >
+    <mat-icon>people</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    color="primary"
+    matTooltip="Edit Department"
+    (click)="editDepartment()"
+  >
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    color="warn"
+    matTooltip="Delete Department"
+    (click)="deleteDepartment()"
+  >
+    <mat-icon>delete</mat-icon>
+  </button>
+  <div class="spacer"></div>
+  <button mat-button (click)="closeDialog()">Close</button>
+</mat-dialog-actions>

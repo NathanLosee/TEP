@@ -1,0 +1,101 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEditMode ? "edit" : "person_add" }}</mat-icon>
+  {{ isEditMode ? "Edit" : "Create" }} User
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="userForm" (ngSubmit)="submitForm()">
+    <div class="form-section">
+      <h3>User Account Information</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Badge Number</mat-label>
+          <mat-select formControlName="badge_number">
+            <mat-option *ngFor="let employee of employees" [value]="employee.badge_number">
+              {{ employee.badge_number }} - {{ employee.first_name }} {{ employee.last_name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="userForm.get('badge_number')?.hasError('required')">
+            Badge number is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>{{ isEditMode ? 'Update Password' : 'Password' }}</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>{{ isEditMode ? 'New Password (leave blank to keep current)' : 'Password' }}</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            [placeholder]="isEditMode ? 'Enter new password' : 'Enter password'"
+          />
+          <mat-error *ngIf="userForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
+          <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">
+            Password must be at least 6 characters long
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Confirm Password</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="Confirm password"
+          />
+          <mat-error *ngIf="userForm.get('confirmPassword')?.hasError('passwordMismatch')">
+            Passwords do not match
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>User Settings</h3>
+      <div class="checkbox-row">
+        <mat-checkbox formControlName="is_active">
+          Account Active
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Role Assignments</h3>
+      <div class="roles-selection">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Assigned Roles</mat-label>
+          <mat-select formControlName="auth_role_ids" multiple>
+            <mat-option *ngFor="let role of authRoles" [value]="role.id">
+              {{ role.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <div class="spacer"></div>
+  <button mat-button (click)="cancelForm()" type="button">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submitForm()"
+    [disabled]="userForm.invalid || isLoading"
+    type="button"
+  >
+    <mat-progress-spinner
+      *ngIf="isLoading"
+      diameter="20"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create User' }}</span>
+  </button>
+</mat-dialog-actions>

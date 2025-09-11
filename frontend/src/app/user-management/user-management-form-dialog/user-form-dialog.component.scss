@@ -1,0 +1,93 @@
+// Form sections styling - consistent with holiday-group-management patterns
+.form-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low);
+  
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  
+  .form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  
+  mat-checkbox {
+    flex: none;
+  }
+}
+
+.roles-selection {
+  .full-width {
+    width: 100%;
+  }
+}
+
+// Dialog specific styling
+mat-dialog-content {
+  max-width: 700px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+mat-dialog-actions {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  
+  .spacer {
+    flex: 1;
+  }
+  
+  button {
+    margin-left: 8px;
+    
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}
+
+// Progress spinner in button
+button mat-progress-spinner {
+  margin-right: 8px;
+}
+
+// Title styling
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 24px 24px 0 24px;
+  font-size: 20px;
+  font-weight: 500;
+  
+  mat-icon {
+    color: var(--mat-sys-primary);
+  }
+}
