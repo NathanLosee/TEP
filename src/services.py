@@ -329,3 +329,217 @@ def create_event_log(
     )
     db.add(event_log)
     db.commit()
+
+
+def generate_dummy_data():
+    """Generate dummy data for development environment.
+    
+    This function creates sample data for all entities in the system
+    to help with development and testing.
+    """
+    from src.config import Settings
+    
+    settings = Settings()
+    if settings.ENVIRONMENT.lower() != "development":
+        return  # Only generate dummy data in development environment
+    
+    db = SessionLocal()
+    
+    try:
+        # Import all models
+        from src.org_unit.models import OrgUnit
+        from src.employee.models import Employee
+        from src.user.models import User
+        from src.auth_role.models import AuthRole, AuthRolePermission, AuthRoleMembership
+        from src.department.models import Department, DepartmentMembership
+        from src.holiday_group.models import HolidayGroup, Holiday
+        from src.timeclock.models import Timeclock
+        from src.event_log.models import EventLog
+        
+        print("Generating dummy data for development environment...")
+        
+        # Create additional org units
+        org_units_data = [
+            {"id": 1, "name": "Engineering"},
+            {"id": 2, "name": "Sales"},
+            {"id": 3, "name": "Marketing"},
+            {"id": 4, "name": "HR"},
+        ]
+        
+        for org_data in org_units_data:
+            if not db.get(OrgUnit, org_data["id"]):
+                org_unit = OrgUnit(**org_data)
+                db.add(org_unit)
+        
+        # Create departments
+        departments_data = [
+            {"id": 1, "name": "Backend Development"},
+            {"id": 2, "name": "Frontend Development"},
+            {"id": 3, "name": "Sales Team"},
+            {"id": 4, "name": "Marketing Team"},
+        ]
+        
+        for dept_data in departments_data:
+            if not db.get(Department, dept_data["id"]):
+                department = Department(**dept_data)
+                db.add(department)
+        
+        # Create holiday groups
+        holiday_groups_data = [
+            {"id": 1, "name": "US Holidays"},
+            {"id": 2, "name": "Company Holidays"},
+        ]
+        
+        for hg_data in holiday_groups_data:
+            if not db.get(HolidayGroup, hg_data["id"]):
+                holiday_group = HolidayGroup(**hg_data)
+                db.add(holiday_group)
+        
+        # Commit the basic entities first
+        db.commit()
+        
+        # Create holidays
+        holidays_data = [
+            {"name": "New Year's Day", "start_date": date(2024, 1, 1), "end_date": date(2024, 1, 1), "holiday_group_id": 1},
+            {"name": "Independence Day", "start_date": date(2024, 7, 4), "end_date": date(2024, 7, 4), "holiday_group_id": 1},
+            {"name": "Christmas", "start_date": date(2024, 12, 25), "end_date": date(2024, 12, 25), "holiday_group_id": 1},
+            {"name": "Company Retreat", "start_date": date(2024, 6, 15), "end_date": date(2024, 6, 16), "holiday_group_id": 2},
+        ]
+        
+        for holiday_data in holidays_data:
+            existing_holiday = db.query(Holiday).filter_by(
+                name=holiday_data["name"], 
+                holiday_group_id=holiday_data["holiday_group_id"]
+            ).first()
+            if not existing_holiday:
+                holiday = Holiday(**holiday_data)
+                db.add(holiday)
+        
+        # Create employees
+        employees_data = [
+            {"id": 1, "badge_number": "EMP001", "first_name": "John", "last_name": "Doe", "payroll_type": "salary", "payroll_sync": date.today(), "workweek_type": "standard", "time_type": True, "allow_clocking": True, "allow_delete": True, "org_unit_id": 1, "manager_id": None, "holiday_group_id": 1},
+            {"id": 2, "badge_number": "EMP002", "first_name": "Jane", "last_name": "Smith", "payroll_type": "hourly", "payroll_sync": date.today(), "workweek_type": "standard", "time_type": True, "allow_clocking": True, "allow_delete": True, "org_unit_id": 1, "manager_id": 1, "holiday_group_id": 1},
+            {"id": 3, "badge_number": "EMP003", "first_name": "Bob", "last_name": "Johnson", "payroll_type": "hourly", "payroll_sync": date.today(), "workweek_type": "standard", "time_type": True, "allow_clocking": True, "allow_delete": True, "org_unit_id": 2, "manager_id": 1, "holiday_group_id": 1},
+            {"id": 4, "badge_number": "EMP004", "first_name": "Alice", "last_name": "Brown", "payroll_type": "salary", "payroll_sync": date.today(), "workweek_type": "standard", "time_type": True, "allow_clocking": True, "allow_delete": True, "org_unit_id": 3, "manager_id": None, "holiday_group_id": 2},
+        ]
+        
+        for emp_data in employees_data:
+            if not db.get(Employee, emp_data["id"]):
+                employee = Employee(**emp_data)
+                db.add(employee)
+        
+        # Create users
+        users_data = [
+            {"id": 1, "badge_number": "EMP001", "password": hash_password("password123")},
+            {"id": 2, "badge_number": "EMP002", "password": hash_password("password123")},
+            {"id": 3, "badge_number": "EMP003", "password": hash_password("password123")},
+            {"id": 4, "badge_number": "EMP004", "password": hash_password("password123")},
+        ]
+        
+        for user_data in users_data:
+            if not db.get(User, user_data["id"]):
+                user = User(**user_data)
+                db.add(user)
+        
+        # Create auth roles
+        auth_roles_data = [
+            {"id": 1, "name": "Employee"},
+            {"id": 2, "name": "Manager"},
+            {"id": 3, "name": "Administrator"},
+        ]
+        
+        for role_data in auth_roles_data:
+            if not db.get(AuthRole, role_data["id"]):
+                auth_role = AuthRole(**role_data)
+                # Add some basic permissions
+                if role_data["name"] == "Employee":
+                    auth_role.permissions = [
+                        AuthRolePermission(resource="employee.read"),
+                        AuthRolePermission(resource="timeclock.create"),
+                        AuthRolePermission(resource="timeclock.read"),
+                    ]
+                elif role_data["name"] == "Manager":
+                    auth_role.permissions = [
+                        AuthRolePermission(resource="employee.read"),
+                        AuthRolePermission(resource="employee.update"),
+                        AuthRolePermission(resource="timeclock.read"),
+                        AuthRolePermission(resource="department.read"),
+                    ]
+                else:  # Administrator
+                    auth_role.permissions = [
+                        AuthRolePermission(resource=resource)
+                        for resource in ["employee.create", "employee.read", "employee.update", "employee.delete",
+                                       "department.create", "department.read", "department.update", "department.delete",
+                                       "auth_role.create", "auth_role.read", "auth_role.update", "auth_role.delete"]
+                    ]
+                db.add(auth_role)
+        
+        # Commit before creating relationships
+        db.commit()
+        
+        # Create auth role memberships
+        role_memberships = [
+            {"auth_role_id": 1, "user_id": 2},  # Jane is Employee
+            {"auth_role_id": 1, "user_id": 3},  # Bob is Employee  
+            {"auth_role_id": 2, "user_id": 1},  # John is Manager
+            {"auth_role_id": 3, "user_id": 4},  # Alice is Administrator
+        ]
+        
+        for membership in role_memberships:
+            existing = db.query(AuthRoleMembership).filter_by(
+                auth_role_id=membership["auth_role_id"],
+                user_id=membership["user_id"]
+            ).first()
+            if not existing:
+                auth_membership = AuthRoleMembership(**membership)
+                db.add(auth_membership)
+        
+        # Create department memberships
+        dept_memberships = [
+            {"department_id": 1, "employee_id": 1},  # John in Backend
+            {"department_id": 1, "employee_id": 2},  # Jane in Backend
+            {"department_id": 2, "employee_id": 3},  # Bob in Frontend
+            {"department_id": 4, "employee_id": 4},  # Alice in Marketing
+        ]
+        
+        for membership in dept_memberships:
+            existing = db.query(DepartmentMembership).filter_by(
+                department_id=membership["department_id"],
+                employee_id=membership["employee_id"]
+            ).first()
+            if not existing:
+                dept_membership = DepartmentMembership(**membership)
+                db.add(dept_membership)
+        
+        # Create some sample timeclock entries
+        timeclock_entries = [
+            {"badge_number": "EMP001", "timestamp": datetime.now(timezone.utc) - timedelta(hours=8)},
+            {"badge_number": "EMP002", "timestamp": datetime.now(timezone.utc) - timedelta(hours=7)},
+            {"badge_number": "EMP003", "timestamp": datetime.now(timezone.utc) - timedelta(hours=6)},
+        ]
+        
+        for entry in timeclock_entries:
+            timeclock = Timeclock(**entry)
+            db.add(timeclock)
+        
+        # Create some sample event logs
+        event_logs = [
+            {"log": "Employee EMP001 clocked in", "timestamp": datetime.now(timezone.utc) - timedelta(hours=8), "badge_number": "EMP001"},
+            {"log": "Employee EMP002 clocked in", "timestamp": datetime.now(timezone.utc) - timedelta(hours=7), "badge_number": "EMP002"},
+            {"log": "Employee EMP003 clocked in", "timestamp": datetime.now(timezone.utc) - timedelta(hours=6), "badge_number": "EMP003"},
+            {"log": "New user created", "timestamp": datetime.now(timezone.utc) - timedelta(hours=1), "badge_number": "0"},
+        ]
+        
+        for log_data in event_logs:
+            event_log = EventLog(**log_data)
+            db.add(event_log)
+        
+        db.commit()
+        print("Dummy data generation completed successfully!")
+        
+    except Exception as e:
+        print(f"Error generating dummy data: {e}")
+        db.rollback()
+        raise
+    finally:
+        db.close()

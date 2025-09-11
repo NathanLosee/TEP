@@ -14,7 +14,7 @@ from starlette.types import Message
 from src.config import Settings
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
-from src.services import create_root_user_if_not_exists, load_keys
+from src.services import create_root_user_if_not_exists, load_keys, generate_dummy_data
 
 app = FastAPI()
 settings = Settings()
@@ -164,3 +164,4 @@ def root() -> dict:
 import_routers()
 load_keys()
 create_root_user_if_not_exists()
+generate_dummy_data()

@@ -12,9 +12,13 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 
+from src.config import Settings
+
 Base: DeclarativeBase = declarative_base()
 
-SQL_ALCHEMY_DATABASE_URL = "sqlite:///tep.sqlite"
+# Get database URL from settings
+settings = Settings()
+SQL_ALCHEMY_DATABASE_URL = settings.get_database_url()
 
 
 @event.listens_for(Engine, "connect")
