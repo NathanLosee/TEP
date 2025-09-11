@@ -1,33 +1,31 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
-  Validators,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { PartialObserver } from 'rxjs';
 import {
-  DepartmentService,
   Department,
+  DepartmentService,
 } from '../../services/department.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-import { DepartmentFormDialogComponent } from './department-form-dialog/department-form-dialog.component';
-import { DepartmentDetailsDialogComponent } from './department-details-dialog/department-details-dialog.component';
 import { DepartmentEmployeesDialogComponent } from './department-employees-dialog/department-employees-dialog.component';
-import { PartialObserver } from 'rxjs';
+import { DepartmentFormDialogComponent } from './department-form-dialog/department-form-dialog.component';
 
 @Component({
   selector: 'app-department-management',
@@ -71,7 +69,7 @@ export class DepartmentManagementComponent implements OnInit {
   isLoading = false;
 
   // Table columns
-  displayedColumns: string[] = ['name', 'employee_count', 'actions'];
+  displayedColumns: string[] = ['name', 'actions'];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
@@ -151,15 +149,6 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  viewDepartmentDetails(department: Department) {
-    this.dialog.open(DepartmentDetailsDialogComponent, {
-      width: '600px',
-      data: { department },
-      enterAnimationDuration: 250,
-      exitAnimationDuration: 250,
-    });
-  }
-
   saveDepartment(departmentData: Department) {
     this.isLoading = true;
     if (this.selectedDepartment) {
@@ -204,30 +193,6 @@ export class DepartmentManagementComponent implements OnInit {
     }
   }
 
-  addDepartment() {
-    this.openDepartmentFormDialog();
-  }
-
-  // Action methods for buttons
-  viewDepartment(department: Department) {
-    this.viewDepartmentDetails(department);
-  }
-
-  editDepartment(department: Department) {
-    this.selectedDepartment = department;
-    this.openDepartmentFormDialog(department);
-  }
-
-  private showSnackBar(
-    message: string,
-    type: 'success' | 'error' | 'info' = 'info'
-  ) {
-    this.snackBar.open(message, 'Close', {
-      duration: 4000,
-      panelClass: [`snack-${type}`],
-    });
-  }
-
   deleteDepartment(department: Department) {
     if (
       confirm(
@@ -237,7 +202,9 @@ export class DepartmentManagementComponent implements OnInit {
       this.isLoading = true;
       this.departmentService.deleteDepartment(department.id!).subscribe({
         next: () => {
-          const index = this.departments.findIndex((d) => d.id === department.id);
+          const index = this.departments.findIndex(
+            (d) => d.id === department.id
+          );
           if (index > -1) {
             this.departments.splice(index, 1);
             this.filterDepartments();
@@ -254,6 +221,16 @@ export class DepartmentManagementComponent implements OnInit {
         },
       });
     }
+  }
+
+  private showSnackBar(
+    message: string,
+    type: 'success' | 'error' | 'info' = 'info'
+  ) {
+    this.snackBar.open(message, 'Close', {
+      duration: 4000,
+      panelClass: [`snack-${type}`],
+    });
   }
 
   private handleError(message: string, error: any) {
