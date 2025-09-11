@@ -18,6 +18,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import {
   DepartmentService,
   Department,
@@ -42,6 +43,7 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
     MatChipsModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
   ],
   templateUrl: './department-management.component.html',
   styleUrl: './department-management.component.scss',

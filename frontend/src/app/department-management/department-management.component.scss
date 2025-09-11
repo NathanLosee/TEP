@@ -43,6 +43,21 @@
   }
 }
 
+.main-tabs {
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .tab-content {
+    padding: 24px;
+  }
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
 .add-form-card {
   margin-bottom: 24px;
   border-radius: 12px;
@@ -103,9 +118,9 @@
 }
 
 .table-card {
-  margin-bottom: 24px;
+  background: var(--sys-surface);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 
   .table-header {
     display: flex;
@@ -123,6 +138,7 @@
 }
 
 .table-container {
+  min-height: 200px;
   width: 100%;
   overflow-x: auto;
 
@@ -146,6 +162,34 @@
 
     tr:hover {
       background: var(--sys-surface-variant);
+    }
+  }
+
+  .empty-state,
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: var(--sys-outline);
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      margin: 0 0 8px 0;
+      color: var(--sys-on-surface);
+    }
+
+    p {
+      color: var(--sys-on-surface-variant);
+      margin: 0 0 16px 0;
     }
   }
 }
@@ -223,75 +267,36 @@
   }
 }
 
-// Loading and Empty States
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-
-  p {
-    margin-top: 16px;
-    color: var(--sys-on-surface-variant);
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-
-  .empty-icon {
-    font-size: 4rem;
-    width: 4rem;
-    height: 4rem;
-    color: var(--sys-outline);
-    margin-bottom: 16px;
-  }
-
-  h3 {
-    margin: 0 0 8px 0;
-    color: var(--sys-on-surface);
-  }
-
-  p {
-    margin: 0 0 24px 0;
-    color: var(--sys-on-surface-variant);
-  }
-
-  button {
-    mat-icon {
-      margin-right: 8px;
-    }
-  }
-}
-
-// Responsive Design
-@media (max-width: 1024px) {
-  .page-header .header-content {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-}
-
+// Responsive design
 @media (max-width: 768px) {
   .department-management-container {
     padding: 16px;
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+  .page-header .header-content {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
 
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .form-section .add-form-card {
+    margin: 16px 0;
+
+    .add-form {
+      .form-actions {
+        flex-direction: column;
+        gap: 8px;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
   }
 }
 
