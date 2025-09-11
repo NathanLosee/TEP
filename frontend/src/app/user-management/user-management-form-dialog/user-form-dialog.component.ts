@@ -86,12 +86,6 @@ export class UserFormDialogComponent {
         this.isEditMode ? [] : [Validators.required, Validators.minLength(6)],
       ],
       confirmPassword: [''],
-      is_active: [
-        this.data.editUser?.is_active !== undefined ? this.data.editUser.is_active : true,
-      ],
-      auth_role_ids: [
-        this.data.editUser?.auth_roles?.map(role => role.id) || [],
-      ],
     });
 
     // Add password confirmation validator
@@ -122,35 +116,18 @@ export class UserFormDialogComponent {
       const userData = {
         badge_number: this.userForm.value.badge_number,
         password: this.userForm.value.password,
-        is_active: this.userForm.value.is_active,
-        auth_role_ids: this.userForm.value.auth_role_ids,
       };
 
-      if (this.isEditMode && this.data.editUser) {
-        this.userService
-          .updateUser(this.data.editUser.id!, userData)
-          .subscribe({
-            next: (updatedUser) => {
-              this.dialogRef.close(updatedUser);
-              this.isLoading = false;
-            },
-            error: (error) => {
-              console.error('Error updating user:', error);
-              this.isLoading = false;
-            },
-          });
-      } else {
-        this.userService.createUser(userData).subscribe({
-          next: (newUser) => {
-            this.dialogRef.close(newUser);
-            this.isLoading = false;
-          },
-          error: (error) => {
-            console.error('Error creating user:', error);
-            this.isLoading = false;
-          },
-        });
-      }
+      this.userService.createUser(userData).subscribe({
+        next: (newUser: any) => {
+          this.dialogRef.close(newUser);
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          console.error('Error creating user:', error);
+          this.isLoading = false;
+        },
+      });
     }
   }
 

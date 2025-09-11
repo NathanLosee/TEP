@@ -10,7 +10,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -81,7 +81,7 @@ export class UserManagementComponent implements OnInit {
   searchTerm = '';
 
   // Table columns
-  displayedColumns = ['badge_number', 'roles', 'actions'];
+  displayedColumns = ['badge_number', 'actions'];
 
   ngOnInit() {
     this.loadUsers();
@@ -166,33 +166,11 @@ export class UserManagementComponent implements OnInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
         this.users.push(result);
         this.filterUsers();
         this.showSnackBar('User account created successfully', 'success');
-      }
-    });
-  }
-
-  editUser(user: User) {
-    const dialogRef = this.dialog.open(UserFormDialogComponent, {
-      width: '600px',
-      data: {
-        editUser: user,
-        authRoles: this.authRoles,
-        employees: this.employees,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        const index = this.users.findIndex((u) => u.id === user.id);
-        if (index > -1) {
-          this.users[index] = result;
-          this.filterUsers();
-          this.showSnackBar('User updated successfully', 'success');
-        }
       }
     });
   }
