@@ -7,6 +7,7 @@ import { Employee } from './employee.service';
 export interface Department {
   id?: number;
   name: string;
+  employee_count?: number;
 }
 
 /**
