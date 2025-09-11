@@ -54,46 +54,49 @@
 
           <mat-card-content>
             <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Employee Badge Number</mat-label>
-                  <mat-select
-                    formControlName="badge_number"
-                    placeholder="Select employee"
-                  >
-                    <mat-option
-                      *ngFor="let employee of employees"
-                      [value]="employee.badge_number"
+              <div class="form-section">
+                <h3>Account Information</h3>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>Employee Badge Number</mat-label>
+                    <mat-select
+                      formControlName="badge_number"
+                      placeholder="Select employee"
                     >
-                      {{ employee.badge_number }} - {{ employee.name }}
-                    </mat-option>
-                  </mat-select>
-                  <mat-error
-                    *ngIf="userForm.get('badge_number')?.hasError('required')"
-                  >
-                    Badge number is required
-                  </mat-error>
-                </mat-form-field>
+                      <mat-option
+                        *ngFor="let employee of employees"
+                        [value]="employee.badge_number"
+                      >
+                        {{ employee.badge_number }} - {{ employee.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error
+                      *ngIf="userForm.get('badge_number')?.hasError('required')"
+                    >
+                      Badge number is required
+                    </mat-error>
+                  </mat-form-field>
 
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Initial Password</mat-label>
-                  <input
-                    matInput
-                    type="password"
-                    formControlName="password"
-                    placeholder="Enter initial password"
-                  />
-                  <mat-error
-                    *ngIf="userForm.get('password')?.hasError('required')"
-                  >
-                    Password is required
-                  </mat-error>
-                  <mat-error
-                    *ngIf="userForm.get('password')?.hasError('minlength')"
-                  >
-                    Password must be at least 6 characters
-                  </mat-error>
-                </mat-form-field>
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>Initial Password</mat-label>
+                    <input
+                      matInput
+                      type="password"
+                      formControlName="password"
+                      placeholder="Enter initial password"
+                    />
+                    <mat-error
+                      *ngIf="userForm.get('password')?.hasError('required')"
+                    >
+                      Password is required
+                    </mat-error>
+                    <mat-error
+                      *ngIf="userForm.get('password')?.hasError('minlength')"
+                    >
+                      Password must be at least 6 characters
+                    </mat-error>
+                  </mat-form-field>
+                </div>
               </div>
 
               <div class="form-note">
@@ -125,8 +128,7 @@
                 *ngIf="isLoading"
                 diameter="20"
                 mode="indeterminate"
-              >
-              </mat-progress-spinner>
+              ></mat-progress-spinner>
               <span *ngIf="!isLoading">Create User Account</span>
             </button>
           </mat-card-actions>
@@ -143,74 +145,67 @@
 
           <mat-card-content>
             <form [formGroup]="passwordForm" (ngSubmit)="onPasswordSubmit()">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Current Password</mat-label>
-                <input
-                  matInput
-                  type="password"
-                  formControlName="current_password"
-                  placeholder="Enter current password"
-                />
-                <mat-error
-                  *ngIf="
-                    passwordForm.get('current_password')?.hasError('required')
-                  "
-                >
-                  Current password is required
-                </mat-error>
-              </mat-form-field>
-
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>New Password</mat-label>
+              <div class="form-section">
+                <h3>Current Authentication</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Current Password</mat-label>
                   <input
                     matInput
                     type="password"
-                    formControlName="new_password"
-                    placeholder="Enter new password"
+                    formControlName="current_password"
+                    placeholder="Enter current password"
                   />
                   <mat-error
-                    *ngIf="
-                      passwordForm.get('new_password')?.hasError('required')
-                    "
+                    *ngIf="passwordForm.get('current_password')?.hasError('required')"
                   >
-                    New password is required
-                  </mat-error>
-                  <mat-error
-                    *ngIf="
-                      passwordForm.get('new_password')?.hasError('minlength')
-                    "
-                  >
-                    Password must be at least 6 characters
+                    Current password is required
                   </mat-error>
                 </mat-form-field>
+              </div>
 
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Confirm New Password</mat-label>
-                  <input
-                    matInput
-                    type="password"
-                    formControlName="confirm_password"
-                    placeholder="Confirm new password"
-                  />
-                  <mat-error
-                    *ngIf="
-                      passwordForm.get('confirm_password')?.hasError('required')
-                    "
-                  >
-                    Please confirm the new password
-                  </mat-error>
-                  <mat-error
-                    *ngIf="
-                      passwordForm.hasError('passwordMismatch') &&
-                      !passwordForm
-                        .get('confirm_password')
-                        ?.hasError('required')
-                    "
-                  >
-                    Passwords do not match
-                  </mat-error>
-                </mat-form-field>
+              <div class="form-section">
+                <h3>New Password</h3>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>New Password</mat-label>
+                    <input
+                      matInput
+                      type="password"
+                      formControlName="new_password"
+                      placeholder="Enter new password"
+                    />
+                    <mat-error
+                      *ngIf="passwordForm.get('new_password')?.hasError('required')"
+                    >
+                      New password is required
+                    </mat-error>
+                    <mat-error
+                      *ngIf="passwordForm.get('new_password')?.hasError('minlength')"
+                    >
+                      Password must be at least 6 characters
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>Confirm New Password</mat-label>
+                    <input
+                      matInput
+                      type="password"
+                      formControlName="confirm_password"
+                      placeholder="Confirm new password"
+                    />
+                    <mat-error
+                      *ngIf="passwordForm.get('confirm_password')?.hasError('required')"
+                    >
+                      Please confirm the new password
+                    </mat-error>
+                    <mat-error
+                      *ngIf="passwordForm.hasError('passwordMismatch') && !passwordForm.get('confirm_password')?.hasError('required')"
+                    >
+                      Passwords do not match
+                    </mat-error>
+                  </mat-form-field>
+                </div>
               </div>
             </form>
           </mat-card-content>
@@ -234,8 +229,7 @@
                 *ngIf="isLoading"
                 diameter="20"
                 mode="indeterminate"
-              >
-              </mat-progress-spinner>
+              ></mat-progress-spinner>
               <span *ngIf="!isLoading">Update Password</span>
             </button>
           </mat-card-actions>
