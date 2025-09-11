@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { baseUrlInterceptor } from '../interceptors/baseurl.interceptor';
 import { formDataInterceptor } from '../interceptors/formdata.interceptor';
+import { authRefreshInterceptor } from '../interceptors/auth-refresh.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideHttpClient(
-      withInterceptors([baseUrlInterceptor, formDataInterceptor])
+      withInterceptors([baseUrlInterceptor, formDataInterceptor, authRefreshInterceptor])
     ),
   ],
 };
