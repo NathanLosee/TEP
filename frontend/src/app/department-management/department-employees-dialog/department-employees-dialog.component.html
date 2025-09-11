@@ -1,101 +1,140 @@
-<div class="dialog-header">
-  <h2 mat-dialog-title>
-    <mat-icon>business</mat-icon>
-    {{ department.name }} - Employees
-  </h2>
-</div>
-
-<mat-dialog-content class="dialog-content">
-  <!-- Search Section -->
-  <div class="search-section">
-    <form [formGroup]="searchForm" class="search-form">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search by name</mat-label>
-        <input matInput formControlName="name" placeholder="Employee name" />
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-      
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search by badge</mat-label>
-        <input matInput formControlName="badge_number" placeholder="Badge number" />
-        <mat-icon matSuffix>badge</mat-icon>
-      </mat-form-field>
-    </form>
+<div class="employee-dialog-container">
+  <div class="dialog-header">
+    <mat-icon class="dialog-icon">people</mat-icon>
+    <div class="dialog-title-text">
+      <h2>Employees - {{ department.name }}</h2>
+      <p class="subtitle">{{ filteredEmployees.length }} of {{ employees.length }} employees</p>
+    </div>
   </div>
 
-  <!-- Employees Table -->
-  <div class="table-container">
-    <h3 class="table-title">
-      Employees ({{ filteredEmployees.length }})
-    </h3>
-    
-    <table mat-table [dataSource]="filteredEmployees" class="employees-table" *ngIf="!isLoading">
-      <!-- Badge Number Column -->
-      <ng-container matColumnDef="badge_number">
-        <th mat-header-cell *matHeaderCellDef>Badge #</th>
-        <td mat-cell *matCellDef="let employee">
-          <div class="badge-cell">
-            <mat-icon class="badge-icon">badge</mat-icon>
-            <span class="badge-number">{{ employee.badge_number }}</span>
-          </div>
-        </td>
-      </ng-container>
+  <mat-dialog-content>
+    <!-- Assignment Note -->
+    <div class="assignment-note">
+      <mat-icon class="note-icon">info</mat-icon>
+      <p>
+        <strong>Note:</strong> To assign or unassign employees to departments, 
+        please use the Employee Management page.
+      </p>
+    </div>
 
-      <!-- Name Column -->
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let employee">
-          <div class="name-cell">
-            <mat-icon class="person-icon">person</mat-icon>
-            <div class="name-info">
-              <div class="full-name">{{ employee.first_name }} {{ employee.last_name }}</div>
+    <!-- Search Form -->
+    <div class="search-section">
+      <form [formGroup]="searchForm" class="search-form">
+        <div class="search-fields">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Badge Number</mat-label>
+            <input
+              matInput
+              formControlName="badge_number"
+              placeholder="Search by badge number"
+            />
+            <mat-icon matSuffix>badge</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>First Name</mat-label>
+            <input
+              matInput
+              formControlName="first_name"
+              placeholder="Search by first name"
+            />
+            <mat-icon matSuffix>person</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Last Name</mat-label>
+            <input
+              matInput
+              formControlName="last_name"
+              placeholder="Search by last name"
+            />
+            <mat-icon matSuffix>person</mat-icon>
+          </mat-form-field>
+
+          <button
+            mat-icon-button
+            type="button"
+            (click)="clearSearch()"
+            matTooltip="Clear search"
+            class="clear-search-btn"
+          >
+            <mat-icon>clear</mat-icon>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Employees Table -->
+    <div class="table-container">
+      <table mat-table [dataSource]="filteredEmployees" class="employees-table">
+        <!-- Badge Number Column -->
+        <ng-container matColumnDef="badge_number">
+          <th mat-header-cell *matHeaderCellDef>Badge Number</th>
+          <td mat-cell *matCellDef="let employee">
+            <div class="badge-cell">
+              <mat-icon class="badge-icon">badge</mat-icon>
+              <span class="badge-number">{{ employee.badge_number }}</span>
             </div>
-          </div>
-        </td>
-      </ng-container>
+          </td>
+        </ng-container>
 
-      <!-- Org Unit Column -->
-      <ng-container matColumnDef="org_unit">
-        <th mat-header-cell *matHeaderCellDef>Organization Unit</th>
-        <td mat-cell *matCellDef="let employee">
-          <div class="org-unit-cell" *ngIf="employee.org_unit">
-            <mat-icon class="org-icon">account_tree</mat-icon>
-            <span class="org-name">{{ employee.org_unit.name }}</span>
-          </div>
-          <div class="org-unit-cell" *ngIf="!employee.org_unit">
-            <mat-icon class="org-icon inactive">account_tree</mat-icon>
-            <span class="org-name inactive">No organization unit</span>
-          </div>
-        </td>
-      </ng-container>
+        <!-- First Name Column -->
+        <ng-container matColumnDef="first_name">
+          <th mat-header-cell *matHeaderCellDef>First Name</th>
+          <td mat-cell *matCellDef="let employee">
+            {{ employee.first_name }}
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
+        <!-- Last Name Column -->
+        <ng-container matColumnDef="last_name">
+          <th mat-header-cell *matHeaderCellDef>Last Name</th>
+          <td mat-cell *matCellDef="let employee">
+            {{ employee.last_name }}
+          </td>
+        </ng-container>
 
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="filteredEmployees.length === 0 && !isLoading">
-      <mat-icon class="empty-icon">people</mat-icon>
-      <h3>No employees found</h3>
-      <p *ngIf="searchForm.get('name')?.value || searchForm.get('badge_number')?.value">
-        Try adjusting your search criteria
-      </p>
-      <p *ngIf="!searchForm.get('name')?.value && !searchForm.get('badge_number')?.value">
-        This department doesn't have any employees yet
-      </p>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+
+      <!-- Empty State -->
+      <div
+        class="empty-state"
+        *ngIf="filteredEmployees.length === 0 && !isLoading"
+      >
+        <mat-icon class="empty-icon">people_outline</mat-icon>
+        <h3 *ngIf="employees.length === 0">No employees assigned</h3>
+        <h3 *ngIf="employees.length > 0">No employees match your search</h3>
+        <p *ngIf="employees.length === 0">
+          This department has no employees assigned to it.
+        </p>
+        <p *ngIf="employees.length > 0">
+          Try adjusting your search criteria or clearing the search.
+        </p>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="clearSearch()"
+          *ngIf="employees.length > 0"
+        >
+          <mat-icon>clear</mat-icon>
+          Clear Search
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="60"
+        ></mat-progress-spinner>
+        <p>Loading employees...</p>
+      </div>
     </div>
+  </mat-dialog-content>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-container">
-      <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
-      <p>Loading employees...</p>
-    </div>
-  </div>
-</mat-dialog-content>
-
-<mat-dialog-actions class="dialog-actions">
-  <button mat-button mat-dialog-close>
-    <mat-icon>close</mat-icon>
-    Close
-  </button>
-</mat-dialog-actions>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Close</button>
+  </mat-dialog-actions>
+</div>

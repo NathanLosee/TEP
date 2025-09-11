@@ -13,7 +13,6 @@ import {
   MatDialogActions,
   MatDialogClose,
   MatDialogContent,
-  MatDialogTitle,
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -43,7 +42,6 @@ export interface DepartmentEmployeesDialogData {
     MatDialogContent,
     MatDialogActions,
     MatDialogClose,
-    MatDialogTitle,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -70,12 +68,13 @@ export class DepartmentEmployeesDialogComponent implements OnInit {
   isLoading = false;
 
   // Table columns
-  displayedColumns: string[] = ['badge_number', 'name', 'org_unit'];
+  displayedColumns: string[] = ['badge_number', 'first_name', 'last_name'];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
-      name: [''],
       badge_number: [''],
+      first_name: [''],
+      last_name: [''],
     });
   }
 
@@ -110,25 +109,31 @@ export class DepartmentEmployeesDialogComponent implements OnInit {
   }
 
   filterEmployees() {
-    const filters = this.searchForm.value;
+    const badgeNumberTerm =
+      this.searchForm.get('badge_number')?.value?.toLowerCase().trim() || '';
+    const firstNameTerm =
+      this.searchForm.get('first_name')?.value?.toLowerCase().trim() || '';
+    const lastNameTerm =
+      this.searchForm.get('last_name')?.value?.toLowerCase().trim() || '';
 
-    if (!filters.name && !filters.badge_number) {
+    if (!badgeNumberTerm && !firstNameTerm && !lastNameTerm) {
       this.filteredEmployees = [...this.employees];
       return;
     }
 
     this.filteredEmployees = this.employees.filter((employee) => {
-      const searchName = filters.name?.toLowerCase() || '';
-      const searchBadge = filters.badge_number?.toLowerCase() || '';
-      
-      const matchesName = !searchName || 
-        employee.first_name?.toLowerCase().includes(searchName) ||
-        employee.last_name?.toLowerCase().includes(searchName);
-      
-      const matchesBadge = !searchBadge || 
-        employee.badge_number?.toLowerCase().includes(searchBadge);
+      const badgeNumberMatch = !badgeNumberTerm || 
+        employee.badge_number.toLowerCase().includes(badgeNumberTerm);
+      const firstNameMatch = !firstNameTerm || 
+        employee.first_name.toLowerCase().includes(firstNameTerm);
+      const lastNameMatch = !lastNameTerm || 
+        employee.last_name.toLowerCase().includes(lastNameTerm);
 
-      return matchesName && matchesBadge;
+      return badgeNumberMatch && firstNameMatch && lastNameMatch;
     });
+  }
+
+  clearSearch() {
+    this.searchForm.reset();
   }
 }
