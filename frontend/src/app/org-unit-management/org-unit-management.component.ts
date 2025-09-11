@@ -15,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -41,6 +42,7 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
     MatChipsModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
   ],
   templateUrl: './org-unit-management.component.html',
   styleUrl: './org-unit-management.component.scss',
