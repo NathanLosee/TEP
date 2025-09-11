@@ -33,7 +33,7 @@
                 <mat-label>Search org units</mat-label>
                 <input
                   matInput
-                  formControlName="searchTerm"
+                  formControlName="name"
                   placeholder="Org unit name"
                 />
                 <mat-icon matSuffix>search</mat-icon>
@@ -62,30 +62,11 @@
                   <ng-container matColumnDef="name">
                     <th mat-header-cell *matHeaderCellDef>Unit Name</th>
                     <td mat-cell *matCellDef="let orgUnit">
-                      <div class="unit-cell">
+                      <div class="unit-name">
                         <mat-icon class="unit-icon">account_tree</mat-icon>
                         <div class="unit-info">
                           <div class="unit-name">{{ orgUnit.name }}</div>
-                          <div
-                            class="unit-description"
-                            *ngIf="orgUnit.description"
-                          >
-                            {{ orgUnit.description }}
-                          </div>
                         </div>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <!-- Employee Count Column -->
-                  <ng-container matColumnDef="employee_count">
-                    <th mat-header-cell *matHeaderCellDef>Employees</th>
-                    <td mat-cell *matCellDef="let orgUnit">
-                      <div class="count-cell">
-                        <mat-icon class="count-icon">people</mat-icon>
-                        <span class="count-value">{{
-                          orgUnit.employee_count || 0
-                        }}</span>
                       </div>
                     </td>
                   </ng-container>
@@ -106,6 +87,7 @@
                         <button
                           mat-icon-button
                           matTooltip="Edit Unit"
+                          color="primary"
                           (click)="openOrgUnitFormDialog(orgUnit)"
                         >
                           <mat-icon>edit</mat-icon>
@@ -113,7 +95,9 @@
                         <button
                           mat-icon-button
                           matTooltip="Delete Unit"
+                          color="warn"
                           (click)="deleteOrgUnit(orgUnit)"
+                          [disabled]="(orgUnit.employee_count || 0) > 0"
                           class="delete-btn"
                         >
                           <mat-icon>delete</mat-icon>
@@ -128,33 +112,39 @@
                     *matRowDef="let row; columns: displayedColumns"
                   ></tr>
                 </table>
-              </div>
 
-              <!-- Loading State -->
-              <div *ngIf="isLoading" class="loading-container">
-                <mat-progress-spinner
-                  mode="indeterminate"
-                  diameter="60"
-                ></mat-progress-spinner>
-                <p>Loading organizational units...</p>
-              </div>
-
-              <!-- Empty State -->
-              <div
-                *ngIf="!isLoading && filteredOrgUnits.length === 0"
-                class="empty-state"
-              >
-                <mat-icon class="empty-icon">account_tree</mat-icon>
-                <h3>No organizational units found</h3>
-                <p>Get started by creating your first organizational unit.</p>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="openOrgUnitFormDialog()"
+                <!-- Empty State -->
+                <div
+                  class="empty-state"
+                  *ngIf="filteredOrgUnits.length === 0 && !isLoading"
                 >
-                  <mat-icon>add</mat-icon>
-                  Create First Org Unit
-                </button>
+                  <mat-icon class="empty-icon">account_tree</mat-icon>
+                  <h3>No organizational units found</h3>
+                  <p *ngIf="searchForm.get('name')?.value">
+                    Try adjusting your search criteria
+                  </p>
+                  <p *ngIf="!searchForm.get('name')?.value">
+                    Create your first organizational unit to get started
+                  </p>
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="openOrgUnitFormDialog()"
+                    *ngIf="!searchForm.get('name')?.value"
+                  >
+                    <mat-icon>add</mat-icon>
+                    Create Organizational Unit
+                  </button>
+                </div>
+
+                <!-- Loading State -->
+                <div *ngIf="isLoading" class="loading-container">
+                  <mat-progress-spinner
+                    mode="indeterminate"
+                    diameter="60"
+                  ></mat-progress-spinner>
+                  <p>Loading organizational units...</p>
+                </div>
               </div>
             </mat-card-content>
           </mat-card>
