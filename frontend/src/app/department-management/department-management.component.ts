@@ -26,6 +26,8 @@ import {
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { DepartmentFormDialogComponent } from './department-form-dialog/department-form-dialog.component';
 import { DepartmentDetailsDialogComponent } from './department-details-dialog/department-details-dialog.component';
+import { DepartmentEmployeesDialogComponent } from './department-employees-dialog/department-employees-dialog.component';
+import { PartialObserver } from 'rxjs';
 
 @Component({
   selector: 'app-department-management',
@@ -51,17 +53,41 @@ import { DepartmentDetailsDialogComponent } from './department-details-dialog/de
   styleUrl: './department-management.component.scss',
 })
 export class DepartmentManagementComponent implements OnInit {
-  private dialog = inject(MatDialog);
+  private formBuilder = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+
   private departmentService = inject(DepartmentService);
 
+  // Data
   departments: Department[] = [];
-  displayedColumns: string[] = ['name', 'actions'];
+  filteredDepartments: Department[] = [];
+  selectedDepartment: Department | null = null;
 
+  // Forms
+  searchForm: FormGroup;
+
+  // UI State
   isLoading = false;
 
+  // Table columns
+  displayedColumns: string[] = ['name', 'employee_count', 'actions'];
+
+  constructor() {
+    this.searchForm = this.formBuilder.group({
+      name: [''],
+    });
+  }
+
   ngOnInit() {
+    this.setupSearchForm();
     this.loadDepartments();
+  }
+
+  setupSearchForm() {
+    this.searchForm.valueChanges.subscribe(() => {
+      this.filterDepartments();
+    });
   }
 
   loadDepartments() {
@@ -70,7 +96,9 @@ export class DepartmentManagementComponent implements OnInit {
       next: (departments) => {
         this.departments = departments.map((dept) => ({
           ...dept,
+          employee_count: 0, // Will be loaded separately if needed
         }));
+        this.filterDepartments();
         this.isLoading = false;
       },
       error: (error) => {
@@ -80,55 +108,114 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  addDepartment() {
+  filterDepartments() {
+    const filters = this.searchForm.value;
+
+    if (!filters.name) {
+      this.filteredDepartments = [...this.departments];
+      return;
+    }
+    this.filteredDepartments = this.departments.filter((department) => {
+      const searchName = filters.name?.toLowerCase() || '';
+      const matchesSearch =
+        !searchName || department.name.toLowerCase().includes(searchName);
+
+      return matchesSearch;
+    });
+  }
+
+  viewEmployees(department: Department) {
+    this.dialog.open(DepartmentEmployeesDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: { department },
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
+    });
+  }
+
+  openDepartmentFormDialog(editDepartment?: Department) {
     const dialogRef = this.dialog.open(DepartmentFormDialogComponent, {
       width: '600px',
+      maxWidth: '90vw',
+      data: { editDepartment },
+      disableClose: true,
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe((result: Department | undefined) => {
       if (result) {
-        this.departments.push(result);
-        this.showSnackBar(
-          `Department "${result.name}" created successfully`,
-          'success'
-        );
+        this.saveDepartment(result);
       }
     });
+  }
+
+  viewDepartmentDetails(department: Department) {
+    this.dialog.open(DepartmentDetailsDialogComponent, {
+      width: '600px',
+      data: { department },
+      enterAnimationDuration: 250,
+      exitAnimationDuration: 250,
+    });
+  }
+
+  saveDepartment(departmentData: Department) {
+    this.isLoading = true;
+    if (this.selectedDepartment) {
+      departmentData.id = this.selectedDepartment.id;
+    }
+
+    const observer: PartialObserver<Department> = {
+      next: (returnedDepartment) => {
+        if (this.selectedDepartment) {
+          // Replace existing department
+          const index = this.departments.findIndex(
+            (d) => d.id === this.selectedDepartment!.id
+          );
+          if (index > -1) {
+            this.departments[index] = returnedDepartment;
+          }
+        } else {
+          // Add new department
+          this.departments.push(returnedDepartment);
+        }
+        this.filterDepartments();
+        this.showSnackBar('Department updated successfully', 'success');
+        this.selectedDepartment = null;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.handleError('Failed to update department', error);
+        this.isLoading = false;
+      },
+    };
+
+    if (this.selectedDepartment) {
+      // Editing an existing department
+      this.departmentService
+        .updateDepartment(this.selectedDepartment.id!, departmentData)
+        .subscribe(observer);
+    } else {
+      // Creating a new department
+      this.departmentService
+        .createDepartment(departmentData)
+        .subscribe(observer);
+    }
+  }
+
+  addDepartment() {
+    this.openDepartmentFormDialog();
   }
 
   // Action methods for buttons
   viewDepartment(department: Department) {
-    const dialogRef = this.dialog.open(DepartmentDetailsDialogComponent, {
-      width: '700px',
-      data: { department },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result?.action === 'edit') {
-        this.editDepartment(result.department);
-      } else if (result?.action === 'delete') {
-        this.deleteDepartment(result.department);
-      }
-    });
+    this.viewDepartmentDetails(department);
   }
 
   editDepartment(department: Department) {
-    const dialogRef = this.dialog.open(DepartmentFormDialogComponent, {
-      width: '600px',
-      data: {
-        editDepartment: department,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        const index = this.departments.findIndex((dept) => dept.id === department.id);
-        if (index > -1) {
-          this.departments[index] = result;
-          this.showSnackBar('Department updated successfully', 'success');
-        }
-      }
-    });
+    this.selectedDepartment = department;
+    this.openDepartmentFormDialog(department);
   }
 
   private showSnackBar(
@@ -142,20 +229,18 @@ export class DepartmentManagementComponent implements OnInit {
   }
 
   deleteDepartment(department: Department) {
-    const confirmDelete = confirm(
-      `Are you sure you want to delete ${department.name}? This action cannot be undone.`
-    );
-
-    if (confirmDelete) {
+    if (
+      confirm(
+        `Are you sure you want to delete "${department.name}"? This action cannot be undone.`
+      )
+    ) {
       this.isLoading = true;
-
       this.departmentService.deleteDepartment(department.id!).subscribe({
         next: () => {
-          const index = this.departments.findIndex(
-            (dept) => dept.id === department.id
-          );
+          const index = this.departments.findIndex((d) => d.id === department.id);
           if (index > -1) {
             this.departments.splice(index, 1);
+            this.filterDepartments();
             this.showSnackBar(
               `${department.name} has been deleted successfully`,
               'success'
