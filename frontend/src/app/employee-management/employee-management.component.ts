@@ -102,8 +102,12 @@ export class EmployeeManagementComponent implements OnInit {
 
   constructor() {
     this.searchForm = this.fb.group({
-      searchTerm: [''],
+      badgeNumber: [''],
+      firstName: [''],
+      lastName: [''],
       department: [''],
+      org_unit: [''],
+      status: [''],
     });
   }
 
@@ -163,8 +167,18 @@ export class EmployeeManagementComponent implements OnInit {
 
   loadEmployees() {
     this.isLoading = true;
+    
+    const formValue = this.searchForm.value;
+    
     this.employeeService
-      .getEmployeesByCriteria(this.searchForm.value)
+      .getEmployeesByCriteria(
+        formValue.department || undefined,
+        formValue.org_unit || undefined,
+        undefined, // holiday_group_name
+        formValue.badgeNumber || undefined,
+        formValue.firstName || undefined,
+        formValue.lastName || undefined
+      )
       .subscribe({
         next: (employees) => {
           this.employees = employees;

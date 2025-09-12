@@ -1,5 +1,6 @@
 """Module defining API for employee-related operations."""
 
+from typing import List, Union
 from fastapi import APIRouter, Depends, Request, Security, status
 from sqlalchemy.orm import Session
 
@@ -82,15 +83,15 @@ def get_employees(
 @router.get(
     "/search",
     status_code=status.HTTP_200_OK,
-    response_model=list[EmployeeExtended],
+    response_model=List[EmployeeExtended],
 )
 def search_for_employees(
-    department_name: str | None = None,
-    org_unit_name: str | None = None,
-    holiday_group_name: str | None = None,
-    badge_number: str | None = None,
-    first_name: str | None = None,
-    last_name: str | None = None,
+    department_name: Union[str, None] = None,
+    org_unit_name: Union[str, None] = None,
+    holiday_group_name: Union[str, None] = None,
+    badge_number: Union[str, None] = None,
+    first_name: Union[str, None] = None,
+    last_name: Union[str, None] = None,
     db: Session = Depends(get_db),
     caller_badge: str = Security(
         requires_permission, scopes=["employee.read"]
@@ -99,12 +100,12 @@ def search_for_employees(
     """Search for employees based on various criteria.
 
     Args:
-        department_name (str | None): Name of the department.
-        org_unit_name (str | None): Name of the org unit.
-        holiday_group_name (str | None): Name of the holiday group.
-        badge_number (str | None): Employee's badge number.
-        first_name (str | None): Employee's first name.
-        last_name (str | None): Employee's last name.
+        department_name (Union[str, None]): Name of the department.
+        org_unit_name (Union[str, None]): Name of the org unit.
+        holiday_group_name (Union[str, None]): Name of the holiday group.
+        badge_number (Union[str, None]): Employee's badge number.
+        first_name (Union[str, None]): Employee's first name.
+        last_name (Union[str, None]): Employee's last name.
         db (Session): Database session for current request.
 
     Returns:
