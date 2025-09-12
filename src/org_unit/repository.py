@@ -1,3 +1,4 @@
+from typing import Union
 """Module providing database interactivity for org unit-related operations."""
 
 from sqlalchemy import select
@@ -38,7 +39,7 @@ def get_org_units(db: Session) -> list[OrgUnit]:
     return db.scalars(select(OrgUnit)).all()
 
 
-def get_org_unit_by_id(id: int, db: Session) -> OrgUnit | None:
+def get_org_unit_by_id(id: int, db: Session) -> OrgUnitUnion[OrgUnit, None]:
     """Retrieve an org unit by a provided id.
 
     Args:
@@ -46,14 +47,14 @@ def get_org_unit_by_id(id: int, db: Session) -> OrgUnit | None:
         db (Session): Database session for the current request.
 
     Returns:
-        (OrgUnit | None): The org unit with the provided id, or None if not
+        (OrgUnitUnion[OrgUnit, None]): The org unit with the provided id, or None if not
             found.
 
     """
     return db.get(OrgUnit, id)
 
 
-def get_org_unit_by_name(name: str, db: Session) -> OrgUnit | None:
+def get_org_unit_by_name(name: str, db: Session) -> OrgUnitUnion[OrgUnit, None]:
     """Retrieve an org unit by a provided name.
 
     Args:
@@ -61,7 +62,7 @@ def get_org_unit_by_name(name: str, db: Session) -> OrgUnit | None:
         db (Session): Database session for the current request.
 
     Returns:
-        (OrgUnit | None): The org unit with the provided name, or None if not
+        (OrgUnitUnion[OrgUnit, None]): The org unit with the provided name, or None if not
             found.
 
     """

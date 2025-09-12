@@ -43,10 +43,9 @@
                 <mat-label>Department</mat-label>
                 <mat-select formControlName="department">
                   <mat-option value="">All Departments</mat-option>
-                  <mat-option value="IT">IT</mat-option>
-                  <mat-option value="HR">HR</mat-option>
-                  <mat-option value="Production">Production</mat-option>
-                  <mat-option value="Admin">Admin</mat-option>
+                  <mat-option *ngFor="let dept of departments" [value]="dept.name">
+                    {{ dept.name }}
+                  </mat-option>
                 </mat-select>
               </mat-form-field>
 
@@ -54,9 +53,9 @@
                 <mat-label>Org Unit</mat-label>
                 <mat-select formControlName="org_unit">
                   <mat-option value="">All Units</mat-option>
-                  <mat-option value="Corporate">Corporate</mat-option>
-                  <mat-option value="Manufacturing">Manufacturing</mat-option>
-                  <mat-option value="Sales">Sales</mat-option>
+                  <mat-option *ngFor="let unit of orgUnits" [value]="unit.name">
+                    {{ unit.name }}
+                  </mat-option>
                 </mat-select>
               </mat-form-field>
 
