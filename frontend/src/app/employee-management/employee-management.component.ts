@@ -102,7 +102,9 @@ export class EmployeeManagementComponent implements OnInit {
 
   constructor() {
     this.searchForm = this.fb.group({
-      searchTerm: [''],
+      badgeNumber: [''],
+      firstName: [''],
+      lastName: [''],
       department: [''],
       org_unit: [''],
       status: [''],
@@ -167,37 +169,15 @@ export class EmployeeManagementComponent implements OnInit {
     this.isLoading = true;
     
     const formValue = this.searchForm.value;
-    const searchTerm = formValue.searchTerm || '';
-    
-    // Extract search criteria from searchTerm (could be name or badge number)
-    let firstName = '';
-    let lastName = '';
-    let badgeNumber = '';
-    
-    if (searchTerm) {
-      // If searchTerm is numeric, treat as badge number
-      if (/^\d+$/.test(searchTerm)) {
-        badgeNumber = searchTerm;
-      } else {
-        // Split by space and treat as first/last name
-        const nameParts = searchTerm.split(' ').filter((part: string) => part.trim());
-        if (nameParts.length === 1) {
-          firstName = nameParts[0];
-        } else if (nameParts.length >= 2) {
-          firstName = nameParts[0];
-          lastName = nameParts.slice(1).join(' ');
-        }
-      }
-    }
     
     this.employeeService
       .getEmployeesByCriteria(
         formValue.department || undefined,
         formValue.org_unit || undefined,
         undefined, // holiday_group_name
-        badgeNumber || undefined,
-        firstName || undefined,
-        lastName || undefined
+        formValue.badgeNumber || undefined,
+        formValue.firstName || undefined,
+        formValue.lastName || undefined
       )
       .subscribe({
         next: (employees) => {

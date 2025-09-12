@@ -30,13 +30,34 @@
           <div class="search-section">
             <form [formGroup]="searchForm" class="search-form">
               <mat-form-field appearance="outline" class="search-field">
-                <mat-label>Search employees</mat-label>
+                <mat-label>Badge Number</mat-label>
                 <input
                   matInput
-                  formControlName="searchTerm"
-                  placeholder="Name or badge number"
+                  formControlName="badgeNumber"
+                  placeholder="Enter badge number"
+                  type="number"
                 />
-                <mat-icon matSuffix>search</mat-icon>
+                <mat-icon matSuffix>badge</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>First Name</mat-label>
+                <input
+                  matInput
+                  formControlName="firstName"
+                  placeholder="Enter first name"
+                />
+                <mat-icon matSuffix>person</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Last Name</mat-label>
+                <input
+                  matInput
+                  formControlName="lastName"
+                  placeholder="Enter last name"
+                />
+                <mat-icon matSuffix>person</mat-icon>
               </mat-form-field>
               
               <mat-form-field appearance="outline" class="filter-field">
