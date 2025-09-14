@@ -1,5 +1,6 @@
-from typing import Union
 """Module providing database interactions for department-related operations."""
+
+from typing import Union
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -62,7 +63,7 @@ def get_departments(db: Session) -> list[Department]:
     return db.scalars(select(Department)).all()
 
 
-def get_department_by_id(id: int, db: Session) -> DepartmentUnion[Department, None]:
+def get_department_by_id(id: int, db: Session) -> Union[Department, None]:
     """Retrieve an department by a provided id.
 
     Args:
@@ -70,14 +71,14 @@ def get_department_by_id(id: int, db: Session) -> DepartmentUnion[Department, No
         db (Session): Database session for the current request.
 
     Returns:
-        (DepartmentUnion[Department, None]): The department with the provided id, or None if
-            not found.
+        (Union[Department, None]): The department with the provided id, or
+            None if not found.
 
     """
     return db.get(Department, id)
 
 
-def get_department_by_name(name: str, db: Session) -> DepartmentUnion[Department, None]:
+def get_department_by_name(name: str, db: Session) -> Union[Department, None]:
     """Retrieve an department by a provided name.
 
     Args:
@@ -85,8 +86,8 @@ def get_department_by_name(name: str, db: Session) -> DepartmentUnion[Department
         db (Session): Database session for the current request.
 
     Returns:
-        (DepartmentUnion[Department, None]): The department with the provided name, or None if
-            not found.
+        (Union[Department, None]): The department with the provided name, or
+            None if not found.
 
     """
     return db.scalars(

@@ -1,6 +1,7 @@
 """Module providing database interactivity for employee-related operations."""
 
 from typing import List, Union
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -67,8 +68,8 @@ def get_employee_by_badge_number(
         db (Session): Database session for the current request.
 
     Returns:
-        (Union[Employee, None]): The employee with the provided badge number, or
-            None if not found.
+        (Union[Employee, None]): The employee with the provided badge number,
+            or None if not found.
 
     """
     return db.scalar(
@@ -90,7 +91,8 @@ def search_for_employees(
     Args:
         department_name (Union[str, None]): Department name to search for.
         org_unit_name (Union[str, None]): Org unit name to search for.
-        holiday_group_name (Union[str, None]): Holiday group name to search for.
+        holiday_group_name (Union[str, None]): Holiday group name to search
+            for.
         badge_number (Union[str, None]): Badge number to search for.
         first_name (Union[str, None]): First name to search for.
         last_name (Union[str, None]): Last name to search for.
