@@ -1,5 +1,6 @@
 """Module providing database interactivity for employee-related operations."""
 
+from typing import Union
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -40,7 +41,7 @@ def get_users(db: Session) -> list[User]:
     return db.scalars(select(User)).all()
 
 
-def get_user_by_id(id: int, db: Session) -> User | None:
+def get_user_by_id(id: int, db: Session) -> Union[User, None]:
     """Retrieve a user by a provided id.
 
     Args:
@@ -48,14 +49,14 @@ def get_user_by_id(id: int, db: Session) -> User | None:
         db (Session): Database session for the current request.
 
     Returns:
-        (User | None): The user with the provided id, or None if not
+        (Union[User, None]): The user with the provided id, or None if not
             found.
 
     """
     return db.get(User, id)
 
 
-def get_user_by_badge_number(badge_number: str, db: Session) -> User | None:
+def get_user_by_badge_number(badge_number: str, db: Session) -> Union[User, None]:
     """Retrieve a user by a provided badge number.
 
     Args:
@@ -63,7 +64,7 @@ def get_user_by_badge_number(badge_number: str, db: Session) -> User | None:
         db (Session): Database session for the current request.
 
     Returns:
-        (User | None): The user with the provided badge number, or None
+        (Union[User, None]): The user with the provided badge number, or None
             if not found.
 
     """

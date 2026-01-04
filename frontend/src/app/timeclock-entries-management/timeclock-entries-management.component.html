@@ -12,6 +12,9 @@
           color="primary"
           (click)="addManualEntry()"
           class="add-btn"
+          [disableIfNoPermission]="'timeclock.create'"
+          matTooltip="Requires timeclock.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>add</mat-icon>
           Manual Entry
@@ -267,6 +270,7 @@
                   mat-icon-button
                   matTooltip="Edit Entry"
                   (click)="editEntry(entry)"
+                  [disableIfNoPermission]="'timeclock.update'"
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
@@ -275,6 +279,7 @@
                   matTooltip="Delete Entry"
                   (click)="deleteEntry(entry)"
                   class="delete-btn"
+                  [disableIfNoPermission]="'timeclock.delete'"
                 >
                   <mat-icon>delete</mat-icon>
                 </button>
@@ -305,7 +310,14 @@
         <mat-icon class="empty-icon">schedule</mat-icon>
         <h3>No time entries found</h3>
         <p>Try adjusting your date range or search criteria.</p>
-        <button mat-raised-button color="primary" (click)="addManualEntry()">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="addManualEntry()"
+          [disableIfNoPermission]="'timeclock.create'"
+          matTooltip="Requires timeclock.create permission"
+          [matTooltipDisabled]="true"
+        >
           <mat-icon>add</mat-icon>
           Add Manual Entry
         </button>

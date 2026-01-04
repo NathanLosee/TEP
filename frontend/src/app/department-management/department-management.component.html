@@ -13,6 +13,9 @@
           (click)="openDepartmentFormDialog()"
           [disabled]="isLoading"
           class="add-btn"
+          [disableIfNoPermission]="'department.create'"
+          matTooltip="Requires department.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>{{ "add" }}</mat-icon>
           Add Department
@@ -82,6 +85,7 @@
                           matTooltip="View Employees"
                           (click)="viewEmployees(department)"
                           class="view-btn"
+                          [disableIfNoPermission]="'department.read'"
                         >
                           <mat-icon>people</mat-icon>
                         </button>
@@ -90,6 +94,7 @@
                           matTooltip="Edit Department"
                           color="primary"
                           (click)="openDepartmentFormDialog(department)"
+                          [disableIfNoPermission]="'department.update'"
                         >
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -99,6 +104,7 @@
                           color="warn"
                           (click)="deleteDepartment(department)"
                           class="delete-btn"
+                          [disableIfNoPermission]="'department.delete'"
                         >
                           <mat-icon>delete</mat-icon>
                         </button>
@@ -131,6 +137,9 @@
                     color="primary"
                     (click)="openDepartmentFormDialog()"
                     *ngIf="!searchForm.get('name')?.value"
+                    [disableIfNoPermission]="'department.create'"
+                    matTooltip="Requires department.create permission"
+                    [matTooltipDisabled]="true"
                   >
                     <mat-icon>add</mat-icon>
                     Create Department

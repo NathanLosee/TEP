@@ -4,7 +4,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-nav-admin',
@@ -15,7 +17,9 @@ import { RouterModule } from '@angular/router';
     MatSidenavModule,
     MatListModule,
     MatIconModule,
+    MatTooltipModule,
     RouterModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './nav-admin.component.html',
   styleUrl: './nav-admin.component.scss',

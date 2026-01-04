@@ -12,6 +12,9 @@
           color="primary"
           (click)="openOrgUnitFormDialog()"
           class="add-btn"
+          [disableIfNoPermission]="'org_unit.create'"
+          matTooltip="Requires org_unit.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>add</mat-icon>
           Add Org Unit
@@ -81,6 +84,7 @@
                           matTooltip="View Employees"
                           (click)="viewEmployees(orgUnit)"
                           class="view-btn"
+                          [disableIfNoPermission]="'org_unit.read'"
                         >
                           <mat-icon>people</mat-icon>
                         </button>
@@ -89,6 +93,7 @@
                           matTooltip="Edit Unit"
                           color="primary"
                           (click)="openOrgUnitFormDialog(orgUnit)"
+                          [disableIfNoPermission]="'org_unit.update'"
                         >
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -99,6 +104,7 @@
                           (click)="deleteOrgUnit(orgUnit)"
                           [disabled]="(orgUnit.employee_count || 0) > 0"
                           class="delete-btn"
+                          [disableIfNoPermission]="'org_unit.delete'"
                         >
                           <mat-icon>delete</mat-icon>
                         </button>
@@ -131,6 +137,9 @@
                     color="primary"
                     (click)="openOrgUnitFormDialog()"
                     *ngIf="!searchForm.get('name')?.value"
+                    [disableIfNoPermission]="'org_unit.create'"
+                    matTooltip="Requires org_unit.create permission"
+                    [matTooltipDisabled]="true"
                   >
                     <mat-icon>add</mat-icon>
                     Create Organizational Unit

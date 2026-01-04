@@ -12,6 +12,9 @@
           color="primary"
           (click)="createUser()"
           [disabled]="isLoading"
+          [disableIfNoPermission]="'user.create'"
+          matTooltip="Requires user.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>add</mat-icon>
           Create User
@@ -79,6 +82,7 @@
                         color="warn"
                         (click)="deleteUser(user)"
                         matTooltip="Delete User"
+                        [disableIfNoPermission]="'user.delete'"
                       >
                         <mat-icon>delete</mat-icon>
                       </button>
@@ -109,6 +113,9 @@
                   color="primary"
                   (click)="createUser()"
                   *ngIf="!searchTerm"
+                  [disableIfNoPermission]="'user.create'"
+                  matTooltip="Requires user.create permission"
+                  [matTooltipDisabled]="true"
                 >
                   <mat-icon>add</mat-icon>
                   Create User Account

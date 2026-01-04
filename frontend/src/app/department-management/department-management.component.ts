@@ -26,6 +26,7 @@ import {
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { DepartmentEmployeesDialogComponent } from './department-employees-dialog/department-employees-dialog.component';
 import { DepartmentFormDialogComponent } from './department-form-dialog/department-form-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-department-management',
@@ -46,6 +47,7 @@ import { DepartmentFormDialogComponent } from './department-form-dialog/departme
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatTabsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './department-management.component.html',
   styleUrl: './department-management.component.scss',

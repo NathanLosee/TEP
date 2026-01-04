@@ -1,5 +1,7 @@
 """Module providing database interactivity for auth role-related operations."""
 
+from typing import Union
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -67,7 +69,7 @@ def get_auth_roles(db: Session) -> list[AuthRole]:
     return db.scalars(select(AuthRole)).all()
 
 
-def get_auth_role_by_id(id: int, db: Session) -> AuthRole | None:
+def get_auth_role_by_id(id: int, db: Session) -> Union[AuthRole, None]:
     """Retrieve an auth role by a provided id.
 
     Args:
@@ -75,14 +77,14 @@ def get_auth_role_by_id(id: int, db: Session) -> AuthRole | None:
         db (Session): Database session for the current request.
 
     Returns:
-        (AuthRole | None): The auth role with the provided id, or None if
+        (Union[AuthRole, None]): The auth role with the provided id, or None if
             not found.
 
     """
     return db.get(AuthRole, id)
 
 
-def get_auth_role_by_name(name: str, db: Session) -> AuthRole | None:
+def get_auth_role_by_name(name: str, db: Session) -> Union[AuthRole, None]:
     """Retrieve an auth role by a provided name.
 
     Args:
@@ -90,8 +92,8 @@ def get_auth_role_by_name(name: str, db: Session) -> AuthRole | None:
         db (Session): Database session for the current request.
 
     Returns:
-        (AuthRole | None): The auth role with the provided name, or None if
-            not found.
+        (Union[AuthRole, None]): The auth role with the provided name, or
+            None if not found.
 
     """
     return db.scalars(select(AuthRole).where(AuthRole.name == name)).first()

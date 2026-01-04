@@ -24,6 +24,7 @@ import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { OrgUnitEmployeesDialogComponent } from './org-unit-employees-dialog/org-unit-employees-dialog.component';
 import { OrgUnitFormDialogComponent } from './org-unit-form-dialog/org-unit-form-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-org-unit-management',
@@ -45,6 +46,7 @@ import { OrgUnitFormDialogComponent } from './org-unit-form-dialog/org-unit-form
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatTabsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './org-unit-management.component.html',
   styleUrl: './org-unit-management.component.scss',

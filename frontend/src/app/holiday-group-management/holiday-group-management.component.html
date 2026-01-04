@@ -13,6 +13,9 @@
           (click)="openHolidayFormDialog()"
           [disabled]="isLoading"
           class="add-btn"
+          [disableIfNoPermission]="'holiday_group.create'"
+          matTooltip="Requires holiday_group.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>{{ "add" }}</mat-icon>
           Add Holiday Group
@@ -109,6 +112,7 @@
                           matTooltip="View Details"
                           (click)="viewHolidayDetails(group)"
                           class="view-btn"
+                          [disableIfNoPermission]="'holiday_group.read'"
                         >
                           <mat-icon>visibility</mat-icon>
                         </button>
@@ -117,6 +121,7 @@
                           matTooltip="View Employees"
                           (click)="viewEmployees(group)"
                           class="view-btn"
+                          [disableIfNoPermission]="'holiday_group.read'"
                         >
                           <mat-icon>people</mat-icon>
                         </button>
@@ -125,6 +130,7 @@
                           matTooltip="Edit Group"
                           color="primary"
                           (click)="openHolidayFormDialog(group)"
+                          [disableIfNoPermission]="'holiday_group.update'"
                         >
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -135,6 +141,7 @@
                           (click)="deleteGroup(group)"
                           [disabled]="group.employee_count > 0"
                           class="delete-btn"
+                          [disableIfNoPermission]="'holiday_group.delete'"
                         >
                           <mat-icon>delete</mat-icon>
                         </button>
@@ -167,6 +174,9 @@
                     color="primary"
                     (click)="openHolidayFormDialog()"
                     *ngIf="!searchForm.get('name')?.value"
+                    [disableIfNoPermission]="'holiday_group.create'"
+                    matTooltip="Requires holiday_group.create permission"
+                    [matTooltipDisabled]="true"
                   >
                     <mat-icon>add</mat-icon>
                     Create Holiday Group

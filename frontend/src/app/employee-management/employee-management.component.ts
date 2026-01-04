@@ -32,6 +32,7 @@ import { HolidayGroupService, HolidayGroup } from '../../services/holiday-group.
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { EmployeeFormDialogComponent } from './employee-form-dialog/employee-form-dialog.component';
 import { EmployeeDetailsDialogComponent } from './employee-details-dialog/employee-details-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-employee-management',
@@ -58,6 +59,7 @@ import { EmployeeDetailsDialogComponent } from './employee-details-dialog/employ
     MatDatepickerModule,
     MatNativeDateModule,
     MatTabsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss',
@@ -102,8 +104,12 @@ export class EmployeeManagementComponent implements OnInit {
 
   constructor() {
     this.searchForm = this.fb.group({
-      searchTerm: [''],
+      badgeNumber: [''],
+      firstName: [''],
+      lastName: [''],
       department: [''],
+      org_unit: [''],
+      status: [''],
     });
   }
 
@@ -163,8 +169,18 @@ export class EmployeeManagementComponent implements OnInit {
 
   loadEmployees() {
     this.isLoading = true;
+    
+    const formValue = this.searchForm.value;
+    
     this.employeeService
-      .getEmployeesByCriteria(this.searchForm.value)
+      .getEmployeesByCriteria(
+        formValue.department || undefined,
+        formValue.org_unit || undefined,
+        undefined, // holiday_group_name
+        formValue.badgeNumber || undefined,
+        formValue.firstName || undefined,
+        formValue.lastName || undefined
+      )
       .subscribe({
         next: (employees) => {
           this.employees = employees;

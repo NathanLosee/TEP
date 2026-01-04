@@ -28,6 +28,7 @@ import {
   TimeclockService,
 } from '../../services/timeclock.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 interface TimeclockEntryListing {
   id?: number;
@@ -63,6 +64,7 @@ interface TimeclockEntryListing {
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTabsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './timeclock-entries-management.component.html',
   styleUrl: './timeclock-entries-management.component.scss',

@@ -230,6 +230,267 @@
   }
 }
 
+// Drill-down Report Styles
+.drill-down-container {
+  margin-top: 16px;
+}
+
+.employee-panel {
+  margin-bottom: 12px;
+  border: 1px solid var(--sys-outline-variant);
+  border-radius: 8px;
+  overflow: hidden;
+
+  .employee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--sys-surface-variant);
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--sys-surface-container-high);
+    }
+
+    .employee-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .expand-icon {
+        transition: transform 0.2s;
+      }
+
+      .employee-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .employee-name {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--sys-on-surface);
+        }
+
+        .employee-badge {
+          font-size: 0.875rem;
+          color: var(--sys-on-surface-variant);
+        }
+      }
+    }
+
+    .employee-summary-stats {
+      display: flex;
+      gap: 20px;
+
+      .stat {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+
+        &.overtime {
+          .stat-value {
+            color: var(--sys-error);
+            font-weight: 600;
+          }
+        }
+
+        .stat-label {
+          font-size: 0.75rem;
+          color: var(--sys-on-surface-variant);
+          margin-bottom: 2px;
+        }
+
+        .stat-value {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--sys-on-surface);
+        }
+      }
+    }
+  }
+
+  .employee-content {
+    border-top: 1px solid var(--sys-outline-variant);
+    background: var(--sys-surface);
+  }
+}
+
+.month-panel {
+  border-bottom: 1px solid var(--sys-outline-variant);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px 12px 48px;
+    background: var(--sys-surface);
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--sys-surface-container);
+    }
+
+    .month-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .expand-icon {
+        font-size: 1.25rem;
+        transition: transform 0.2s;
+      }
+
+      .month-label {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--sys-on-surface);
+      }
+    }
+
+    .month-stats {
+      .month-hours {
+        font-size: 0.875rem;
+        color: var(--sys-on-surface-variant);
+      }
+    }
+  }
+
+  .month-content {
+    background: var(--sys-surface-container-lowest);
+  }
+}
+
+.day-panel {
+  border-bottom: 1px solid var(--sys-outline-variant);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px 10px 80px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--sys-surface-container-low);
+    }
+
+    .day-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .expand-icon {
+        font-size: 1.1rem;
+        transition: transform 0.2s;
+      }
+
+      .day-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--sys-on-surface);
+      }
+    }
+
+    .day-stats {
+      .day-hours {
+        font-size: 0.8125rem;
+        color: var(--sys-on-surface-variant);
+      }
+    }
+  }
+
+  .day-content {
+    padding: 8px 16px 8px 112px;
+    background: var(--sys-surface);
+  }
+}
+
+.periods-table {
+  background: white;
+  border: 1px solid var(--sys-outline-variant);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .period-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 0.8fr;
+    gap: 12px;
+
+    &.period-header-row {
+      background: var(--sys-surface-variant);
+
+      .period-cell {
+        font-weight: 600;
+        color: var(--sys-on-surface-variant);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+    }
+
+    &:not(.period-header-row) {
+      border-top: 1px solid var(--sys-outline-variant);
+
+      &:hover {
+        background: var(--sys-surface-container-lowest);
+      }
+    }
+
+    .period-cell {
+      padding: 8px 12px;
+      font-size: 0.8125rem;
+      color: var(--sys-on-surface);
+    }
+  }
+}
+
+.empty-state,
+.no-report-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .empty-icon,
+  .placeholder-icon {
+    font-size: 4rem;
+    width: 4rem;
+    height: 4rem;
+    color: var(--sys-outline);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 12px 0;
+    color: var(--sys-on-surface);
+  }
+
+  p {
+    margin: 8px 0;
+    color: var(--sys-on-surface-variant);
+  }
+}
+
+.summary-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 // Responsive Design
 @media (max-width: 1024px) {
   .config-form .form-row {
@@ -244,6 +505,10 @@
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
+  }
+
+  .employee-summary-stats {
+    flex-wrap: wrap;
   }
 }
 
@@ -267,11 +532,48 @@
   .config-form .form-row .date-range-section {
     grid-template-columns: 1fr;
   }
+
+  .employee-summary-stats {
+    gap: 12px;
+
+    .stat {
+      font-size: 0.75rem;
+    }
+  }
+
+  .periods-table .period-row {
+    grid-template-columns: 1.2fr 1.2fr 0.6fr;
+    gap: 8px;
+
+    .period-cell {
+      font-size: 0.75rem;
+      padding: 6px 8px;
+    }
+  }
 }
 
 @media (max-width: 480px) {
   .summary-stats {
     grid-template-columns: 1fr;
+  }
+
+  .employee-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .employee-summary-stats {
+    align-self: stretch;
+    justify-content: space-around;
+  }
+
+  .day-header {
+    padding-left: 60px !important;
+  }
+
+  .day-content {
+    padding-left: 16px !important;
   }
 }
 

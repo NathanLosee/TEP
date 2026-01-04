@@ -5,6 +5,7 @@ import {
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  Validators,
 } from "@angular/forms";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
@@ -14,21 +15,19 @@ import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatNativeDateModule } from "@angular/material/core";
-import { MatTableModule } from "@angular/material/table";
-import { MatTabsModule } from "@angular/material/tabs";
+import { MatExpansionModule } from "@angular/material/expansion";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
-interface ReportData {
-  employee_name: string;
-  badge_number: string;
-  department: string;
-  total_hours: number;
-  regular_hours: number;
-  overtime_hours: number;
-  days_worked: number;
-  avg_daily_hours: number;
-}
+import {
+  ReportService,
+  ReportResponse,
+  EmployeeReportData
+} from "../../services/report.service";
+import { EmployeeService } from "../../services/employee.service";
+import { DepartmentService } from "../../services/department.service";
+import { OrgUnitService } from "../../services/org-unit.service";
 
 @Component({
   selector: "app-reports",
@@ -45,10 +44,10 @@ interface ReportData {
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatTableModule,
-    MatTabsModule,
+    MatExpansionModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatTooltipModule,
   ],
   templateUrl: "./reports.component.html",
   styleUrl: "./reports.component.scss",
@@ -56,102 +55,256 @@ interface ReportData {
 export class ReportsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private reportService = inject(ReportService);
+  private employeeService = inject(EmployeeService);
+  private departmentService = inject(DepartmentService);
+  private orgUnitService = inject(OrgUnitService);
 
   reportForm: FormGroup;
   isLoading = false;
-  reportData: ReportData[] = [];
-  selectedTabIndex = 0;
+  reportData: ReportResponse | null = null;
 
-  holidayGroups = [
-    { value: "", label: "All Holiday Groups" },
-    { value: "us-federal", label: "US Federal Holidays" },
-    { value: "manufacturing", label: "Manufacturing Holidays" },
-    { value: "international", label: "International Holidays" },
-  ];
-
-  displayedColumns: string[] = [
-    "employee_name",
-    "badge_number",
-    "department",
-    "total_hours",
-    "regular_hours",
-    "overtime_hours",
-    "days_worked",
-    "avg_daily_hours",
-  ];
+  employees: any[] = [];
+  departments: any[] = [];
+  orgUnits: any[] = [];
 
   reportTypes = [
-    { value: "timesheet", label: "Timesheet Report" },
-    { value: "attendance", label: "Attendance Summary" },
-    { value: "overtime", label: "Overtime Report" },
-    { value: "department", label: "Department Summary" },
-    { value: "payroll", label: "Payroll Export" },
+    { value: "all", label: "All Employees" },
+    { value: "employee", label: "Individual Employee" },
+    { value: "department", label: "Department" },
+    { value: "org_unit", label: "Organizational Unit" },
   ];
+
+  detailLevels = [
+    { value: "summary", label: "Summary Only" },
+    { value: "employee_summary", label: "Summary + Employee Details" },
+    { value: "detailed", label: "Full Detailed Report" },
+  ];
+
+  // Track expansion state for drill-down
+  expandedEmployees: Set<number> = new Set();
+  expandedMonths: Map<number, Set<string>> = new Map();
+  expandedDays: Map<number, Map<string, Set<string>>> = new Map();
 
   constructor() {
     this.reportForm = this.fb.group({
-      reportType: ["timesheet"],
+      reportType: ["all"],
       dateRange: this.fb.group({
-        start: [this.getLastWeekStart()],
-        end: [new Date()],
+        start: [this.getLastWeekStart(), Validators.required],
+        end: [new Date(), Validators.required],
       }),
-      department: [""],
-      employee: [""],
-      holidayGroup: [""],
-      format: ["html"],
+      employee: [null],
+      department: [null],
+      orgUnit: [null],
+      detailLevel: ["summary"],
+    });
+
+    // Subscribe to report type changes to reset filters
+    this.reportForm.get("reportType")?.valueChanges.subscribe(() => {
+      this.reportForm.patchValue({
+        employee: null,
+        department: null,
+        orgUnit: null,
+      });
     });
   }
 
   ngOnInit() {
-    this.generateSampleReport();
+    this.loadEmployees();
+    this.loadDepartments();
+    this.loadOrgUnits();
+  }
+
+  loadEmployees() {
+    this.employeeService.getEmployees().subscribe({
+      next: (data) => {
+        this.employees = data;
+      },
+      error: (error) => {
+        console.error("Error loading employees:", error);
+        this.showSnackBar("Failed to load employees", "error");
+      },
+    });
+  }
+
+  loadDepartments() {
+    this.departmentService.getDepartments().subscribe({
+      next: (data) => {
+        this.departments = data;
+      },
+      error: (error) => {
+        console.error("Error loading departments:", error);
+        this.showSnackBar("Failed to load departments", "error");
+      },
+    });
+  }
+
+  loadOrgUnits() {
+    this.orgUnitService.getOrgUnits().subscribe({
+      next: (data) => {
+        this.orgUnits = data;
+      },
+      error: (error) => {
+        console.error("Error loading org units:", error);
+        this.showSnackBar("Failed to load org units", "error");
+      },
+    });
   }
 
   generateReport() {
+    if (this.reportForm.invalid) {
+      this.showSnackBar("Please fill in all required fields", "error");
+      return;
+    }
+
     this.isLoading = true;
     const formValue = this.reportForm.value;
+    const reportType = formValue.reportType;
 
-    setTimeout(() => {
-      this.generateSampleReport();
-      this.isLoading = false;
-      this.showSnackBar(
-        `${this.getReportTypeLabel(formValue.reportType)} generated successfully`,
-        "success",
-      );
-    }, 1500);
+    const request = {
+      start_date: this.formatDate(formValue.dateRange.start),
+      end_date: this.formatDate(formValue.dateRange.end),
+      employee_id: reportType === "employee" ? formValue.employee : undefined,
+      department_id: reportType === "department" ? formValue.department : undefined,
+      org_unit_id: reportType === "org_unit" ? formValue.orgUnit : undefined,
+    };
+
+    this.reportService.generateReport(request).subscribe({
+      next: (data) => {
+        this.reportData = data;
+        this.isLoading = false;
+        this.expandedEmployees.clear();
+        this.expandedMonths.clear();
+        this.expandedDays.clear();
+        this.showSnackBar("Report generated successfully", "success");
+      },
+      error: (error) => {
+        console.error("Error generating report:", error);
+        this.isLoading = false;
+        this.showSnackBar("Failed to generate report", "error");
+      },
+    });
   }
 
-  exportReport(format: "pdf" | "excel" | "csv") {
-    this.showSnackBar(`Exporting report as ${format.toUpperCase()}...`, "info");
+  exportPDF() {
+    if (!this.reportData) {
+      this.showSnackBar("Please generate a report first", "error");
+      return;
+    }
 
-    // Simulate export
-    setTimeout(() => {
-      this.showSnackBar(
-        `Report exported as ${format.toUpperCase()} successfully`,
-        "success",
-      );
-    }, 2000);
+    const formValue = this.reportForm.value;
+    const reportType = formValue.reportType;
+
+    this.reportService
+      .exportPDF(
+        this.formatDate(formValue.dateRange.start),
+        this.formatDate(formValue.dateRange.end),
+        formValue.detailLevel,
+        reportType === "employee" ? formValue.employee : undefined,
+        reportType === "department" ? formValue.department : undefined,
+        reportType === "org_unit" ? formValue.orgUnit : undefined
+      )
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `timeclock_report_${this.formatDate(formValue.dateRange.start)}_to_${this.formatDate(formValue.dateRange.end)}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+          this.showSnackBar("PDF exported successfully", "success");
+        },
+        error: (error) => {
+          console.error("Error exporting PDF:", error);
+          this.showSnackBar("Failed to export PDF", "error");
+        },
+      });
   }
 
-  getReportTypeLabel(value: string): string {
-    const type = this.reportTypes.find((t) => t.value === value);
-    return type ? type.label : value;
+  toggleEmployee(employeeId: number) {
+    if (this.expandedEmployees.has(employeeId)) {
+      this.expandedEmployees.delete(employeeId);
+    } else {
+      this.expandedEmployees.add(employeeId);
+    }
+  }
+
+  isEmployeeExpanded(employeeId: number): boolean {
+    return this.expandedEmployees.has(employeeId);
+  }
+
+  toggleMonth(employeeId: number, monthKey: string) {
+    if (!this.expandedMonths.has(employeeId)) {
+      this.expandedMonths.set(employeeId, new Set());
+    }
+    const months = this.expandedMonths.get(employeeId)!;
+    if (months.has(monthKey)) {
+      months.delete(monthKey);
+    } else {
+      months.add(monthKey);
+    }
+  }
+
+  isMonthExpanded(employeeId: number, monthKey: string): boolean {
+    return this.expandedMonths.get(employeeId)?.has(monthKey) || false;
+  }
+
+  toggleDay(employeeId: number, monthKey: string, dayKey: string) {
+    if (!this.expandedDays.has(employeeId)) {
+      this.expandedDays.set(employeeId, new Map());
+    }
+    const employeeDays = this.expandedDays.get(employeeId)!;
+    if (!employeeDays.has(monthKey)) {
+      employeeDays.set(monthKey, new Set());
+    }
+    const days = employeeDays.get(monthKey)!;
+    if (days.has(dayKey)) {
+      days.delete(dayKey);
+    } else {
+      days.add(dayKey);
+    }
+  }
+
+  isDayExpanded(employeeId: number, monthKey: string, dayKey: string): boolean {
+    return (
+      this.expandedDays.get(employeeId)?.get(monthKey)?.has(dayKey) || false
+    );
+  }
+
+  getMonthKey(month: any): string {
+    return `${month.year}-${month.month.toString().padStart(2, "0")}`;
   }
 
   getTotalHours(): number {
-    return this.reportData.reduce((sum, item) => sum + item.total_hours, 0);
+    if (!this.reportData) return 0;
+    return this.reportData.employees.reduce(
+      (sum, emp) => sum + emp.summary.total_hours,
+      0
+    );
   }
 
   getTotalEmployees(): number {
-    return this.reportData.length;
+    return this.reportData?.employees.length || 0;
   }
 
   getAverageHours(): number {
-    if (this.reportData.length === 0) return 0;
-    return this.getTotalHours() / this.reportData.length;
+    if (!this.reportData || this.reportData.employees.length === 0) return 0;
+    return this.getTotalHours() / this.reportData.employees.length;
   }
 
   getTotalOvertimeHours(): number {
-    return this.reportData.reduce((sum, item) => sum + item.overtime_hours, 0);
+    if (!this.reportData) return 0;
+    return this.reportData.employees.reduce(
+      (sum, emp) => sum + emp.summary.overtime_hours,
+      0
+    );
+  }
+
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   private getLastWeekStart(): Date {
@@ -160,64 +313,9 @@ export class ReportsComponent implements OnInit {
     return date;
   }
 
-  private generateSampleReport() {
-    this.reportData = [
-      {
-        employee_name: "John Doe",
-        badge_number: "EMP001",
-        department: "IT",
-        total_hours: 42.5,
-        regular_hours: 40.0,
-        overtime_hours: 2.5,
-        days_worked: 5,
-        avg_daily_hours: 8.5,
-      },
-      {
-        employee_name: "Jane Smith",
-        badge_number: "EMP002",
-        department: "HR",
-        total_hours: 40.0,
-        regular_hours: 40.0,
-        overtime_hours: 0.0,
-        days_worked: 5,
-        avg_daily_hours: 8.0,
-      },
-      {
-        employee_name: "Mike Johnson",
-        badge_number: "EMP003",
-        department: "Manufacturing",
-        total_hours: 45.0,
-        regular_hours: 40.0,
-        overtime_hours: 5.0,
-        days_worked: 5,
-        avg_daily_hours: 9.0,
-      },
-      {
-        employee_name: "Sarah Wilson",
-        badge_number: "EMP004",
-        department: "Sales",
-        total_hours: 38.5,
-        regular_hours: 38.5,
-        overtime_hours: 0.0,
-        days_worked: 5,
-        avg_daily_hours: 7.7,
-      },
-      {
-        employee_name: "David Brown",
-        badge_number: "EMP005",
-        department: "Manufacturing",
-        total_hours: 44.0,
-        regular_hours: 40.0,
-        overtime_hours: 4.0,
-        days_worked: 5,
-        avg_daily_hours: 8.8,
-      },
-    ];
-  }
-
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info",
+    type: "success" | "error" | "info" = "info"
   ) {
     this.snackBar.open(message, "Close", {
       duration: 4000,
