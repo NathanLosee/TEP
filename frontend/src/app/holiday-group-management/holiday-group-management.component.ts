@@ -30,6 +30,7 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { HolidayFormDialogComponent } from './holiday-form-dialog/holiday-form-dialog.component';
 import { HolidayGroupDetailsDialogComponent } from './holiday-group-details-dialog/holiday-group-details-dialog.component';
 import { HolidayGroupEmployeesDialogComponent } from './holiday-group-employees-dialog/holiday-group-employees-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-holiday-group-management',
@@ -53,6 +54,7 @@ import { HolidayGroupEmployeesDialogComponent } from './holiday-group-employees-
     MatTabsModule,
     MatTooltipModule,
     ReactiveFormsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './holiday-group-management.component.html',
   styleUrl: './holiday-group-management.component.scss',

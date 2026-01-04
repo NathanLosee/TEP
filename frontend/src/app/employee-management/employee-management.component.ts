@@ -32,6 +32,7 @@ import { HolidayGroupService, HolidayGroup } from '../../services/holiday-group.
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { EmployeeFormDialogComponent } from './employee-form-dialog/employee-form-dialog.component';
 import { EmployeeDetailsDialogComponent } from './employee-details-dialog/employee-details-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-employee-management',
@@ -58,6 +59,7 @@ import { EmployeeDetailsDialogComponent } from './employee-details-dialog/employ
     MatDatepickerModule,
     MatNativeDateModule,
     MatTabsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss',

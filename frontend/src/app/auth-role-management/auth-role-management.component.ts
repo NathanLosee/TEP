@@ -26,6 +26,7 @@ import { PartialObserver } from 'rxjs';
 import { AuthRole, AuthRoleService } from '../../services/auth-role.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { AuthRoleFormComponent } from './auth-role-form/auth-role-form.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-auth-role-management',
@@ -51,6 +52,7 @@ import { AuthRoleFormComponent } from './auth-role-form/auth-role-form.component
     MatTabsModule,
     MatTooltipModule,
     ReactiveFormsModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './auth-role-management.component.html',
   styleUrl: './auth-role-management.component.scss',

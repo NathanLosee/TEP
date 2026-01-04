@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
+import { PermissionService } from './permission.service';
 
 export interface AccessResponse {
   access_token: string;
@@ -35,27 +36,58 @@ export interface AuthRole {
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private http = inject(HttpClient);
+  private permissionService = inject(PermissionService);
   private baseUrl = 'users';
 
   /**
-   * Login a user
+   * Login a user and set permissions
    */
   login(loginData: FormData): Observable<AccessResponse> {
-    return this.http.post<AccessResponse>(`${this.baseUrl}/login`, loginData);
+    return this.http.post<AccessResponse>(`${this.baseUrl}/login`, loginData).pipe(
+      tap(response => {
+        // Decode token and extract permissions
+        try {
+          const payload = JSON.parse(atob(response.access_token.split('.')[1]));
+          this.permissionService.setPermissions({
+            scopes: payload.scopes || [],
+            badge_number: payload.sub || ''
+          });
+        } catch (error) {
+          console.error('Error decoding token:', error);
+        }
+      })
+    );
   }
 
   /**
-   * Logout a user
+   * Logout a user and clear permissions
    */
   logout(): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.baseUrl}/logout`, {});
+    return this.http.post<{ message: string }>(`${this.baseUrl}/logout`, {}).pipe(
+      tap(() => {
+        this.permissionService.clearPermissions();
+      })
+    );
   }
 
   /**
-   * Refresh access token
+   * Refresh access token and update permissions
    */
   refreshToken(): Observable<AccessResponse> {
-    return this.http.post<AccessResponse>(`${this.baseUrl}/refresh`, {});
+    return this.http.post<AccessResponse>(`${this.baseUrl}/refresh`, {}).pipe(
+      tap(response => {
+        // Decode token and update permissions
+        try {
+          const payload = JSON.parse(atob(response.access_token.split('.')[1]));
+          this.permissionService.setPermissions({
+            scopes: payload.scopes || [],
+            badge_number: payload.sub || ''
+          });
+        } catch (error) {
+          console.error('Error decoding token:', error);
+        }
+      })
+    );
   }
 
   /**

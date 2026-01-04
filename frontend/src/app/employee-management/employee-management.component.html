@@ -12,6 +12,9 @@
           color="primary"
           (click)="addEmployee()"
           class="add-btn"
+          [disableIfNoPermission]="'employee.create'"
+          matTooltip="Requires employee.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>person_add</mat-icon>
           Add Employee
@@ -216,6 +219,7 @@
                   mat-icon-button
                   matTooltip="View Details"
                   (click)="viewEmployee(employee)"
+                  [disableIfNoPermission]="'employee.read'"
                 >
                   <mat-icon>visibility</mat-icon>
                 </button>
@@ -223,6 +227,7 @@
                   mat-icon-button
                   matTooltip="Edit Employee"
                   (click)="editEmployee(employee)"
+                  [disableIfNoPermission]="'employee.update'"
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
@@ -232,6 +237,7 @@
                   [disabled]="!employee.allow_delete"
                   (click)="deleteEmployee(employee)"
                   class="delete-btn"
+                  [disableIfNoPermission]="'employee.delete'"
                 >
                   <mat-icon>delete</mat-icon>
                 </button>
@@ -251,7 +257,14 @@
           <mat-icon class="empty-icon">people_outline</mat-icon>
           <h3>No employees found</h3>
           <p>Try adjusting your search criteria or add a new employee.</p>
-          <button mat-raised-button color="primary" (click)="addEmployee()">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="addEmployee()"
+            [disableIfNoPermission]="'employee.create'"
+            matTooltip="Requires employee.create permission"
+            [matTooltipDisabled]="true"
+          >
             <mat-icon>person_add</mat-icon>
             Add First Employee
           </button>

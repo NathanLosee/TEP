@@ -32,6 +32,7 @@ import {
 } from '../../services/user.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { UserFormDialogComponent } from './user-management-form-dialog/user-form-dialog.component';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 interface Employee {
   badge_number: string;
@@ -60,6 +61,7 @@ interface Employee {
     MatTooltipModule,
     MatDividerModule,
     MatSlideToggleModule,
+    DisableIfNoPermissionDirective,
   ],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss',

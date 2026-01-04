@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
 import { UserService } from '../services/user.service';
+import { PermissionService } from '../services/permission.service';
 import { Router } from '@angular/router';
 
 // Global state to handle concurrent refresh attempts
@@ -18,6 +19,7 @@ export function authRefreshInterceptor(
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> {
   const userService = inject(UserService);
+  const permissionService = inject(PermissionService);
   const router = inject(Router);
 
   return next(req).pipe(
@@ -26,12 +28,12 @@ export function authRefreshInterceptor(
       if (error.status === 401 && !req.url.includes('/users/refresh')) {
         // Get current access token to check if we have one
         const currentToken = localStorage.getItem('access_token');
-        
+
         if (currentToken) {
-          return handleTokenRefresh(req, next, userService, router);
+          return handleTokenRefresh(req, next, userService, permissionService, router);
         }
       }
-      
+
       // For all other errors, just pass them through
       return throwError(() => error);
     })
@@ -45,6 +47,7 @@ function handleTokenRefresh(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
   userService: UserService,
+  permissionService: PermissionService,
   router: Router
 ): Observable<HttpEvent<unknown>> {
   if (!isRefreshing) {
@@ -55,20 +58,21 @@ function handleTokenRefresh(
       switchMap((response) => {
         isRefreshing = false;
         refreshTokenSubject.next(response.access_token);
-        
+
         // Update the stored access token
         localStorage.setItem('access_token', response.access_token);
-        
+
         // Clone the original request with the new token
         return next(addTokenToRequest(req, response.access_token));
       }),
       catchError((refreshError) => {
         isRefreshing = false;
         refreshTokenSubject.next(null);
-        
-        // Refresh failed, clear tokens and redirect to login
+
+        // Refresh failed, clear tokens, permissions, and redirect to frontpage
         localStorage.removeItem('access_token');
-        router.navigate(['/login']);
+        permissionService.clearPermissions();
+        router.navigate(['/']);
         return throwError(() => refreshError);
       })
     );

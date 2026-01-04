@@ -13,6 +13,9 @@
           (click)="toggleForm()"
           [disabled]="isLoading"
           class="add-btn"
+          [disableIfNoPermission]="'auth_role.create'"
+          matTooltip="Requires auth_role.create permission"
+          [matTooltipDisabled]="true"
         >
           <mat-icon>{{ showForm ? "close" : "add" }}</mat-icon>
           {{ showForm ? "Cancel" : "Add Auth Role" }}
@@ -115,6 +118,7 @@
                           matTooltip="View Users"
                           (click)="viewUsers(role)"
                           class="view-btn"
+                          [disableIfNoPermission]="'auth_role.read'"
                         >
                           <mat-icon>people</mat-icon>
                         </button>
@@ -123,6 +127,7 @@
                           matTooltip="Edit Role"
                           color="primary"
                           (click)="editRole(role)"
+                          [disableIfNoPermission]="'auth_role.update'"
                         >
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -133,6 +138,7 @@
                           (click)="deleteRole(role)"
                           [disabled]="role.user_count > 0"
                           class="delete-btn"
+                          [disableIfNoPermission]="'auth_role.delete'"
                         >
                           <mat-icon>delete</mat-icon>
                         </button>
@@ -200,6 +206,9 @@
                     color="primary"
                     (click)="toggleForm()"
                     *ngIf="!searchForm.get('name')?.value"
+                    [disableIfNoPermission]="'auth_role.create'"
+                    matTooltip="Requires auth_role.create permission"
+                    [matTooltipDisabled]="true"
                   >
                     <mat-icon>add</mat-icon>
                     Create Auth Role
