@@ -107,17 +107,6 @@
         <mat-icon matListItemIcon>assessment</mat-icon>
         <span matListItemTitle>Time Reports</span>
       </a>
-      <a
-        mat-list-item
-        routerLink="/admin/analytics"
-        routerLinkActive="active-link"
-        [disableIfNoPermission]="'report.read'"
-        matTooltip="Requires report.read permission"
-        [matTooltipDisabled]="true"
-      >
-        <mat-icon matListItemIcon>analytics</mat-icon>
-        <span matListItemTitle>Analytics</span>
-      </a>
 
       <mat-divider></mat-divider>
 
@@ -143,6 +132,17 @@
       >
         <mat-icon matListItemIcon>security</mat-icon>
         <span matListItemTitle>Auth Roles</span>
+      </a>
+      <a
+        mat-list-item
+        routerLink="/admin/event-logs"
+        routerLinkActive="active-link"
+        [disableIfNoPermission]="'event_log.read'"
+        matTooltip="Requires event_log.read permission"
+        [matTooltipDisabled]="true"
+      >
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>Event Logs</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>

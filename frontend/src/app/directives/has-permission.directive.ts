@@ -110,6 +110,12 @@ export class DisableIfNoPermissionDirective implements OnInit, OnDestroy {
       ? this.disableIfNoPermission
       : [this.disableIfNoPermission];
 
+    // Don't disable if permissions haven't loaded yet (null state)
+    const currentPermissions = this.permissionService.getCurrentPermissions();
+    if (!currentPermissions) {
+      return; // Skip update until permissions are loaded
+    }
+
     const hasPermission = this.disableIfNoPermissionRequireAll
       ? this.permissionService.hasAllPermissions(permissions)
       : this.permissionService.hasAnyPermission(permissions);

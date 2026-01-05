@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ng generate:*)",
+      "Bash(ruff format:*)",
+      "Bash(python -m black:*)",
+      "Bash(python -m autopep8:*)"
+    ]
+  }
+}

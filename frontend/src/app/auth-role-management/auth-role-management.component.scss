@@ -271,6 +271,15 @@
     .roles-table {
       width: 100%;
 
+      th {
+        background: var(--sys-surface-variant);
+        color: var(--sys-on-surface-variant);
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
       .role-name {
         display: flex;
         align-items: center;

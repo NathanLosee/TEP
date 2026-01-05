@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
 
 import src.event_log.repository as event_log_repository
-import src.user.routes as user_routes
+import src.user.repository as user_repository
 from src.database import get_db
 from src.event_log.constants import BASE_URL, EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND
 from src.event_log.schemas import EventLogBase, EventLogExtended
@@ -37,7 +37,7 @@ def create_event_log(
         EventLogExtended: The created event log entry.
 
     """
-    user_routes.get_user_by_id(request.badge_number, db)
+    user_repository.get_user_by_badge_number(request.badge_number, db)
     return event_log_repository.create_event_log(request, db)
 
 
@@ -57,6 +57,8 @@ def get_event_log_entries(
     ),
 ):
     """Retrieve all event logs with given time period.
+    Logs are filtered based on the caller's permissions - only logs for
+        entities the caller has read access to will be returned.
     If badge_number is provided, it will be used to filter the logs to
         those associated with the badge number.
     If log_filter is provided, it will be used to filter the logs to those
@@ -70,14 +72,26 @@ def get_event_log_entries(
         log_filter (str, optional): Filter for log messages.
             Defaults to None.
         db (Session): Database session for current request.
+        caller_badge (str): The badge number of the user making the request.
 
     Returns:
         list[EventLogExtended]: The retrieved event log entries.
 
     """
-    return event_log_repository.get_event_log_entries(
+    # Get the caller's user object to check permissions
+    caller_user = user_repository.get_user_by_badge_number(caller_badge, db)
+
+    # Get all event logs matching the criteria
+    all_logs = event_log_repository.get_event_log_entries(
         start_timestamp, end_timestamp, badge_number, log_filter, db
     )
+
+    # Filter logs based on caller's permissions
+    filtered_logs = event_log_repository.filter_logs_by_permissions(
+        all_logs, caller_user, db
+    )
+
+    return filtered_logs
 
 
 @router.get(

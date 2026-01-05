@@ -140,18 +140,19 @@ export class TimeclockEntriesManagementComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          console.log(response);
-          this.timeEntries = response.map((entry) => ({
+          console.log('API Response:', response);
+          this.timeEntries = response.map((entry: any) => ({
             ...entry,
-            employeeName: entry.firstName + ' ' + entry.lastName,
-            totalHours: entry.clockOut
+            employeeName: entry.first_name + ' ' + entry.last_name,
+            totalHours: entry.clock_out
               ? this.calculateTotalHours(
-                  new Date(entry.clockIn),
-                  new Date(entry.clockOut)
+                  new Date(entry.clock_in),
+                  new Date(entry.clock_out)
                 )
               : 0,
             status: this.getEntryStatus(entry),
           }));
+          console.log('Mapped Entries:', this.timeEntries);
           this.isLoading = false;
         },
         error: (error) => {
@@ -185,12 +186,17 @@ export class TimeclockEntriesManagementComponent implements OnInit {
     );
   }
 
-  getEntryStatus(entry: TimeclockEntry): string {
-    return !entry.clockOut
-      ? 'clocked_in'
-      : entry.clockOut.getTime() - entry.clockIn.getTime() < 4 * 60 * 60 * 1000
-      ? 'incomplete'
-      : 'clocked_out';
+  getEntryStatus(entry: any): string {
+    // API returns snake_case (clock_out) not camelCase (clockOut)
+    if (!entry.clock_out) {
+      return 'clocked_in';
+    }
+
+    const clockInDate = new Date(entry.clock_in);
+    const clockOutDate = new Date(entry.clock_out);
+    const diffMs = clockOutDate.getTime() - clockInDate.getTime();
+
+    return diffMs < 4 * 60 * 60 * 1000 ? 'incomplete' : 'clocked_out';
   }
 
   getStatusClass(status: string): string {

@@ -20,7 +20,7 @@ export interface EventLogBase {
 @Injectable({ providedIn: 'root' })
 export class EventLogService {
   private http = inject(HttpClient);
-  private baseUrl = 'event_logs';
+  private baseUrl = 'event_log';
 
   /**
    * Create a new event log entry
@@ -31,30 +31,23 @@ export class EventLogService {
 
   /**
    * Get event logs with optional filtering
+   * Matches backend API: start_timestamp, end_timestamp, badge_number, log_filter
    */
   getEventLogs(
-    startDate?: Date,
-    endDate?: Date,
+    startTimestamp: string,
+    endTimestamp: string,
     badgeNumber?: string,
-    limit?: number,
-    offset?: number
+    logFilter?: string
   ): Observable<EventLog[]> {
-    let params = new HttpParams();
-    
-    if (startDate) {
-      params = params.set('start_date', startDate.toISOString());
-    }
-    if (endDate) {
-      params = params.set('end_date', endDate.toISOString());
-    }
+    let params = new HttpParams()
+      .set('start_timestamp', startTimestamp)
+      .set('end_timestamp', endTimestamp);
+
     if (badgeNumber) {
       params = params.set('badge_number', badgeNumber);
     }
-    if (limit !== undefined) {
-      params = params.set('limit', limit.toString());
-    }
-    if (offset !== undefined) {
-      params = params.set('offset', offset.toString());
+    if (logFilter) {
+      params = params.set('log_filter', logFilter);
     }
 
     return this.http.get<EventLog[]>(`${this.baseUrl}`, { params });
@@ -75,16 +68,17 @@ export class EventLogService {
   }
 
   /**
-   * Get event logs by badge number
+   * Get recent event logs (last N days)
+   * @param days Number of days to look back (default: 7)
    */
-  getEventLogsByBadgeNumber(badgeNumber: string): Observable<EventLog[]> {
-    return this.http.get<EventLog[]>(`${this.baseUrl}/user/${badgeNumber}`);
-  }
+  getRecentEventLogs(days: number = 7): Observable<EventLog[]> {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
 
-  /**
-   * Get recent event logs (last 100 entries)
-   */
-  getRecentEventLogs(): Observable<EventLog[]> {
-    return this.getEventLogs(undefined, undefined, undefined, 100, 0);
+    return this.getEventLogs(
+      startDate.toISOString(),
+      endDate.toISOString()
+    );
   }
 }

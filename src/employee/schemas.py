@@ -84,6 +84,7 @@ class EmployeeUpdate(BaseModel):
         allow_delete (bool): Whether the employee is allowed to be deleted.
         org_unit_id (int): Org unit's unique identifier.
         manager_id (int): Manager's unique identifier.
+        holiday_group_id (int): Holiday group's unique identifier.
 
     """
 
@@ -98,3 +99,4 @@ class EmployeeUpdate(BaseModel):
     allow_delete: bool
     org_unit_id: int
     manager_id: Optional[int] = Field(default=None)
+    holiday_group_id: Optional[int] = Field(default=None)

@@ -10,7 +10,7 @@ export interface Timeclock {
 export interface TimeclockEntry {
   id?: number;
   clockIn: Date;
-  clockOut: Date;
+  clockOut?: Date | null;
   badgeNumber: string;
   firstName: string;
   lastName: string;
@@ -68,8 +68,8 @@ export class TimeclockService {
     }
 
     let params = new HttpParams();
-    params = params.set('start_date', startDate.toUTCString());
-    params = params.set('end_date', endDate.toUTCString());
+    params = params.set('start_timestamp', startDate.toISOString());
+    params = params.set('end_timestamp', endDate.toISOString());
     if (badgeNumber) {
       params = params.set('badge_number', badgeNumber);
     }

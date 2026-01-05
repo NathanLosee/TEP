@@ -8,9 +8,9 @@ import { DepartmentManagementComponent } from './department-management/departmen
 import { OrgUnitManagementComponent } from './org-unit-management/org-unit-management.component';
 import { HolidayGroupManagementComponent } from './holiday-group-management/holiday-group-management.component';
 import { ReportsComponent } from './reports/reports.component';
-import { AnalyticsComponent } from './analytics/analytics.component';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { AuthRoleManagementComponent } from './auth-role-management/auth-role-management.component';
+import { EventLogManagementComponent } from './event-log-management/event-log-management.component';
 
 export const routes: Routes = [
   {
@@ -75,9 +75,9 @@ export const routes: Routes = [
         component: ReportsComponent,
       },
       {
-        title: 'Analytics Dashboard',
-        path: 'analytics',
-        component: AnalyticsComponent,
+        title: 'Event Logs',
+        path: 'event-logs',
+        component: EventLogManagementComponent,
       },
     ],
   },

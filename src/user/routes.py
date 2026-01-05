@@ -1,6 +1,15 @@
 """Module defining API for user-related operations."""
 
-from fastapi import APIRouter, Depends, Request, Response, Security, status
+import jwt
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    Security,
+    status,
+)
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -262,19 +271,8 @@ def login(
 
     user_repository.clean_invalidated_tokens(db)
 
-    access_token = services.encode_jwt_token(
-        {
-            "sub": user.badge_number,
-            "scopes": services.generate_permission_list(user),
-            "exp": services.get_expiration_time(True),
-        },
-    )
-    refresh_token = services.encode_jwt_token(
-        {
-            "sub": user.badge_number,
-            "exp": services.get_expiration_time(False),
-        }
-    )
+    access_token = services.generate_access_token(user)
+    refresh_token = services.generate_refresh_token(user)
 
     response.set_cookie(
         key="refresh_token",
@@ -321,27 +319,35 @@ def refresh_token(
         status.HTTP_401_UNAUTHORIZED,
     )
 
-    payload = services.decode_jwt_token(refresh_token)
-    services.validate(
-        payload.get("sub"),
-        EXC_MSG_REFRESH_TOKEN_INVALID,
-        status.HTTP_401_UNAUTHORIZED,
-    )
+    try:
+        payload = jwt.decode(
+            refresh_token, services.verifying_bytes, algorithms=[services.algorithm]
+        )
+        badge_number = payload.get("badge_number")
+        services.validate(
+            badge_number,
+            EXC_MSG_REFRESH_TOKEN_INVALID,
+            status.HTTP_401_UNAUTHORIZED,
+        )
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=EXC_MSG_REFRESH_TOKEN_INVALID,
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=EXC_MSG_REFRESH_TOKEN_INVALID,
+        )
 
-    user = user_repository.get_user_by_badge_number(payload.get("sub"), db)
+    user = user_repository.get_user_by_badge_number(badge_number, db)
     services.validate(
         user,
         EXC_MSG_REFRESH_TOKEN_INVALID,
         status.HTTP_401_UNAUTHORIZED,
     )
 
-    new_access_token = services.encode_jwt_token(
-        {
-            "sub": user.badge_number,
-            "scopes": services.generate_permission_list(user),
-            "exp": services.get_expiration_time(True),
-        },
-    )
+    new_access_token = services.generate_access_token(user)
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 

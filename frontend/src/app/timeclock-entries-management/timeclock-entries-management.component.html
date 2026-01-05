@@ -29,43 +29,6 @@
       <!-- Time Entries Tab -->
       <mat-tab label="Time Entries" [disabled]="isLoading">
         <div class="tab-content">
-          <!-- Summary Stats -->
-          <div class="stats-section">
-            <div class="stats-grid">
-              <mat-card class="stat-card">
-                <div class="stat-content">
-                  <mat-icon class="stat-icon">schedule</mat-icon>
-                  <div class="stat-value">{{ timeEntries.length }}</div>
-                  <div class="stat-label">Total Entries</div>
-                </div>
-              </mat-card>
-
-              <mat-card class="stat-card">
-                <div class="stat-content">
-                  <mat-icon class="stat-icon active-icon">play_circle</mat-icon>
-                  <div class="stat-value">{{ getActiveEntriesCount() }}</div>
-                  <div class="stat-label">Currently Active</div>
-                </div>
-              </mat-card>
-
-              <mat-card class="stat-card">
-                <div class="stat-content">
-                  <mat-icon class="stat-icon complete-icon">check_circle</mat-icon>
-                  <div class="stat-value">{{ getCompletedEntriesCount() }}</div>
-                  <div class="stat-label">Completed</div>
-                </div>
-              </mat-card>
-
-              <mat-card class="stat-card">
-                <div class="stat-content">
-                  <mat-icon class="stat-icon warning-icon">warning</mat-icon>
-                  <div class="stat-value">{{ getIncompleteEntriesCount() }}</div>
-                  <div class="stat-label">Incomplete</div>
-                </div>
-              </mat-card>
-            </div>
-          </div>
-
           <!-- Filters -->
           <div class="filter-section">
             <mat-card class="filter-card">

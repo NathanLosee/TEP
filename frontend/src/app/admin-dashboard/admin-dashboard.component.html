@@ -23,8 +23,15 @@
       </mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div class="activity-list">
-        <div *ngFor="let activity of recentActivity" class="activity-item">
+      <mat-progress-bar
+        *ngIf="isLoadingEvents"
+        mode="indeterminate"
+      ></mat-progress-bar>
+      <div class="activity-list" *ngIf="!isLoadingEvents">
+        <div
+          *ngFor="let activity of recentActivity"
+          class="activity-item"
+        >
           <div class="activity-icon">
             <mat-icon [class]="'activity-icon-' + activity.type">{{
               activity.icon
@@ -32,9 +39,15 @@
           </div>
           <div class="activity-content">
             <div class="activity-action">{{ activity.action }}</div>
-            <div class="activity-detail">{{ activity.detail }}</div>
+            <div class="activity-detail" *ngIf="activity.detail">
+              {{ activity.detail }}
+            </div>
             <div class="activity-time">{{ activity.time }}</div>
           </div>
+        </div>
+        <div *ngIf="recentActivity.length === 0" class="no-activity">
+          <mat-icon>info</mat-icon>
+          <p>No recent activity</p>
         </div>
       </div>
     </mat-card-content>

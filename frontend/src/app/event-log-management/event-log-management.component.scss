@@ -1,4 +1,4 @@
-.holiday-group-management-container {
+.event-log-management-container {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
@@ -31,17 +31,6 @@
         color: var(--sys-on-surface);
       }
     }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-
-      .add-btn {
-        mat-icon {
-          margin-right: 8px;
-        }
-      }
-    }
   }
 }
 
@@ -57,14 +46,27 @@
 }
 
 .search-section {
-  display: flex;
-  gap: 16px;
   margin-bottom: 24px;
-  align-items: flex-end;
 
-  .search-field {
-    flex: 1;
-    max-width: 400px;
+  .search-form {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .date-field {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .badge-field {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .search-field {
+      flex: 2;
+      min-width: 250px;
+    }
   }
 }
 
@@ -76,7 +78,7 @@
   .table-container {
     min-height: 200px;
 
-    .groups-table {
+    .event-log-table {
       width: 100%;
 
       th {
@@ -88,71 +90,46 @@
         letter-spacing: 0.5px;
       }
 
-      .group-name {
+      .timestamp-cell {
         display: flex;
         align-items: center;
         gap: 8px;
 
-        .group-icon {
+        .timestamp-icon {
           color: var(--sys-primary);
           font-size: 1.2rem;
           width: 1.2rem;
           height: 1.2rem;
         }
 
-        .group-info .group-name {
-          font-weight: 600;
+        span {
+          font-weight: 500;
           color: var(--sys-on-surface);
         }
       }
 
-      .holidays-cell {
-        .holiday-count {
-          font-weight: 600;
-          color: var(--sys-on-surface);
-          display: block;
-          margin-bottom: 8px;
-        }
-
-        .holiday-preview {
-          mat-chip-set {
-            mat-chip {
-              font-size: 0.75rem;
-
-              &.more-chip {
-                background: var(--sys-outline);
-                color: var(--sys-on-outline);
-              }
-            }
-          }
-        }
+      th {
+        font-weight: 600;
       }
 
-      .action-buttons {
-        display: flex;
-        gap: 8px;
+      td {
+        padding: 12px 8px;
+      }
 
-        button {
-          min-width: auto;
-          width: 36px;
-          height: 36px;
+      .mat-column-timestamp {
+        width: 220px;
+      }
 
-          &.view-btn {
-            color: var(--sys-primary);
+      .mat-column-badge_number {
+        width: 150px;
+      }
 
-            &:hover {
-              background: rgba(var(--sys-primary-rgb), 0.08);
-            }
-          }
+      .mat-column-log {
+        min-width: 300px;
+      }
 
-          &.delete-btn {
-            color: var(--sys-error);
-
-            &:hover {
-              background: rgba(var(--sys-error-rgb), 0.08);
-            }
-          }
-        }
+      .mat-column-type {
+        width: 150px;
       }
     }
 
@@ -188,27 +165,17 @@
 
 // Responsive design
 @media (max-width: 768px) {
-  .holiday-group-management-container {
+  .event-log-management-container {
     padding: 16px;
   }
 
-  .search-section {
+  .search-form {
     flex-direction: column;
-    align-items: stretch;
 
+    .date-field,
+    .badge-field,
     .search-field {
-      max-width: none;
-    }
-  }
-
-  .page-header .header-content {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-
-    .header-actions {
-      width: 100%;
-      justify-content: flex-end;
+      min-width: 100%;
     }
   }
 }

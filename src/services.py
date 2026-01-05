@@ -16,7 +16,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from sqlalchemy.orm import Session
 
-import src.user.repository as user_repository
 from src.auth_role.models import AuthRole, AuthRolePermission
 from src.constants import RESOURCE_SCOPES
 from src.database import SessionLocal, get_db
@@ -199,76 +198,70 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         bool: True if the passwords match, False otherwise.
 
     """
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+    plain_password_bytes = plain_password.encode("utf-8")
+    hashed_password_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(plain_password_bytes, hashed_password_bytes)
+
+
+def generate_access_token(user: User) -> str:
+    """Generate an access token for the provided user.
+
+    Args:
+        user (User): The user to generate the token for.
+
+    Returns:
+        str: The generated access token.
+
+    """
+    expiration = datetime.now(timezone.utc) + timedelta(
+        minutes=access_exp_time
     )
+    payload = {
+        "badge_number": user.badge_number,
+        "exp": expiration,
+        "scopes": get_scopes_from_user(user),
+    }
+    token = jwt.encode(payload, signing_bytes, algorithm=algorithm)
+    return token
 
 
-def get_expiration_time(access_exp: bool) -> datetime:
-    """Get the expiration time for the token.
-
-    Args:
-        access_exp (bool): Whether to get the expiration time for access token.
-
-    Returns:
-        datetime: The expiration time.
-
-    """
-    if access_exp:
-        return datetime.now(timezone.utc) + timedelta(minutes=access_exp_time)
-    else:
-        return datetime.now(timezone.utc) + timedelta(minutes=refresh_exp_time)
-
-
-def encode_jwt_token(payload: dict) -> str:
-    """Encode the provided payload into a JWT token.
+def generate_refresh_token(user: User) -> str:
+    """Generate a refresh token for the provided user.
 
     Args:
-        payload (dict): The payload to encode.
+        user (User): The user to generate the token for.
 
     Returns:
-        str: The JWT token.
+        str: The generated refresh token.
 
     """
-    return jwt.encode(payload, key=signing_bytes, algorithm="RS256")
+    expiration = datetime.now(timezone.utc) + timedelta(
+        minutes=refresh_exp_time
+    )
+    payload = {
+        "badge_number": user.badge_number,
+        "exp": expiration,
+        "scopes": get_scopes_from_user(user),
+    }
+    token = jwt.encode(payload, signing_bytes, algorithm=algorithm)
+    return token
 
 
-def decode_jwt_token(token: str) -> dict:
-    """Decode the provided JWT token.
+def get_scopes_from_user(user: User) -> list[str]:
+    """Get the scopes for the provided user.
 
     Args:
-        token (str): The JWT token to decode.
+        user (User): The user to get the scopes for.
 
     Returns:
-        dict: The decoded payload.
+        list[str]: The scopes for the user.
 
     """
-    try:
-        payload = jwt.decode(token, key=verifying_bytes, algorithms=["RS256"])
-    except jwt.ExpiredSignatureError:
-        validate(
-            condition=False,
-            exc_msg=EXC_MSG_TOKEN_EXPIRED,
-            status_code=status.HTTP_401_UNAUTHORIZED,
-        )
-    return payload
-
-
-def generate_permission_list(user: User) -> list[str]:
-    """Generate permission list for the logged-in user.
-
-    Args:
-        user (User): The user object containing user credentials.
-
-    Returns:
-        list[str]: A list of unique permissions for the user.
-
-    """
-    permissions_set = set()
+    scopes = set()
     for role in user.auth_roles:
         for permission in role.permissions:
-            permissions_set.add(permission.resource)
-    return list(permissions_set)
+            scopes.add(permission.resource)
+    return list(scopes)
 
 
 def requires_permission(
@@ -276,171 +269,539 @@ def requires_permission(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> str:
-    """Check if the user has the required permission.
+    """Verify that the provided token has the required scopes.
 
     Args:
-        jwt (str): The JWT token to check.
-        resource (str): The resource to check.
-        db (Session): The database session.
+        security_scopes (SecurityScopes): The required scopes.
+        token (str): The token to verify.
+        db (Session): Database session for the current request.
+
+    Raises:
+        HTTPException: If the token is invalid or missing required scopes.
 
     Returns:
-        int: The user id if the permission is granted.
+        str: The badge number of the user.
 
     """
-    validate(
-        token not in user_repository.get_invalidated_tokens(db),
-        EXC_MSG_ACCESS_TOKEN_INVALID,
-        status.HTTP_401_UNAUTHORIZED,
-    )
-    payload = decode_jwt_token(token)
-    token_scopes = payload.get("scopes", [])
-    for scope in security_scopes.scopes:
-        validate(
-            scope in token_scopes,
-            EXC_MSG_MISSING_PERMISSION,
-            status.HTTP_403_FORBIDDEN,
+    try:
+        payload = jwt.decode(token, verifying_bytes, algorithms=[algorithm])
+        badge_number: str = payload.get("badge_number")
+        if badge_number is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=EXC_MSG_ACCESS_TOKEN_INVALID,
+            )
+
+        user_scopes = payload.get("scopes", [])
+
+        for scope in security_scopes.scopes:
+            if scope not in user_scopes:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=EXC_MSG_MISSING_PERMISSION,
+                )
+
+        return badge_number
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=EXC_MSG_TOKEN_EXPIRED,
         )
-    return payload.get("sub")
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=EXC_MSG_ACCESS_TOKEN_INVALID,
+        )
 
 
 def create_event_log(
-    event_entity: str,
-    event_type: str,
-    format_args: dict,
-    badge_number: str,
-    db: Session = Depends(get_db),
-) -> None:
+    identifier: str,
+    action: str,
+    log_args: dict,
+    caller_badge: str,
+    db: Session,
+):
     """Create an event log entry.
 
     Args:
-        event_entity (str): Entity associated with the event.
-        event_type (str): Event type (e.g., CREATE, UPDATE, DELETE).
-        format_args (dict): Arguments to format the event log message.
-        user_id (int): User ID associated with the event.
-        db (Session): The database session.
+        identifier (str): The identifier for the event.
+        action (str): The action performed.
+        log_args (dict): Arguments to format the log message.
+        caller_badge (str): The badge number of the user.
+        db (Session): Database session for the current request.
 
     """
-    event_log_msg = EVENT_LOG_MSGS[event_entity][event_type]
-    event_log_msg = event_log_msg.format(**format_args)
+    message_template = EVENT_LOG_MSGS[identifier][action]
+    message = message_template.format(**log_args)
+
     event_log = EventLog(
-        log=event_log_msg,
+        badge_number=caller_badge,
+        log=message,
         timestamp=datetime.now(timezone.utc),
-        badge_number=badge_number,
     )
     db.add(event_log)
     db.commit()
 
 
 def generate_dummy_data():
-    """Generate dummy data for development environment.
-    
+    """Generate comprehensive dummy data for development environment.
+
     This function creates sample data for all entities in the system
-    to help with development and testing.
+    using API route functions to ensure proper event log generation.
     """
+    import random
+
     from src.config import Settings
-    
+
     settings = Settings()
     if settings.ENVIRONMENT.lower() != "development":
         return  # Only generate dummy data in development environment
-    
-    print("Generating dummy data for development environment...")
-    
-    # Use SQLAlchemy core operations to avoid import issues
-    from src.database import engine
-    from sqlalchemy import text
-    
+
+    print("\n" + "=" * 60)
+    print("Generating comprehensive dummy data for development...")
+    print("=" * 60)
+
+    db = SessionLocal()
+
     try:
-        with engine.connect() as conn:
-            trans = conn.begin()
-            
-            try:
-                # Insert basic org units (beyond root which is id=0)
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO org_units (id, name) VALUES 
-                    (1, 'Engineering'),
-                    (2, 'Sales'), 
-                    (3, 'Marketing')
-                """))
-                
-                # Insert departments
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO departments (id, name) VALUES
-                    (1, 'Backend Development'),
-                    (2, 'Sales Team')
-                """))
-                
-                # Insert holiday groups
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO holiday_groups (id, name) VALUES
-                    (1, 'US Holidays')
-                """))
-                
-                # Insert holidays
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO holidays (name, start_date, end_date, holiday_group_id) VALUES
-                    ('New Year''s Day', '2024-01-01', '2024-01-01', 1),
-                    ('Independence Day', '2024-07-04', '2024-07-04', 1)
-                """))
-                
-                # Insert sample employees (beyond root employee id=0)
-                today = date.today().isoformat()
-                conn.execute(text(f"""
-                    INSERT OR IGNORE INTO employees (id, badge_number, first_name, last_name, payroll_type, payroll_sync, workweek_type, time_type, allow_clocking, allow_delete, org_unit_id, manager_id, holiday_group_id) VALUES
-                    (1, 'EMP001', 'John', 'Doe', 'salary', '{today}', 'standard', 1, 1, 1, 1, NULL, 1),
-                    (2, 'EMP002', 'Jane', 'Smith', 'hourly', '{today}', 'standard', 1, 1, 1, 2, 1, 1)
-                """))
-                
-                # Insert sample users (beyond root user id=0)
-                hashed_pw = hash_password("password123")
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO users (id, badge_number, password) VALUES
-                    (1, 'EMP001', :password),
-                    (2, 'EMP002', :password)
-                """), {"password": hashed_pw})
-                
-                # Insert auth roles (beyond root role id=0)
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO auth_roles (id, name) VALUES
-                    (1, 'Employee'),
-                    (2, 'Manager')
-                """))
-                
-                # Insert basic permissions
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO auth_role_permissions (resource, auth_role_id) VALUES
-                    ('employee.read', 1),
-                    ('timeclock.create', 1),
-                    ('employee.read', 2),
-                    ('employee.update', 2)
-                """))
-                
-                # Insert role memberships
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO auth_role_memberships (auth_role_id, user_id) VALUES
-                    (1, 2),  -- Jane is Employee
-                    (2, 1)   -- John is Manager
-                """))
-                
-                # Insert department memberships
-                conn.execute(text("""
-                    INSERT OR IGNORE INTO department_memberships (department_id, employee_id) VALUES
-                    (1, 1),  -- John in Backend
-                    (1, 2)   -- Jane in Backend
-                """))
-                
-                # Insert a sample timeclock entry
-                clock_time = (datetime.now(timezone.utc) - timedelta(hours=8)).isoformat()
-                conn.execute(text(f"""
-                    INSERT OR IGNORE INTO timeclock (badge_number, clock_in) VALUES
-                    ('EMP001', '{clock_time}')
-                """))
-                
-                trans.commit()
-                print("Dummy data generation completed successfully!")
-                
-            except Exception as e:
-                trans.rollback()
-                print(f"Error generating dummy data: {e}")
-                
+        # Check if data already exists (skip if yes)
+        existing_org_units = db.query(OrgUnit).filter(OrgUnit.id > 0).count()
+        if existing_org_units > 0:
+            print("Dummy data already exists, skipping generation.")
+            db.close()
+            return
+
+        # Import route functions (these call event logging automatically)
+        from src.auth_role import routes as auth_role_routes
+        from src.auth_role.schemas import AuthRoleBase, PermissionBase
+        from src.department import routes as department_routes
+        from src.department.schemas import DepartmentBase
+        from src.employee import routes as employee_routes
+        from src.employee.schemas import EmployeeBase, EmployeeUpdate
+        from src.holiday_group import routes as holiday_group_routes
+        from src.holiday_group.schemas import HolidayBase, HolidayGroupBase
+        from src.org_unit import routes as org_unit_routes
+        from src.org_unit.schemas import OrgUnitBase
+        from src.timeclock import routes as timeclock_routes
+        from src.user import routes as user_routes
+        from src.user.schemas import UserBase
+
+        print("\n[1/7] Creating organizational units...")
+        org_units_data = [
+            "Engineering",
+            "Sales",
+            "Marketing",
+            "Operations",
+            "Customer Support",
+        ]
+        org_units = {}
+        for name in org_units_data:
+            org = org_unit_routes.create_org_unit(
+                OrgUnitBase(name=name), db, "0"
+            )
+            org_units[name] = org
+            print(f"  ✓ Created: {name}")
+
+        print("\n[2/7] Creating departments...")
+        departments_data = [
+            "Backend Development",
+            "Frontend Development",
+            "Sales Team",
+            "Marketing Team",
+            "Warehouse",
+            "Customer Service",
+        ]
+        departments = {}
+        for name in departments_data:
+            dept = department_routes.create_department(
+                DepartmentBase(name=name), db, "0"
+            )
+            departments[name] = dept
+            print(f"  ✓ Created: {name}")
+
+        print("\n[3/7] Creating holiday groups with holidays...")
+        hg_us = holiday_group_routes.create_holiday_group(
+            HolidayGroupBase(
+                name="US Holidays",
+                holidays=[
+                    HolidayBase(
+                        name="New Year's Day",
+                        start_date=datetime.fromisoformat("2024-01-01").date(),
+                        end_date=datetime.fromisoformat("2024-01-01").date(),
+                    ),
+                    HolidayBase(
+                        name="Independence Day",
+                        start_date=datetime.fromisoformat("2024-07-04").date(),
+                        end_date=datetime.fromisoformat("2024-07-04").date(),
+                    ),
+                    HolidayBase(
+                        name="Thanksgiving",
+                        start_date=datetime.fromisoformat("2024-11-28").date(),
+                        end_date=datetime.fromisoformat("2024-11-28").date(),
+                    ),
+                    HolidayBase(
+                        name="Christmas",
+                        start_date=datetime.fromisoformat("2024-12-25").date(),
+                        end_date=datetime.fromisoformat("2024-12-25").date(),
+                    ),
+                    HolidayBase(
+                        name="Labor Day",
+                        start_date=datetime.fromisoformat("2024-09-02").date(),
+                        end_date=datetime.fromisoformat("2024-09-02").date(),
+                    ),
+                ],
+            ),
+            db,
+            "0",
+        )
+        hg_intl = holiday_group_routes.create_holiday_group(
+            HolidayGroupBase(
+                name="International Holidays",
+                holidays=[],
+            ),
+            db,
+            "0",
+        )
+        print(f"  ✓ Created: US Holidays (5 holidays)")
+        print(f"  ✓ Created: International Holidays (0 holidays)")
+
+        print("\n[4/7] Creating employees with hierarchy...")
+        today = date.today()
+
+        employees_data = [
+            # (badge, first, last, payroll_type, org_unit, mgr, hg_id)
+            ("EMP001", "John", "Doe", "salary", "Engineering", None, hg_us.id),
+            (
+                "EMP002",
+                "Jane",
+                "Smith",
+                "hourly",
+                "Engineering",
+                "EMP001",
+                hg_us.id,
+            ),
+            (
+                "EMP003",
+                "Bob",
+                "Johnson",
+                "hourly",
+                "Engineering",
+                "EMP001",
+                hg_us.id,
+            ),
+            (
+                "EMP004",
+                "Alice",
+                "Williams",
+                "salary",
+                "Engineering",
+                None,
+                hg_us.id,
+            ),
+            (
+                "EMP005",
+                "Charlie",
+                "Brown",
+                "hourly",
+                "Sales",
+                "EMP004",
+                hg_us.id,
+            ),
+            (
+                "EMP006",
+                "Diana",
+                "Davis",
+                "hourly",
+                "Sales",
+                "EMP004",
+                hg_us.id,
+            ),
+            ("EMP007", "Eve", "Miller", "salary", "Marketing", None, hg_us.id),
+            (
+                "EMP008",
+                "Frank",
+                "Wilson",
+                "hourly",
+                "Marketing",
+                "EMP007",
+                hg_us.id,
+            ),
+            (
+                "EMP009",
+                "Grace",
+                "Moore",
+                "hourly",
+                "Operations",
+                "EMP007",
+                hg_intl.id,
+            ),
+            (
+                "EMP010",
+                "Henry",
+                "Taylor",
+                "hourly",
+                "Operations",
+                "EMP007",
+                hg_intl.id,
+            ),
+            (
+                "EMP011",
+                "Ivy",
+                "Anderson",
+                "salary",
+                "Customer Support",
+                None,
+                hg_us.id,
+            ),
+            (
+                "EMP012",
+                "Jack",
+                "Thomas",
+                "hourly",
+                "Customer Support",
+                "EMP011",
+                hg_us.id,
+            ),
+        ]
+
+        employees = {}
+        # First pass: create all employees without managers
+        for badge, first, last, payroll, org_name, _, hg_id in employees_data:
+            emp = employee_routes.create_employee(
+                EmployeeBase(
+                    badge_number=badge,
+                    first_name=first,
+                    last_name=last,
+                    payroll_type=payroll,
+                    payroll_sync=today,
+                    workweek_type="standard",
+                    time_type=True,
+                    allow_clocking=True,
+                    allow_delete=True,
+                    org_unit_id=org_units[org_name].id,
+                    manager_id=None,
+                    holiday_group_id=hg_id,
+                ),
+                db,
+                "0",
+            )
+            employees[badge] = emp
+            print(f"  ✓ Created employee: {badge} ({first} {last})")
+
+        # Second pass: update manager relationships
+        for badge, _, _, _, _, manager_badge, _ in employees_data:
+            if manager_badge:
+                emp = employees[badge]
+                updated_emp = EmployeeUpdate(
+                    id=emp.id,
+                    first_name=emp.first_name,
+                    last_name=emp.last_name,
+                    payroll_type=emp.payroll_type,
+                    payroll_sync=emp.payroll_sync,
+                    workweek_type=emp.workweek_type,
+                    time_type=emp.time_type,
+                    allow_clocking=emp.allow_clocking,
+                    allow_delete=emp.allow_delete,
+                    org_unit_id=emp.org_unit_id,
+                    manager_id=employees[manager_badge].id,
+                    holiday_group_id=emp.holiday_group_id,
+                )
+                employee_routes.update_employee_by_id(
+                    updated_emp.id, updated_emp, db, "0"
+                )
+
+        print("\n[5/7] Creating users and auth roles...")
+        role_admin = auth_role_routes.create_auth_role(
+            AuthRoleBase(
+                name="Admin",
+                permissions=[
+                    PermissionBase(resource="employee.create"),
+                    PermissionBase(resource="employee.read"),
+                    PermissionBase(resource="employee.update"),
+                    PermissionBase(resource="employee.delete"),
+                    PermissionBase(resource="department.create"),
+                    PermissionBase(resource="department.read"),
+                    PermissionBase(resource="department.update"),
+                    PermissionBase(resource="department.delete"),
+                    PermissionBase(resource="org_unit.create"),
+                    PermissionBase(resource="org_unit.read"),
+                    PermissionBase(resource="org_unit.update"),
+                    PermissionBase(resource="org_unit.delete"),
+                    PermissionBase(resource="holiday_group.create"),
+                    PermissionBase(resource="holiday_group.read"),
+                    PermissionBase(resource="holiday_group.update"),
+                    PermissionBase(resource="holiday_group.delete"),
+                    PermissionBase(resource="user.create"),
+                    PermissionBase(resource="user.read"),
+                    PermissionBase(resource="user.update"),
+                    PermissionBase(resource="user.delete"),
+                    PermissionBase(resource="auth_role.create"),
+                    PermissionBase(resource="auth_role.read"),
+                    PermissionBase(resource="auth_role.update"),
+                    PermissionBase(resource="auth_role.delete"),
+                    PermissionBase(resource="timeclock.create"),
+                    PermissionBase(resource="timeclock.read"),
+                    PermissionBase(resource="timeclock.update"),
+                    PermissionBase(resource="timeclock.delete"),
+                    PermissionBase(resource="event_log.create"),
+                    PermissionBase(resource="event_log.read"),
+                    PermissionBase(resource="event_log.delete"),
+                    PermissionBase(resource="report.read"),
+                    PermissionBase(resource="report.export"),
+                ],
+            ),
+            db,
+            "0",
+        )
+
+        role_manager = auth_role_routes.create_auth_role(
+            AuthRoleBase(
+                name="Manager",
+                permissions=[
+                    PermissionBase(resource="employee.read"),
+                    PermissionBase(resource="employee.update"),
+                    PermissionBase(resource="timeclock.read"),
+                    PermissionBase(resource="timeclock.update"),
+                    PermissionBase(resource="event_log.read"),
+                    PermissionBase(resource="report.read"),
+                ],
+            ),
+            db,
+            "0",
+        )
+
+        role_employee = auth_role_routes.create_auth_role(
+            AuthRoleBase(
+                name="Employee",
+                permissions=[
+                    PermissionBase(resource="employee.read"),
+                    PermissionBase(resource="timeclock.create"),
+                    PermissionBase(resource="timeclock.read"),
+                    PermissionBase(resource="event_log.read"),
+                ],
+            ),
+            db,
+            "0",
+        )
+        print("  ✓ Created roles: Admin, Manager, Employee")
+
+        users_roles = [
+            ("EMP001", "Admin"),
+            ("EMP004", "Manager"),
+            ("EMP007", "Manager"),
+            ("EMP011", "Manager"),
+            ("EMP002", "Employee"),
+            ("EMP003", "Employee"),
+            ("EMP005", "Employee"),
+            ("EMP006", "Employee"),
+            ("EMP008", "Employee"),
+            ("EMP009", "Employee"),
+            ("EMP010", "Employee"),
+            ("EMP012", "Employee"),
+        ]
+
+        for badge, role_name in users_roles:
+            user = user_routes.create_user(
+                UserBase(badge_number=badge, password="password123"), db, "0"
+            )
+
+            # Assign role
+            role = (
+                role_admin
+                if role_name == "Admin"
+                else (
+                    role_manager if role_name == "Manager" else role_employee
+                )
+            )
+            user.auth_roles.append(role)
+            db.commit()
+            print(f"  ✓ Created user: {badge} with role {role_name}")
+
+        print("\n[6/7] Assigning department memberships...")
+        dept_memberships = [
+            ("Backend Development", ["EMP001", "EMP002", "EMP003"]),
+            ("Frontend Development", ["EMP004"]),
+            ("Sales Team", ["EMP005", "EMP006"]),
+            ("Marketing Team", ["EMP007"]),
+            ("Warehouse", ["EMP008", "EMP009", "EMP010"]),
+            ("Customer Service", ["EMP011", "EMP012"]),
+        ]
+
+        for dept_name, emp_badges in dept_memberships:
+            dept = departments[dept_name]
+            for badge in emp_badges:
+                emp = employees[badge]
+                dept.employees.append(emp)
+            db.commit()
+            print(f"  ✓ Assigned {len(emp_badges)} employees to {dept_name}")
+
+        print("\n[7/7] Creating timeclock entries...")
+        now = datetime.now(timezone.utc)
+        entry_count = 0
+
+        # Generate entries for past 10 working days
+        for day_offset in range(10, 0, -1):
+            entry_date = now - timedelta(days=day_offset)
+
+            # Skip weekends
+            if entry_date.weekday() >= 5:
+                continue
+
+            for badge in employees.keys():
+                # Randomize clock in/out times (8-9 AM, 4-6 PM)
+                clock_in = entry_date.replace(
+                    hour=8,
+                    minute=random.randint(0, 59),
+                    second=0,
+                    microsecond=0,
+                )
+
+                clock_out = entry_date.replace(
+                    hour=16 + random.randint(0, 2),
+                    minute=random.randint(0, 59),
+                    second=0,
+                    microsecond=0,
+                )
+
+                # Some employees might still be clocked in on most recent day
+                if day_offset == 1 and random.random() < 0.3:
+                    timeclock_routes.timeclock(badge, db)
+                else:
+                    # Directly insert complete entry
+                    # (not through API to avoid excessive clock in/out logs)
+                    from src.timeclock.models import TimeclockEntry
+
+                    entry = TimeclockEntry(
+                        badge_number=badge,
+                        clock_in=clock_in,
+                        clock_out=clock_out,
+                    )
+                    db.add(entry)
+
+                entry_count += 1
+
+        db.commit()
+        print(f"  ✓ Created {entry_count} timeclock entries")
+
+        print("\n" + "=" * 60)
+        print("✅ Comprehensive dummy data generation completed!")
+        print("=" * 60)
+        print("\n📊 Summary:")
+        print(f"  • Org units: {len(org_units_data)}")
+        print(f"  • Departments: {len(departments_data)}")
+        print(f"  • Employees: {len(employees_data)}")
+        print(f"  • Users: {len(users_roles)}")
+        print(f"  • Timeclock entries: {entry_count}")
+        print(f"  • Event logs: Auto-generated from API calls")
+        print(f"\n🔐 Login credentials: Any badge number / password123")
+        print(f"   Admin user: EMP001 / password123\n")
+
     except Exception as e:
-        print(f"Database connection error: {e}")
+        print(f"\n❌ Error generating dummy data: {e}")
+        import traceback
+
+        traceback.print_exc()
+        db.rollback()
+    finally:
+        db.close()
