@@ -11,6 +11,9 @@ from src.department.constants import (
 from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
 from src.holiday_group.constants import IDENTIFIER as HOLIDAY_GROUP_IDENTIFIER
 from src.org_unit.constants import IDENTIFIER as ORG_UNIT_IDENTIFIER
+from src.registered_browser.constants import (
+    IDENTIFIER as REGISTERED_BROWSER_IDENTIFIER,
+)
 from src.timeclock.constants import IDENTIFIER as TIMECLOCK_IDENTIFIER
 from src.user.constants import IDENTIFIER as USER_IDENTIFIER
 
@@ -24,8 +27,8 @@ EVENT_LOG_MSGS = {
         "DELETE": "Auth role {auth_role_name} deleted",
     },
     AUTH_ROLE_MEMBERSHIP_IDENTIFIER: {
-        "CREATE": ("Auth role {auth_role_name} added to user {user_id}"),
-        "DELETE": ("Auth role {auth_role_name} removed from user {user_id}"),
+        "CREATE": "Auth role {auth_role_name} added to user {user_id}",
+        "DELETE": "Auth role {auth_role_name} removed from user {user_id}",
     },
     DEPARTMENT_IDENTIFIER: {
         "CREATE": "Department {department_name} created",
@@ -54,9 +57,13 @@ EVENT_LOG_MSGS = {
         "DELETE": "Holiday {holiday_group_name} deleted",
     },
     ORG_UNIT_IDENTIFIER: {
-        "CREATE": "Org unit {org_unit_id} created",
-        "UPDATE": "Org unit {org_unit_id} updated",
-        "DELETE": "Org unit {org_unit_id} deleted",
+        "CREATE": "Org unit {org_unit_name} created",
+        "UPDATE": "Org unit {org_unit_name} updated",
+        "DELETE": "Org unit {org_unit_name} deleted",
+    },
+    REGISTERED_BROWSER_IDENTIFIER: {
+        "CREATE": "Registered device {browser_uuid} created",
+        "DELETE": "Registered device {browser_uuid} deleted",
     },
     TIMECLOCK_IDENTIFIER: {
         "CLOCK_IN": "Employee {badge_number} clocked in",

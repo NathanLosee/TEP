@@ -11,6 +11,7 @@ import { ReportsComponent } from './reports/reports.component';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { AuthRoleManagementComponent } from './auth-role-management/auth-role-management.component';
 import { EventLogManagementComponent } from './event-log-management/event-log-management.component';
+import { RegisteredDeviceManagementComponent } from './registered-device-management/registered-device-management.component';
 
 export const routes: Routes = [
   {
@@ -68,6 +69,11 @@ export const routes: Routes = [
         title: 'Holiday Groups',
         path: 'holiday-groups',
         component: HolidayGroupManagementComponent,
+      },
+      {
+        title: 'Registered Devices',
+        path: 'registered-devices',
+        component: RegisteredDeviceManagementComponent,
       },
       {
         title: 'Time Reports',

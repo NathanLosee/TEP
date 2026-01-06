@@ -88,8 +88,12 @@ export class TimeclockEntriesManagementComponent implements OnInit {
 
   filterForm: FormGroup;
   isLoading = false;
+  userTimezone: string;
 
   constructor() {
+    // Detect the user's timezone using Intl API
+    this.userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     this.filterForm = this.fb.group({
       dateRange: this.fb.group({
         start: [new Date()],
@@ -140,7 +144,6 @@ export class TimeclockEntriesManagementComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          console.log('API Response:', response);
           this.timeEntries = response.map((entry: any) => ({
             ...entry,
             employeeName: entry.first_name + ' ' + entry.last_name,
@@ -152,7 +155,6 @@ export class TimeclockEntriesManagementComponent implements OnInit {
               : 0,
             status: this.getEntryStatus(entry),
           }));
-          console.log('Mapped Entries:', this.timeEntries);
           this.isLoading = false;
         },
         error: (error) => {
@@ -192,11 +194,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
       return 'clocked_in';
     }
 
-    const clockInDate = new Date(entry.clock_in);
-    const clockOutDate = new Date(entry.clock_out);
-    const diffMs = clockOutDate.getTime() - clockInDate.getTime();
-
-    return diffMs < 4 * 60 * 60 * 1000 ? 'incomplete' : 'clocked_out';
+    return 'clocked_out';
   }
 
   getStatusClass(status: string): string {

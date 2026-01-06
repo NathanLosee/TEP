@@ -152,10 +152,10 @@
             <td mat-cell *matCellDef="let entry">
               <div class="time-cell">
                 <div class="time-date">
-                  {{ entry.clock_in | date : "MMM d, y" }}
+                  {{ entry.clock_in | date : "MMM d, y" : userTimezone }}
                 </div>
                 <div class="time-value">
-                  {{ entry.clock_in | date : "HH:mm" }}
+                  {{ entry.clock_in | date : "HH:mm" : userTimezone }}
                 </div>
               </div>
             </td>
@@ -167,10 +167,10 @@
             <td mat-cell *matCellDef="let entry">
               <div class="time-cell" *ngIf="entry.clock_out; else noClockOut">
                 <div class="time-date">
-                  {{ entry.clock_out | date : "MMM d, y" }}
+                  {{ entry.clock_out | date : "MMM d, y" : userTimezone }}
                 </div>
                 <div class="time-value">
-                  {{ entry.clock_out | date : "HH:mm" }}
+                  {{ entry.clock_out | date : "HH:mm" : userTimezone }}
                 </div>
               </div>
               <ng-template #noClockOut>

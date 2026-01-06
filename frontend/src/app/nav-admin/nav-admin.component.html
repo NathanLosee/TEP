@@ -38,56 +38,46 @@
 
       <h3 mat-subheader>Employee Management</h3>
       <a
+        *hasPermission="'timeclock.read'"
         mat-list-item
         routerLink="/admin/timeclock-entries"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'timeclock.read'"
-        matTooltip="Requires timeclock.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>event_note</mat-icon>
         <span matListItemTitle>Timeclock Entries</span>
       </a>
       <a
+        *hasPermission="'employee.read'"
         mat-list-item
         routerLink="/admin/employees"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'employee.read'"
-        matTooltip="Requires employee.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>people</mat-icon>
         <span matListItemTitle>Employees</span>
       </a>
       <a
+        *hasPermission="'department.read'"
         mat-list-item
         routerLink="/admin/departments"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'department.read'"
-        matTooltip="Requires department.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>business</mat-icon>
         <span matListItemTitle>Departments</span>
       </a>
       <a
+        *hasPermission="'org_unit.read'"
         mat-list-item
         routerLink="/admin/org-units"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'org_unit.read'"
-        matTooltip="Requires org_unit.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>account_tree</mat-icon>
         <span matListItemTitle>Org Units</span>
       </a>
       <a
+        *hasPermission="'holiday_group.read'"
         mat-list-item
         routerLink="/admin/holiday-groups"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'holiday_group.read'"
-        matTooltip="Requires holiday_group.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>event</mat-icon>
         <span matListItemTitle>Holiday Groups</span>
@@ -97,12 +87,10 @@
 
       <h3 mat-subheader>Reports</h3>
       <a
+        *hasPermission="'report.read'"
         mat-list-item
         routerLink="/admin/reports"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'report.read'"
-        matTooltip="Requires report.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>assessment</mat-icon>
         <span matListItemTitle>Time Reports</span>
@@ -112,34 +100,37 @@
 
       <h3 mat-subheader>User & Security Management</h3>
       <a
+        *hasPermission="'user.read'"
         mat-list-item
         routerLink="/admin/users"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'user.read'"
-        matTooltip="Requires user.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>account_circle</mat-icon>
         <span matListItemTitle>User Accounts</span>
       </a>
       <a
+        *hasPermission="'auth_role.read'"
         mat-list-item
         routerLink="/admin/auth-roles"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'auth_role.read'"
-        matTooltip="Requires auth_role.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>security</mat-icon>
         <span matListItemTitle>Auth Roles</span>
       </a>
       <a
+        *hasPermission="'registered_browser.read'"
+        mat-list-item
+        routerLink="/admin/registered-devices"
+        routerLinkActive="active-link"
+      >
+        <mat-icon matListItemIcon>devices</mat-icon>
+        <span matListItemTitle>Registered Devices</span>
+      </a>
+      <a
+        *hasPermission="'event_log.read'"
         mat-list-item
         routerLink="/admin/event-logs"
         routerLinkActive="active-link"
-        [disableIfNoPermission]="'event_log.read'"
-        matTooltip="Requires event_log.read permission"
-        [matTooltipDisabled]="true"
       >
         <mat-icon matListItemIcon>history</mat-icon>
         <span matListItemTitle>Event Logs</span>

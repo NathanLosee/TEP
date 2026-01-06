@@ -29,6 +29,7 @@ class EmployeeBase(BaseModel):
         time_type (bool): Employee's time type.
             (True for full-time, False for part-time)
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
+        external_clock_allowed (bool): Whether the employee can clock in/out from external devices.
         allow_delete (bool): Whether the employee is allowed to be deleted.
         org_unit_id (int): Org unit's unique identifier.
         manager_id (int): Manager's unique identifier.
@@ -44,6 +45,7 @@ class EmployeeBase(BaseModel):
     workweek_type: str
     time_type: bool
     allow_clocking: bool
+    external_clock_allowed: bool = Field(default=False)
     allow_delete: bool
     manager_id: Optional[int] = Field(default=None)
     org_unit_id: int
@@ -81,6 +83,7 @@ class EmployeeUpdate(BaseModel):
         time_type (bool): Employee's time type.
             (True for full-time, False for part-time)
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
+        external_clock_allowed (bool): Whether the employee can clock in/out from external devices.
         allow_delete (bool): Whether the employee is allowed to be deleted.
         org_unit_id (int): Org unit's unique identifier.
         manager_id (int): Manager's unique identifier.
@@ -96,6 +99,7 @@ class EmployeeUpdate(BaseModel):
     workweek_type: str
     time_type: bool
     allow_clocking: bool
+    external_clock_allowed: bool = Field(default=False)
     allow_delete: bool
     org_unit_id: int
     manager_id: Optional[int] = Field(default=None)

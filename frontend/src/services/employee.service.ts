@@ -16,6 +16,7 @@ export interface Employee {
   workweek_type: string;
   time_type: boolean;
   allow_clocking: boolean;
+  external_clock_allowed: boolean;
   allow_delete: boolean;
   manager?: Employee;
   holiday_group?: HolidayGroup;
@@ -32,6 +33,7 @@ export interface EmployeeBase {
   workweek_type: string;
   time_type: boolean;
   allow_clocking: boolean;
+  external_clock_allowed: boolean;
   allow_delete: boolean;
   holiday_group_id?: number;
   org_unit_id: number;

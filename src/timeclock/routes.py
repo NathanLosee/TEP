@@ -1,11 +1,13 @@
 """Module defining API for timeclock-related operations."""
 
 from datetime import datetime
+from typing import Optional
 
-from fastapi import APIRouter, Depends, Security, status
+from fastapi import APIRouter, Depends, Header, Security, status
 from sqlalchemy.orm import Session
 
 import src.employee.routes as employee_routes
+import src.registered_browser.repository as browser_repository
 import src.timeclock.repository as timeclock_repository
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
@@ -25,12 +27,17 @@ router = APIRouter(prefix=BASE_URL, tags=["timeclock"])
     "/{badge_number}",
     status_code=status.HTTP_201_CREATED,
 )
-def timeclock(badge_number: str, db: Session = Depends(get_db)):
+def timeclock(
+    badge_number: str,
+    db: Session = Depends(get_db),
+    x_device_uuid: Optional[str] = Header(None, alias="X-Device-UUID"),
+):
     """Clock in/out an employee.
 
     Args:
         badge_number (str): Employee's badge number.
         db (Session): Database session for current request.
+        x_device_uuid (Optional[str]): Device UUID header for internal devices.
 
     Returns:
         dict: Clock in/out status.
@@ -43,7 +50,35 @@ def timeclock(badge_number: str, db: Session = Depends(get_db)):
         status.HTTP_403_FORBIDDEN,
     )
 
+    # Check if browser UUID is provided (browser has saved UUID)
+    if x_device_uuid:
+        # Check if browser is registered in system
+        browser = browser_repository.get_registered_browser_by_uuid(
+            x_device_uuid, db
+        )
+
+        if browser:
+            # Registered company browser - anyone can use it
+            pass
+        else:
+            # Unregistered browser - only employees with external_clock_allowed can use
+            validate(
+                employee.external_clock_allowed,
+                "Employee is not authorized to clock from unregistered browsers",
+                status.HTTP_403_FORBIDDEN,
+            )
+    else:
+        # No browser UUID - only employees with external_clock_allowed can clock
+        validate(
+            employee.external_clock_allowed,
+            "Employee must clock from a registered company browser",
+            status.HTTP_403_FORBIDDEN,
+        )
+
     log_args = {"badge_number": employee.badge_number}
+    if x_device_uuid:
+        log_args["device_uuid"] = x_device_uuid
+
     if timeclock_repository.timeclock(badge_number, db):
         create_event_log(IDENTIFIER, "CLOCK_IN", log_args, "0", db)
         return {"status": "success", "message": "Clocked in"}
@@ -56,12 +91,17 @@ def timeclock(badge_number: str, db: Session = Depends(get_db)):
     "/{badge_number}/status",
     status_code=status.HTTP_200_OK,
 )
-def check_status(badge_number: str, db: Session = Depends(get_db)):
+def check_status(
+    badge_number: str,
+    db: Session = Depends(get_db),
+    x_device_uuid: Optional[str] = Header(None, alias="X-Device-UUID"),
+):
     """Check the clock status of an employee.
 
     Args:
         badge_number (str): Employee's badge number.
         db (Session): Database session for current request.
+        x_device_uuid (Optional[str]): Device UUID header for external devices.
 
     Returns:
         dict: Clock in/out status.
@@ -75,6 +115,33 @@ def check_status(badge_number: str, db: Session = Depends(get_db)):
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
+
+    employee = employees[0]
+
+    # Check if browser UUID is provided (browser has saved UUID)
+    if x_device_uuid:
+        # Check if browser is registered in system
+        browser = browser_repository.get_registered_browser_by_uuid(
+            x_device_uuid, db
+        )
+
+        if browser:
+            # Registered company browser - anyone can use it
+            pass
+        else:
+            # Unregistered browser - only employees with external_clock_allowed can use
+            validate(
+                employee.external_clock_allowed,
+                "Employee is not authorized to clock from unregistered browsers",
+                status.HTTP_403_FORBIDDEN,
+            )
+    else:
+        # No browser UUID - only employees with external_clock_allowed can clock
+        validate(
+            employee.external_clock_allowed,
+            "Employee must clock from a registered company browser",
+            status.HTTP_403_FORBIDDEN,
+        )
 
     if timeclock_repository.check_status(badge_number, db):
         return {"status": "success", "message": "Clocked in"}

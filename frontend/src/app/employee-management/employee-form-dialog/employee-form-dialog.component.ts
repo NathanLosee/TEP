@@ -110,6 +110,7 @@ export class EmployeeFormDialogComponent {
       ],
       time_type: [this.data.editEmployee?.time_type || true],
       allow_clocking: [this.data.editEmployee?.allow_clocking || true],
+      external_clock_allowed: [this.data.editEmployee?.external_clock_allowed || false],
       allow_delete: [this.data.editEmployee?.allow_delete || true],
       holiday_group_id: [this.data.editEmployee?.holiday_group?.id || null],
       org_unit_id: [

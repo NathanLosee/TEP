@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -6,12 +7,13 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
-import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import { HasPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-nav-admin',
   standalone: true,
   imports: [
+    CommonModule,
     MatToolbarModule,
     MatButtonModule,
     MatSidenavModule,
@@ -19,7 +21,7 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
     MatIconModule,
     MatTooltipModule,
     RouterModule,
-    DisableIfNoPermissionDirective,
+    HasPermissionDirective,
   ],
   templateUrl: './nav-admin.component.html',
   styleUrl: './nav-admin.component.scss',

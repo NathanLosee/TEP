@@ -6,6 +6,7 @@ This module defines the service layer for handling CRUD
 """
 
 import os
+import random
 from datetime import date, datetime, timedelta, timezone
 
 import bcrypt
@@ -23,6 +24,7 @@ from src.employee.models import Employee
 from src.event_log.constants import EVENT_LOG_MSGS
 from src.event_log.models import EventLog
 from src.org_unit.models import OrgUnit
+from src.timeclock.models import TimeclockEntry
 from src.user.constants import BASE_URL as USER_URL
 from src.user.constants import (
     EXC_MSG_ACCESS_TOKEN_INVALID,
@@ -261,6 +263,7 @@ def get_scopes_from_user(user: User) -> list[str]:
     for role in user.auth_roles:
         for permission in role.permissions:
             scopes.add(permission.resource)
+
     return list(scopes)
 
 
@@ -344,19 +347,84 @@ def create_event_log(
     db.commit()
 
 
+def clear_database():
+    # Import all models needed for cleanup
+    from src.auth_role.models import AuthRole, AuthRolePermission
+    from src.department.models import Department, DepartmentMembership
+    from src.employee.models import Employee
+    from src.event_log.models import EventLog
+    from src.holiday_group.models import Holiday, HolidayGroup
+    from src.org_unit.models import OrgUnit
+    from src.registered_browser.models import RegisteredBrowser
+    from src.timeclock.models import TimeclockEntry
+    from src.user.models import User
+
+    # Delete all existing data from tables
+    print("Clearing all existing data...")
+    db = SessionLocal()
+
+    try:
+        # Delete in reverse order of dependencies to avoid foreign key constraints
+        # NOTE: Preserve root records (id=0) for OrgUnit, Employee, User, and AuthRole
+
+        # Level 1: Most dependent tables (no other tables depend on these)
+        db.query(TimeclockEntry).delete()  # depends on Employee
+        db.query(RegisteredBrowser).delete()  # depends on Employee
+        db.query(EventLog).delete()  # depends on Employee (badge_number)
+        db.query(
+            DepartmentMembership
+        ).delete()  # depends on Employee & Department
+
+        # Level 2: User and AuthRole relationships (exclude root user id=0)
+        db.query(AuthRolePermission).filter(
+            AuthRolePermission.auth_role_id != 0
+        ).delete()
+        # Clear User-AuthRole many-to-many relationships (except root)
+        for user in db.query(User).filter(User.id != 0).all():
+            user.auth_roles.clear()
+        db.commit()
+
+        db.query(User).filter(User.id != 0).delete()  # preserve root user
+        db.query(AuthRole).filter(
+            AuthRole.id != 0
+        ).delete()  # preserve root role
+
+        # Level 3: Employee (exclude root employee id=0)
+        # Clear manager relationships first (self-reference)
+        db.query(Employee).filter(Employee.id != 0).update(
+            {Employee.manager_id: None}
+        )
+        db.commit()
+        db.query(Employee).filter(Employee.id != 0).delete()
+
+        # Level 4: Tables that Employee depended on
+        db.query(Holiday).delete()  # depends on HolidayGroup
+        db.query(
+            HolidayGroup
+        ).delete()  # was referenced by Employee (now deleted)
+        db.query(Department).delete()  # was referenced by DepartmentMembership
+        db.query(OrgUnit).filter(
+            OrgUnit.id != 0
+        ).delete()  # preserve root org_unit
+
+        db.commit()
+        print(
+            "All existing data cleared successfully (root records preserved)."
+        )
+    except Exception as e:
+        print(f"Warning: Error clearing data: {e}")
+        db.rollback()
+        # Continue anyway - might be first run with empty tables
+
+    db.close()
+
+
 def generate_dummy_data():
     """Generate comprehensive dummy data for development environment.
 
     This function creates sample data for all entities in the system
     using API route functions to ensure proper event log generation.
     """
-    import random
-
-    from src.config import Settings
-
-    settings = Settings()
-    if settings.ENVIRONMENT.lower() != "development":
-        return  # Only generate dummy data in development environment
 
     print("\n" + "=" * 60)
     print("Generating comprehensive dummy data for development...")
@@ -365,24 +433,19 @@ def generate_dummy_data():
     db = SessionLocal()
 
     try:
-        # Check if data already exists (skip if yes)
-        existing_org_units = db.query(OrgUnit).filter(OrgUnit.id > 0).count()
-        if existing_org_units > 0:
-            print("Dummy data already exists, skipping generation.")
-            db.close()
-            return
-
         # Import route functions (these call event logging automatically)
         from src.auth_role import routes as auth_role_routes
         from src.auth_role.schemas import AuthRoleBase, PermissionBase
         from src.department import routes as department_routes
         from src.department.schemas import DepartmentBase
         from src.employee import routes as employee_routes
-        from src.employee.schemas import EmployeeBase, EmployeeUpdate
+        from src.employee.schemas import EmployeeBase
         from src.holiday_group import routes as holiday_group_routes
         from src.holiday_group.schemas import HolidayBase, HolidayGroupBase
         from src.org_unit import routes as org_unit_routes
         from src.org_unit.schemas import OrgUnitBase
+        from src.registered_browser import routes as browser_routes
+        from src.registered_browser.schemas import RegisteredBrowserBase
         from src.timeclock import routes as timeclock_routes
         from src.user import routes as user_routes
         from src.user.schemas import UserBase
@@ -565,6 +628,17 @@ def generate_dummy_data():
             ),
         ]
 
+        # Define which employees have external clock permissions
+        # Managers and some specific employees who work remotely/flexibly
+        external_clock_allowed_badges = {
+            "EMP001",  # Admin - works from home sometimes
+            "EMP004",  # Manager
+            "EMP007",  # Manager
+            "EMP011",  # Manager
+            "EMP005",  # Sales - travels for work
+            "EMP006",  # Sales - travels for work
+        }
+
         employees = {}
         # First pass: create all employees without managers
         for badge, first, last, payroll, org_name, _, hg_id in employees_data:
@@ -578,6 +652,7 @@ def generate_dummy_data():
                     workweek_type="standard",
                     time_type=True,
                     allow_clocking=True,
+                    external_clock_allowed=badge in external_clock_allowed_badges,
                     allow_delete=True,
                     org_unit_id=org_units[org_name].id,
                     manager_id=None,
@@ -587,29 +662,20 @@ def generate_dummy_data():
                 "0",
             )
             employees[badge] = emp
-            print(f"  ✓ Created employee: {badge} ({first} {last})")
+            external_status = "external allowed" if badge in external_clock_allowed_badges else "office only"
+            print(f"  ✓ Created employee: {badge} ({first} {last}) - {external_status}")
 
         # Second pass: update manager relationships
         for badge, _, _, _, _, manager_badge, _ in employees_data:
             if manager_badge:
                 emp = employees[badge]
-                updated_emp = EmployeeUpdate(
-                    id=emp.id,
-                    first_name=emp.first_name,
-                    last_name=emp.last_name,
-                    payroll_type=emp.payroll_type,
-                    payroll_sync=emp.payroll_sync,
-                    workweek_type=emp.workweek_type,
-                    time_type=emp.time_type,
-                    allow_clocking=emp.allow_clocking,
-                    allow_delete=emp.allow_delete,
-                    org_unit_id=emp.org_unit_id,
-                    manager_id=employees[manager_badge].id,
-                    holiday_group_id=emp.holiday_group_id,
-                )
-                employee_routes.update_employee_by_id(
-                    updated_emp.id, updated_emp, db, "0"
-                )
+                manager_emp = employees[manager_badge]
+                # Directly update the manager_id on the employee object
+                emp.manager_id = manager_emp.id
+
+        # Commit all manager relationship updates
+        db.commit()
+        print("  ✓ Updated manager relationships")
 
         print("\n[5/7] Creating users and auth roles...")
         role_admin = auth_role_routes.create_auth_role(
@@ -644,6 +710,9 @@ def generate_dummy_data():
                     PermissionBase(resource="timeclock.read"),
                     PermissionBase(resource="timeclock.update"),
                     PermissionBase(resource="timeclock.delete"),
+                    PermissionBase(resource="registered_browser.create"),
+                    PermissionBase(resource="registered_browser.read"),
+                    PermissionBase(resource="registered_browser.delete"),
                     PermissionBase(resource="event_log.create"),
                     PermissionBase(resource="event_log.read"),
                     PermissionBase(resource="event_log.delete"),
@@ -686,19 +755,13 @@ def generate_dummy_data():
         )
         print("  ✓ Created roles: Admin, Manager, Employee")
 
+        # Only create user accounts for employees who need system access
+        # Most employees only need to clock in/out and don't need accounts
         users_roles = [
-            ("EMP001", "Admin"),
-            ("EMP004", "Manager"),
-            ("EMP007", "Manager"),
-            ("EMP011", "Manager"),
-            ("EMP002", "Employee"),
-            ("EMP003", "Employee"),
-            ("EMP005", "Employee"),
-            ("EMP006", "Employee"),
-            ("EMP008", "Employee"),
-            ("EMP009", "Employee"),
-            ("EMP010", "Employee"),
-            ("EMP012", "Employee"),
+            ("EMP001", "Admin"),    # Alice Johnson - Full admin access
+            ("EMP004", "Manager"),  # David Lee - Engineering manager
+            ("EMP007", "Manager"),  # Eve Miller - Marketing manager
+            ("EMP011", "Manager"),  # Ivy Anderson - Customer Support manager
         ]
 
         for badge, role_name in users_roles:
@@ -717,6 +780,18 @@ def generate_dummy_data():
             user.auth_roles.append(role)
             db.commit()
             print(f"  ✓ Created user: {badge} with role {role_name}")
+
+        # Register a dummy browser for testing timeclock functionality
+        print("\n  Registering company browser for testing...")
+        test_browser = browser_routes.register_browser(
+            RegisteredBrowserBase(
+                browser_uuid="TEST-BROWSER-UUID-12345",
+                browser_name="Office Kiosk - Main Entrance"
+            ),
+            db,
+            "0"
+        )
+        print(f"  ✓ Registered browser: {test_browser.browser_name}")
 
         print("\n[6/7] Assigning department memberships...")
         dept_memberships = [
@@ -765,13 +840,10 @@ def generate_dummy_data():
                 )
 
                 # Some employees might still be clocked in on most recent day
+                # Use the registered browser UUID so all employees can clock in
                 if day_offset == 1 and random.random() < 0.3:
-                    timeclock_routes.timeclock(badge, db)
+                    timeclock_routes.timeclock(badge, db, x_device_uuid=test_browser.browser_uuid)
                 else:
-                    # Directly insert complete entry
-                    # (not through API to avoid excessive clock in/out logs)
-                    from src.timeclock.models import TimeclockEntry
-
                     entry = TimeclockEntry(
                         badge_number=badge,
                         clock_in=clock_in,

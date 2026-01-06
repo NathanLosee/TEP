@@ -52,7 +52,7 @@ def create_org_unit(
     )
 
     org_unit = org_unit_repository.create_org_unit(request, db)
-    log_args = {"org_unit_id": org_unit.id}
+    log_args = {"org_unit_name": org_unit.name}
     create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return org_unit
 
@@ -191,7 +191,7 @@ def update_org_unit(
     )
 
     org_unit = org_unit_repository.update_org_unit(org_unit, request, db)
-    log_args = {"org_unit_id": org_unit.id}
+    log_args = {"org_unit_name": org_unit.name}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return org_unit
 
@@ -224,5 +224,5 @@ def delete_org_unit(
     )
 
     org_unit_repository.delete_org_unit(org_unit, db)
-    log_args = {"org_unit_id": org_unit.id}
+    log_args = {"org_unit_name": org_unit.name}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

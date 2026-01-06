@@ -4,7 +4,12 @@
       "Bash(ng generate:*)",
       "Bash(ruff format:*)",
       "Bash(python -m black:*)",
-      "Bash(python -m autopep8:*)"
+      "Bash(python -m autopep8:*)",
+      "Bash(alembic revision:*)",
+      "Bash(poetry run alembic revision:*)",
+      "Bash(poetry run alembic:*)",
+      "Bash(ls:*)",
+      "Bash(npx ng generate:*)"
     ]
   }
 }

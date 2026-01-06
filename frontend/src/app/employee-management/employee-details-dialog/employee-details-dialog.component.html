@@ -84,6 +84,10 @@
           <mat-icon>{{ employee.allow_clocking ? 'check_circle' : 'cancel' }}</mat-icon>
           <span>Allow Clocking</span>
         </div>
+        <div class="permission-item" [class.enabled]="employee.external_clock_allowed">
+          <mat-icon>{{ employee.external_clock_allowed ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>Allow External Clocking</span>
+        </div>
         <div class="permission-item" [class.enabled]="employee.allow_delete">
           <mat-icon>{{ employee.allow_delete ? 'check_circle' : 'cancel' }}</mat-icon>
           <span>Allow Delete</span>
