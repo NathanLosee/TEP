@@ -7,6 +7,12 @@ export interface Holiday {
   name: string;
   start_date: Date;
   end_date: Date;
+  is_recurring?: boolean;
+  recurrence_type?: 'fixed' | 'relative' | null;
+  recurrence_month?: number | null;
+  recurrence_day?: number | null;
+  recurrence_week?: number | null;
+  recurrence_weekday?: number | null;
 }
 
 export interface HolidayGroup {

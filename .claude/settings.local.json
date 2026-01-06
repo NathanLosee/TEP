@@ -9,7 +9,14 @@
       "Bash(poetry run alembic revision:*)",
       "Bash(poetry run alembic:*)",
       "Bash(ls:*)",
-      "Bash(npx ng generate:*)"
+      "Bash(npx ng generate:*)",
+      "Bash(poetry run python:*)",
+      "Bash(poetry run uvicorn:*)",
+      "Bash(findstr:*)",
+      "Bash(done)",
+      "Bash(cat:*)",
+      "Bash(npm run test:*)",
+      "Bash(poetry run pytest:*)"
     ]
   }
 }

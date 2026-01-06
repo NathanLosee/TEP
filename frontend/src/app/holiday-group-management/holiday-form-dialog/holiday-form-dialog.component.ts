@@ -28,6 +28,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
 import { HolidayGroup } from '../../../services/holiday-group.service';
 
 export interface HolidayFormDialogData {
@@ -54,6 +56,8 @@ export interface HolidayFormDialogData {
     MatProgressSpinnerModule,
     MatExpansionModule,
     MatTabsModule,
+    MatCheckboxModule,
+    MatSelectModule,
     MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
@@ -70,6 +74,20 @@ export class HolidayFormDialogComponent {
   isEditMode = false;
   isLoading = false;
 
+  // Constants for recurring holiday options
+  readonly weekdayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  readonly weekNumbers = [
+    { value: 1, label: 'First' },
+    { value: 2, label: 'Second' },
+    { value: 3, label: 'Third' },
+    { value: 4, label: 'Fourth' },
+    { value: 5, label: 'Last' },
+  ];
+  readonly monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
   constructor() {
     this.holidayForm = this.formBuilder.group({
       name: ['', [Validators.required]],
@@ -83,15 +101,23 @@ export class HolidayFormDialogComponent {
         holidays: this.formBuilder.array([]),
       });
       this.data.editGroup.holidays.forEach((holiday) => {
-        this.getHolidays().push(
-          this.formBuilder.group({
-            name: [holiday.name, Validators.required],
-            start_date: [new Date(holiday.start_date), Validators.required],
-            end_date: [new Date(holiday.end_date), Validators.required],
-          })
-        );
+        this.getHolidays().push(this.createHolidayFormGroup(holiday));
       });
     }
+  }
+
+  private createHolidayFormGroup(holiday?: any): FormGroup {
+    return this.formBuilder.group({
+      name: [holiday?.name || '', Validators.required],
+      start_date: [holiday?.start_date ? new Date(holiday.start_date) : '', Validators.required],
+      end_date: [holiday?.end_date ? new Date(holiday.end_date) : '', Validators.required],
+      is_recurring: [holiday?.is_recurring || false],
+      recurrence_type: [holiday?.recurrence_type || null],
+      recurrence_month: [holiday?.recurrence_month || null],
+      recurrence_day: [holiday?.recurrence_day || null],
+      recurrence_week: [holiday?.recurrence_week || null],
+      recurrence_weekday: [holiday?.recurrence_weekday || null],
+    });
   }
 
   getHolidays(): FormArray {
@@ -99,13 +125,7 @@ export class HolidayFormDialogComponent {
   }
 
   addHoliday() {
-    this.getHolidays().push(
-      this.formBuilder.group({
-        name: ['', Validators.required],
-        start_date: ['', Validators.required],
-        end_date: ['', Validators.required],
-      })
-    );
+    this.getHolidays().push(this.createHolidayFormGroup());
   }
 
   removeHoliday(holidayIndex: number) {

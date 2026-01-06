@@ -21,34 +21,96 @@ h2[mat-dialog-title] {
 
     .holiday-item {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
       margin: 8px 0;
       border-radius: 8px;
       background: var(--sys-surface-variant);
+      border-left: 4px solid var(--sys-primary);
 
-      .holiday-info {
-        flex: 1;
-
+      .holiday-header {
         .holiday-name {
           font-weight: 600;
+          font-size: 1.1rem;
           color: var(--sys-on-surface);
-          margin-bottom: 4px;
-          display: block;
-        }
-
-        .holiday-dates {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.875rem;
+
+          .recurring-badge {
+            background: var(--sys-secondary-container);
+            color: var(--sys-on-secondary-container);
+            font-size: 0.75rem;
+            height: 24px;
+            padding: 0 8px;
+
+            mat-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+              margin-right: 4px;
+            }
+          }
+        }
+      }
+
+      .holiday-info {
+        .recurring-details {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          .recurrence-pattern,
+          .current-year-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--sys-on-surface-variant);
+
+            mat-icon {
+              font-size: 20px;
+              width: 20px;
+              height: 20px;
+              color: var(--sys-primary);
+            }
+
+            .pattern-text {
+              font-weight: 500;
+            }
+          }
+
+          .current-year-date {
+            color: var(--sys-on-surface);
+            font-weight: 500;
+          }
+        }
+
+        .one-time-dates {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.9rem;
           color: var(--sys-on-surface-variant);
 
-          .duration-chip {
-            background: var(--sys-tertiary-container);
-            color: var(--sys-on-tertiary-container);
-            font-size: 0.75rem;
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            color: var(--sys-primary);
+          }
+
+          .holiday-dates {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .duration-chip {
+              background: var(--sys-tertiary-container);
+              color: var(--sys-on-tertiary-container);
+              font-size: 0.75rem;
+            }
           }
         }
       }

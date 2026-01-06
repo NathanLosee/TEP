@@ -15,6 +15,7 @@ from src.holiday_group.constants import (
     IDENTIFIER,
 )
 from src.holiday_group.schemas import HolidayGroupBase, HolidayGroupExtended
+from src.holiday_group.utils import get_holidays_for_year
 from src.services import create_event_log, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
@@ -142,6 +143,39 @@ def get_employees_by_holiday_group(
     )
 
     return holiday_group.employees
+
+
+@router.get(
+    "/{id}/year/{year}",
+    status_code=status.HTTP_200_OK,
+)
+def get_holidays_for_year_by_group(
+    id: int,
+    year: int,
+    db: Session = Depends(get_db),
+    caller_badge: str = Security(
+        requires_permission, scopes=["holiday_group.read"]
+    ),
+):
+    """Generate holiday instances for a specific year.
+
+    Args:
+        id (int): Holiday group's unique identifier.
+        year (int): Year to generate holidays for.
+        db (Session): Database session for current request.
+
+    Returns:
+        list[dict]: List of holiday instances with name, start_date, end_date.
+
+    """
+    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    validate(
+        holiday_group,
+        EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
+
+    return get_holidays_for_year(holiday_group.holidays, year)
 
 
 @router.put(

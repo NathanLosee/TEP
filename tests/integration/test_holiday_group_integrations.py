@@ -192,6 +192,12 @@ def test_update_holiday_group_by_id_200_add_holiday(
             "name": "New Holiday",
             "start_date": "2023-12-25",
             "end_date": "2023-12-25",
+            "is_recurring": False,
+            "recurrence_type": None,
+            "recurrence_month": None,
+            "recurrence_day": None,
+            "recurrence_weekday": None,
+            "recurrence_week": None,
         }
     )
     response = test_client.put(
@@ -205,6 +211,12 @@ def test_update_holiday_group_by_id_200_add_holiday(
         "name": "New Holiday",
         "start_date": "2023-12-25",
         "end_date": "2023-12-25",
+        "is_recurring": False,
+        "recurrence_type": None,
+        "recurrence_month": None,
+        "recurrence_day": None,
+        "recurrence_weekday": None,
+        "recurrence_week": None,
     } in response.json()["holidays"]
 
 

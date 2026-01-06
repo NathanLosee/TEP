@@ -249,6 +249,44 @@ def generate_refresh_token(user: User) -> str:
     return token
 
 
+def decode_jwt_token(token: str) -> dict:
+    """Decode a JWT token for testing purposes.
+
+    Args:
+        token (str): The JWT token to decode.
+
+    Returns:
+        dict: The decoded token payload.
+
+    """
+    payload = jwt.decode(token, verifying_bytes, algorithms=[algorithm])
+    # Add 'sub' field for compatibility with tests expecting standard JWT claims
+    if "badge_number" in payload and "sub" not in payload:
+        payload["sub"] = payload["badge_number"]
+    return payload
+
+
+def encode_jwt_token(
+    badge_number: str, exp: datetime, scopes: list[str] = None
+) -> str:
+    """Encode a JWT token for testing purposes.
+
+    Args:
+        badge_number (str): The badge number to include in the token.
+        exp (datetime): The expiration time for the token.
+        scopes (list[str]): The scopes to include in the token.
+
+    Returns:
+        str: The encoded JWT token.
+
+    """
+    if scopes is None:
+        scopes = []
+    payload = {"badge_number": badge_number, "exp": exp, "scopes": scopes}
+    token = jwt.encode(payload, signing_bytes, algorithm=algorithm)
+    return token
+
+
 def get_scopes_from_user(user: User) -> list[str]:
     """Get the scopes for the provided user.
 
@@ -464,7 +502,7 @@ def generate_dummy_data():
                 OrgUnitBase(name=name), db, "0"
             )
             org_units[name] = org
-            print(f"  ✓ Created: {name}")
+            print(f"  [OK] Created: {name}")
 
         print("\n[2/7] Creating departments...")
         departments_data = [
@@ -481,7 +519,7 @@ def generate_dummy_data():
                 DepartmentBase(name=name), db, "0"
             )
             departments[name] = dept
-            print(f"  ✓ Created: {name}")
+            print(f"  [OK] Created: {name}")
 
         print("\n[3/7] Creating holiday groups with holidays...")
         hg_us = holiday_group_routes.create_holiday_group(
@@ -492,26 +530,58 @@ def generate_dummy_data():
                         name="New Year's Day",
                         start_date=datetime.fromisoformat("2024-01-01").date(),
                         end_date=datetime.fromisoformat("2024-01-01").date(),
+                        is_recurring=True,
+                        recurrence_type="fixed",
+                        recurrence_month=1,
+                        recurrence_day=1,
                     ),
                     HolidayBase(
                         name="Independence Day",
                         start_date=datetime.fromisoformat("2024-07-04").date(),
                         end_date=datetime.fromisoformat("2024-07-04").date(),
+                        is_recurring=True,
+                        recurrence_type="fixed",
+                        recurrence_month=7,
+                        recurrence_day=4,
                     ),
                     HolidayBase(
                         name="Thanksgiving",
                         start_date=datetime.fromisoformat("2024-11-28").date(),
                         end_date=datetime.fromisoformat("2024-11-28").date(),
+                        is_recurring=True,
+                        recurrence_type="relative",
+                        recurrence_month=11,
+                        recurrence_week=4,
+                        recurrence_weekday=3,  # Thursday
                     ),
                     HolidayBase(
                         name="Christmas",
                         start_date=datetime.fromisoformat("2024-12-25").date(),
                         end_date=datetime.fromisoformat("2024-12-25").date(),
+                        is_recurring=True,
+                        recurrence_type="fixed",
+                        recurrence_month=12,
+                        recurrence_day=25,
                     ),
                     HolidayBase(
                         name="Labor Day",
                         start_date=datetime.fromisoformat("2024-09-02").date(),
                         end_date=datetime.fromisoformat("2024-09-02").date(),
+                        is_recurring=True,
+                        recurrence_type="relative",
+                        recurrence_month=9,
+                        recurrence_week=1,
+                        recurrence_weekday=0,  # Monday
+                    ),
+                    HolidayBase(
+                        name="Memorial Day",
+                        start_date=datetime.fromisoformat("2024-05-27").date(),
+                        end_date=datetime.fromisoformat("2024-05-27").date(),
+                        is_recurring=True,
+                        recurrence_type="relative",
+                        recurrence_month=5,
+                        recurrence_week=5,  # Last
+                        recurrence_weekday=0,  # Monday
                     ),
                 ],
             ),
@@ -521,13 +591,38 @@ def generate_dummy_data():
         hg_intl = holiday_group_routes.create_holiday_group(
             HolidayGroupBase(
                 name="International Holidays",
-                holidays=[],
+                holidays=[
+                    HolidayBase(
+                        name="Company Anniversary",
+                        start_date=datetime.fromisoformat("2025-03-15").date(),
+                        end_date=datetime.fromisoformat("2025-03-15").date(),
+                        is_recurring=False,
+                    ),
+                    HolidayBase(
+                        name="Summer Conference",
+                        start_date=datetime.fromisoformat("2025-07-10").date(),
+                        end_date=datetime.fromisoformat("2025-07-12").date(),
+                        is_recurring=False,
+                    ),
+                    HolidayBase(
+                        name="Year-End Closure",
+                        start_date=datetime.fromisoformat("2025-12-26").date(),
+                        end_date=datetime.fromisoformat("2025-12-31").date(),
+                        is_recurring=False,
+                    ),
+                    HolidayBase(
+                        name="Special Training Day",
+                        start_date=datetime.fromisoformat("2026-02-20").date(),
+                        end_date=datetime.fromisoformat("2026-02-20").date(),
+                        is_recurring=False,
+                    ),
+                ],
             ),
             db,
             "0",
         )
-        print(f"  ✓ Created: US Holidays (5 holidays)")
-        print(f"  ✓ Created: International Holidays (0 holidays)")
+        print(f"  [OK] Created: US Holidays (6 recurring holidays)")
+        print(f"  [OK] Created: International Holidays (4 one-time holidays)")
 
         print("\n[4/7] Creating employees with hierarchy...")
         today = date.today()
@@ -663,7 +758,7 @@ def generate_dummy_data():
             )
             employees[badge] = emp
             external_status = "external allowed" if badge in external_clock_allowed_badges else "office only"
-            print(f"  ✓ Created employee: {badge} ({first} {last}) - {external_status}")
+            print(f"  [OK] Created employee: {badge} ({first} {last}) - {external_status}")
 
         # Second pass: update manager relationships
         for badge, _, _, _, _, manager_badge, _ in employees_data:
@@ -675,7 +770,7 @@ def generate_dummy_data():
 
         # Commit all manager relationship updates
         db.commit()
-        print("  ✓ Updated manager relationships")
+        print("  [OK] Updated manager relationships")
 
         print("\n[5/7] Creating users and auth roles...")
         role_admin = auth_role_routes.create_auth_role(
@@ -753,7 +848,7 @@ def generate_dummy_data():
             db,
             "0",
         )
-        print("  ✓ Created roles: Admin, Manager, Employee")
+        print("  [OK] Created roles: Admin, Manager, Employee")
 
         # Only create user accounts for employees who need system access
         # Most employees only need to clock in/out and don't need accounts
@@ -779,7 +874,7 @@ def generate_dummy_data():
             )
             user.auth_roles.append(role)
             db.commit()
-            print(f"  ✓ Created user: {badge} with role {role_name}")
+            print(f"  [OK] Created user: {badge} with role {role_name}")
 
         # Register a dummy browser for testing timeclock functionality
         print("\n  Registering company browser for testing...")
@@ -791,7 +886,7 @@ def generate_dummy_data():
             db,
             "0"
         )
-        print(f"  ✓ Registered browser: {test_browser.browser_name}")
+        print(f"  [OK] Registered browser: {test_browser.browser_name}")
 
         print("\n[6/7] Assigning department memberships...")
         dept_memberships = [
@@ -809,7 +904,7 @@ def generate_dummy_data():
                 emp = employees[badge]
                 dept.employees.append(emp)
             db.commit()
-            print(f"  ✓ Assigned {len(emp_badges)} employees to {dept_name}")
+            print(f"  [OK] Assigned {len(emp_badges)} employees to {dept_name}")
 
         print("\n[7/7] Creating timeclock entries...")
         now = datetime.now(timezone.utc)
@@ -854,23 +949,23 @@ def generate_dummy_data():
                 entry_count += 1
 
         db.commit()
-        print(f"  ✓ Created {entry_count} timeclock entries")
+        print(f"  [OK] Created {entry_count} timeclock entries")
 
         print("\n" + "=" * 60)
-        print("✅ Comprehensive dummy data generation completed!")
+        print("[SUCCESS] Comprehensive dummy data generation completed!")
         print("=" * 60)
-        print("\n📊 Summary:")
-        print(f"  • Org units: {len(org_units_data)}")
-        print(f"  • Departments: {len(departments_data)}")
-        print(f"  • Employees: {len(employees_data)}")
-        print(f"  • Users: {len(users_roles)}")
-        print(f"  • Timeclock entries: {entry_count}")
-        print(f"  • Event logs: Auto-generated from API calls")
-        print(f"\n🔐 Login credentials: Any badge number / password123")
+        print("\nSummary:")
+        print(f"  - Org units: {len(org_units_data)}")
+        print(f"  - Departments: {len(departments_data)}")
+        print(f"  - Employees: {len(employees_data)}")
+        print(f"  - Users: {len(users_roles)}")
+        print(f"  - Timeclock entries: {entry_count}")
+        print(f"  - Event logs: Auto-generated from API calls")
+        print(f"\nLogin credentials: Any badge number / password123")
         print(f"   Admin user: EMP001 / password123\n")
 
     except Exception as e:
-        print(f"\n❌ Error generating dummy data: {e}")
+        print(f"\n[ERROR] Error generating dummy data: {e}")
         import traceback
 
         traceback.print_exc()

@@ -21,52 +21,104 @@
           class="holiday-item"
           [formGroupName]="i"
         >
-          <mat-form-field appearance="outline">
-            <mat-label>Holiday Name</mat-label>
-            <input
-              matInput
-              formControlName="name"
-              placeholder="Enter holiday name"
-            />
-          </mat-form-field>
+          <div class="basic-fields">
+            <mat-form-field appearance="outline">
+              <mat-label>Holiday Name</mat-label>
+              <input
+                matInput
+                formControlName="name"
+                placeholder="Enter holiday name"
+              />
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Start Date</mat-label>
-            <input
-              matInput
-              [matDatepicker]="startPicker"
-              formControlName="start_date"
-            />
-            <mat-datepicker-toggle
-              matSuffix
-              [for]="startPicker"
-            ></mat-datepicker-toggle>
-            <mat-datepicker #startPicker></mat-datepicker>
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="startPicker"
+                formControlName="start_date"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="startPicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>End Date</mat-label>
-            <input
-              matInput
-              [matDatepicker]="endPicker"
-              formControlName="end_date"
-            />
-            <mat-datepicker-toggle
-              matSuffix
-              [for]="endPicker"
-            ></mat-datepicker-toggle>
-            <mat-datepicker #endPicker></mat-datepicker>
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>End Date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="endPicker"
+                formControlName="end_date"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="endPicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
 
-          <button
-            mat-icon-button
-            color="warn"
-            (click)="removeHoliday(i)"
-            matTooltip="Remove Holiday"
-            type="button"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="removeHoliday(i)"
+              matTooltip="Remove Holiday"
+              type="button"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <div class="recurring-checkbox">
+            <mat-checkbox formControlName="is_recurring">
+              Recurring Annual Holiday
+            </mat-checkbox>
+          </div>
+
+          <div class="recurring-fields" *ngIf="holiday.get('is_recurring')?.value">
+            <mat-form-field appearance="outline">
+              <mat-label>Recurrence Type</mat-label>
+              <mat-select formControlName="recurrence_type">
+                <mat-option value="fixed">Fixed Date (e.g., December 25)</mat-option>
+                <mat-option value="relative">Relative Date (e.g., First Monday in September)</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Month</mat-label>
+              <mat-select formControlName="recurrence_month">
+                <mat-option *ngFor="let month of monthNames; let idx = index" [value]="idx + 1">
+                  {{ month }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="holiday.get('recurrence_type')?.value === 'fixed'">
+              <mat-label>Day of Month</mat-label>
+              <input matInput type="number" formControlName="recurrence_day" min="1" max="31" />
+            </mat-form-field>
+
+            <div class="relative-fields" *ngIf="holiday.get('recurrence_type')?.value === 'relative'">
+              <mat-form-field appearance="outline">
+                <mat-label>Week</mat-label>
+                <mat-select formControlName="recurrence_week">
+                  <mat-option *ngFor="let week of weekNumbers" [value]="week.value">
+                    {{ week.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Weekday</mat-label>
+                <mat-select formControlName="recurrence_weekday">
+                  <mat-option *ngFor="let day of weekdayNames; let idx = index" [value]="idx">
+                    {{ day }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
         </div>
         <div *ngIf="getHolidays().length === 0" class="no-holidays">
           <mat-icon>event_busy</mat-icon>

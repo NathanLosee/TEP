@@ -13,22 +13,45 @@
         *ngFor="let holiday of holidayGroup.holidays; let i = index"
         class="holiday-item"
       >
-        <div class="holiday-info">
-          <span class="holiday-name">{{ holiday.name }}</span>
-          <span class="holiday-dates">
-            {{ getStartDate(holiday) | date : "MMM d, y" }}
-            <span *ngIf="getStartDate(holiday).getTime() !== getEndDate(holiday).getTime()">
-              - {{ getEndDate(holiday) | date : "MMM d, y" }}
-            </span>
-            <mat-chip class="duration-chip"
-              >{{
-                getDurationDays(holiday)
-              }}
-              day{{
-                getDurationDays(holiday) !== 1 ? "s" : ""
-              }}</mat-chip
-            >
+        <div class="holiday-header">
+          <span class="holiday-name">
+            {{ holiday.name }}
+            <mat-chip *ngIf="holiday.is_recurring" class="recurring-badge">
+              <mat-icon>repeat</mat-icon>
+              Recurring
+            </mat-chip>
           </span>
+        </div>
+
+        <div class="holiday-info">
+          <div *ngIf="holiday.is_recurring" class="recurring-details">
+            <div class="recurrence-pattern">
+              <mat-icon>event_repeat</mat-icon>
+              <span class="pattern-text">{{ getRecurrenceDescription(holiday) }}</span>
+            </div>
+            <div class="current-year-date">
+              <mat-icon>today</mat-icon>
+              <span>{{ currentYear }}: {{ getCurrentYearDate(holiday) | date : "EEEE, MMMM d" }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="!holiday.is_recurring" class="one-time-dates">
+            <mat-icon>event</mat-icon>
+            <span class="holiday-dates">
+              {{ getStartDate(holiday) | date : "MMM d, y" }}
+              <span *ngIf="getStartDate(holiday).getTime() !== getEndDate(holiday).getTime()">
+                - {{ getEndDate(holiday) | date : "MMM d, y" }}
+              </span>
+              <mat-chip class="duration-chip"
+                >{{
+                  getDurationDays(holiday)
+                }}
+                day{{
+                  getDurationDays(holiday) !== 1 ? "s" : ""
+                }}</mat-chip
+              >
+            </span>
+          </div>
         </div>
       </div>
     </div>

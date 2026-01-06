@@ -16,20 +16,58 @@
 
 .holiday-item {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 1rem;
   padding: 1rem;
   border: 1px solid var(--sys-outline-variant);
   border-radius: 8px;
   background: var(--sys-surface-variant);
 
-  mat-form-field {
-    flex: 1;
-    min-width: 120px;
+  .basic-fields {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    button {
+      margin-top: 8px;
+    }
   }
 
-  button {
-    margin-top: 8px;
+  .recurring-checkbox {
+    padding: 0.5rem 0;
+
+    mat-checkbox {
+      font-size: 0.9rem;
+    }
+  }
+
+  .recurring-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--sys-surface);
+    border-radius: 4px;
+    border-left: 3px solid var(--sys-primary);
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .relative-fields {
+      display: flex;
+      gap: 0.75rem;
+
+      mat-form-field {
+        flex: 1;
+      }
+    }
   }
 }
 
@@ -73,7 +111,7 @@ mat-dialog-actions {
     min-width: 90vw;
   }
 
-  .holiday-item {
+  .holiday-item .basic-fields {
     flex-direction: column;
     align-items: stretch;
 
