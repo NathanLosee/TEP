@@ -1,10 +1,64 @@
 :host {
+  display: block;
+  width: 100%;
+  background-color: var(--sys-surface-container-low);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.timeclock-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+// Left Column Styles
+.left-column {
   display: flex;
   flex-direction: column;
-  width: 425px;
-  padding: 1rem 1rem 0 1rem;
-  background-color: var(--sys-surface-container-low);
+  gap: 1.5rem;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: var(--sys-surface);
   border-radius: 1rem;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+  }
+}
+
+// Right Column Styles
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: var(--sys-surface);
+  border-radius: 1rem;
+
+  mat-form-field {
+    margin-bottom: 0;
+  }
+
+  button {
+    width: 100%;
+  }
 }
 
 mat-toolbar {
@@ -33,20 +87,165 @@ input {
   text-align: center;
 }
 
-mat-form-field {
-  margin-bottom: 17px;
+.actions-section {
+  .mat-mdc-button-base {
+    background-color: var(--sys-tertiary-container);
+    color: var(--sys-on-tertiary-container);
+  }
+
+  .mat-mdc-button-disabled {
+    background-color: var(--sys-surface-container);
+    color: var(--sys-on-surface-container);
+  }
 }
 
-:host > button {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-:host > .mat-mdc-button-base {
-  background-color: var(--sys-tertiary-container);
-  color: var(--sys-on-tertiary-container);
-}
-:host > .mat-mdc-button-disabled {
+// Device status card
+.device-status-card {
   background-color: var(--sys-surface-container);
-  color: var(--sys-on-surface-container);
+
+  .device-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+
+      &.registered {
+        color: var(--sys-primary);
+      }
+
+      &.unregistered {
+        color: var(--sys-error);
+      }
+    }
+
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      strong {
+        font-size: 1rem;
+      }
+
+      .device-name {
+        font-size: 0.875rem;
+        color: var(--sys-on-surface-variant);
+      }
+
+      .warning-text {
+        font-size: 0.875rem;
+        color: var(--sys-error);
+      }
+    }
+  }
+
+  .recovery-link {
+    margin-top: 1rem;
+    text-align: center;
+
+    button {
+      color: var(--sys-primary);
+    }
+  }
+
+  .recovery-form {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--sys-surface);
+    border-radius: 0.5rem;
+    border: 1px solid var(--sys-outline-variant);
+
+    h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: var(--sys-on-surface);
+      text-align: left;
+    }
+
+    p {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.875rem;
+      color: var(--sys-on-surface-variant);
+      text-align: left;
+    }
+
+    .format-hint {
+      margin-bottom: 1rem;
+      font-size: 0.8125rem;
+      font-style: italic;
+      color: var(--sys-on-surface-variant);
+      opacity: 0.8;
+    }
+
+    .recovery-input {
+      width: 100%;
+      margin-bottom: 1rem;
+
+      input {
+        text-align: left;
+        text-transform: uppercase;
+      }
+    }
+
+    .recovery-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: var(--sys-error-container);
+      color: var(--sys-on-error-container);
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+
+      mat-icon {
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 900px) {
+  .timeclock-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .left-column {
+    order: 1;
+  }
+
+  .right-column {
+    order: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  :host {
+    padding: 1rem;
+  }
+
+  .timeclock-layout {
+    gap: 1rem;
+  }
+
+  .logo-container {
+    padding: 1rem;
+  }
+
+  .actions-section {
+    padding: 1rem;
+  }
 }

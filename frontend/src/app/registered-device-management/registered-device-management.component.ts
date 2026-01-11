@@ -65,6 +65,8 @@ export class RegisteredDeviceManagementComponent implements OnInit {
   displayedColumns: string[] = [
     'browser_name',
     'browser_uuid',
+    'last_seen',
+    'is_active',
     'actions',
   ];
 
@@ -82,10 +84,9 @@ export class RegisteredDeviceManagementComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.loadDevices();
-    this.currentBrowserUuid = this.deviceUuidService.getDeviceUuid();
-    this.currentBrowserName = this.deviceUuidService.getBrowserName();
+    await this.verifyCurrentBrowser();
   }
 
   loadDevices() {
@@ -103,6 +104,57 @@ export class RegisteredDeviceManagementComponent implements OnInit {
     });
   }
 
+  async verifyCurrentBrowser() {
+    try {
+      const fingerprint = await this.deviceUuidService.generateFingerprint();
+      const storedUuid = this.deviceUuidService.getDeviceUuid();
+
+      this.deviceService
+        .verifyBrowser({
+          fingerprint_hash: fingerprint,
+          browser_uuid: storedUuid || undefined,
+        })
+        .subscribe({
+          next: (response) => {
+            if (response.verified && response.browser_uuid) {
+              this.currentBrowserUuid = response.browser_uuid;
+              this.currentBrowserName = response.browser_name || null;
+
+              // If UUID was restored from fingerprint, update localStorage
+              if (response.restored) {
+                this.deviceUuidService.setDeviceUuid(
+                  response.browser_uuid,
+                  response.browser_name
+                );
+                this.showSnackBar(
+                  'Device registration restored',
+                  'success'
+                );
+              }
+
+              this.checkIfCurrentBrowserIsRegistered();
+            } else {
+              this.currentBrowserUuid = storedUuid;
+              this.currentBrowserName =
+                this.deviceUuidService.getBrowserName();
+              this.checkIfCurrentBrowserIsRegistered();
+            }
+          },
+          error: (error) => {
+            console.error('Fingerprint verification failed:', error);
+            this.currentBrowserUuid = storedUuid;
+            this.currentBrowserName = this.deviceUuidService.getBrowserName();
+            this.checkIfCurrentBrowserIsRegistered();
+          },
+        });
+    } catch (error) {
+      console.error('Failed to generate fingerprint:', error);
+      this.currentBrowserUuid = this.deviceUuidService.getDeviceUuid();
+      this.currentBrowserName = this.deviceUuidService.getBrowserName();
+      this.checkIfCurrentBrowserIsRegistered();
+    }
+  }
+
   checkIfCurrentBrowserIsRegistered() {
     if (this.currentBrowserUuid) {
       this.isCurrentBrowserRegistered = this.devices.some(
@@ -113,28 +165,49 @@ export class RegisteredDeviceManagementComponent implements OnInit {
     }
   }
 
-  registerDevice() {
+  async registerDevice() {
     if (this.registerForm.valid) {
       this.isRegistering = true;
-      const browserData = this.registerForm.value;
 
-      this.deviceService.registerDevice(browserData).subscribe({
-        next: (browser) => {
-          // Save the UUID and name to localStorage for this browser
-          this.deviceUuidService.setDeviceUuid(browser.browser_uuid, browser.browser_name);
-          this.currentBrowserUuid = browser.browser_uuid;
-          this.currentBrowserName = browser.browser_name;
+      try {
+        const fingerprint =
+          await this.deviceUuidService.generateFingerprint();
+        const browserData = {
+          ...this.registerForm.value,
+          fingerprint_hash: fingerprint,
+          user_agent: navigator.userAgent,
+        };
 
-          this.showSnackBar('Browser registered successfully', 'success');
-          this.registerForm.reset();
-          this.loadDevices();
-          this.isRegistering = false;
-        },
-        error: (error) => {
-          this.errorDialog.openErrorDialog('Failed to register browser', error);
-          this.isRegistering = false;
-        },
-      });
+        this.deviceService.registerDevice(browserData).subscribe({
+          next: (browser) => {
+            // Save the UUID and name to localStorage for this browser
+            this.deviceUuidService.setDeviceUuid(
+              browser.browser_uuid,
+              browser.browser_name
+            );
+            this.currentBrowserUuid = browser.browser_uuid;
+            this.currentBrowserName = browser.browser_name;
+
+            this.showSnackBar('Device registered successfully', 'success');
+            this.registerForm.reset();
+            this.loadDevices();
+            this.isRegistering = false;
+          },
+          error: (error) => {
+            this.errorDialog.openErrorDialog(
+              'Failed to register device',
+              error
+            );
+            this.isRegistering = false;
+          },
+        });
+      } catch (error) {
+        this.errorDialog.openErrorDialog(
+          'Failed to generate device fingerprint',
+          error
+        );
+        this.isRegistering = false;
+      }
     }
   }
 
@@ -159,52 +232,85 @@ export class RegisteredDeviceManagementComponent implements OnInit {
     }
   }
 
-  useCurrentBrowserUuid() {
+  async useCurrentBrowserUuid() {
     if (this.currentBrowserUuid && this.currentBrowserName) {
-      // Send a registration request with the current browser info
-      const browserData = {
-        browser_uuid: this.currentBrowserUuid,
-        browser_name: this.currentBrowserName
-      };
+      try {
+        const fingerprint =
+          await this.deviceUuidService.generateFingerprint();
+        const browserData = {
+          browser_uuid: this.currentBrowserUuid,
+          browser_name: this.currentBrowserName,
+          fingerprint_hash: fingerprint,
+          user_agent: navigator.userAgent,
+        };
 
-      this.isRegistering = true;
-      this.deviceService.registerDevice(browserData).subscribe({
-        next: () => {
-          this.showSnackBar('Browser reregistered successfully', 'success');
-          this.loadDevices();
-          this.isRegistering = false;
-        },
-        error: (error) => {
-          this.errorDialog.openErrorDialog('Failed to reregister browser', error);
-          this.isRegistering = false;
-        },
-      });
+        this.isRegistering = true;
+        this.deviceService.registerDevice(browserData).subscribe({
+          next: () => {
+            this.showSnackBar('Device reregistered successfully', 'success');
+            this.loadDevices();
+            this.isRegistering = false;
+          },
+          error: (error) => {
+            this.errorDialog.openErrorDialog(
+              'Failed to reregister device',
+              error
+            );
+            this.isRegistering = false;
+          },
+        });
+      } catch (error) {
+        this.errorDialog.openErrorDialog(
+          'Failed to generate device fingerprint',
+          error
+        );
+      }
     } else {
-      this.showSnackBar('No browser registration found', 'info');
+      this.showSnackBar('No device registration found', 'info');
     }
   }
 
   clearBrowserUuid() {
-    if (confirm('Are you sure you want to unregister this browser?')) {
+    if (confirm('Are you sure you want to unregister this device?')) {
       this.deviceUuidService.clearDeviceUuid();
       this.currentBrowserUuid = null;
       this.currentBrowserName = null;
       this.isCurrentBrowserRegistered = false;
-      this.showSnackBar('Browser unregistered', 'success');
+      this.showSnackBar('Device unregistered', 'success');
     }
   }
 
   generateDeviceUUID() {
-    // Generate a simple UUID-like string for demonstration
-    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
-      /[xy]/g,
-      function (c) {
-        const r = (Math.random() * 16) | 0,
-          v = c === 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      }
-    );
-    this.registerForm.patchValue({ device_uuid: uuid });
+    // Generate a human-readable UUID in format WORD-WORD-WORD-NUMBER
+    const wordList = [
+      'APPLE', 'BEACH', 'CLOUD', 'DELTA', 'EAGLE', 'FLAME', 'GRASS', 'HOUSE',
+      'IVORY', 'JADE', 'KITE', 'LIGHT', 'MOON', 'NIGHT', 'OCEAN', 'PEARL',
+      'QUIET', 'RIVER', 'STONE', 'TIGER', 'ULTRA', 'VENUS', 'WATER', 'XENON',
+      'YOUTH', 'ZEBRA', 'AMBER', 'BLADE', 'CEDAR', 'DUNE', 'EMBER', 'FROST',
+      'GROVE', 'HAWK', 'IRIS', 'JET', 'KING', 'LOTUS', 'MIST', 'NOVA',
+      'OPAL', 'PINE', 'QUARTZ', 'RAVEN', 'SAGE', 'THORN', 'UNITY', 'VINE',
+      'WOLF', 'XRAY', 'YELLOW', 'ZINC', 'ARCTIC', 'BLAZE', 'CORAL', 'DAWN',
+      'ECHO', 'FLARE', 'GLOW', 'HALO', 'ICE', 'JADE', 'KELP', 'LAVA',
+      'MAPLE', 'NECTAR', 'ORBIT', 'PRISM', 'QUEST', 'RIDGE', 'SOLAR', 'TIDE',
+      'URBAN', 'VORTEX', 'WHALE', 'XYLEM', 'YARN', 'ZENITH', 'AZURE', 'BRICK',
+      'CRISP', 'DREAM', 'EDGE', 'FIELD', 'GRAIN', 'HAVEN', 'ISLAND', 'JEWEL',
+      'KNIGHT', 'LAKE', 'MEADOW', 'NORTH', 'OLIVE', 'PLAIN', 'QUEST', 'RANGE',
+      'SLOPE', 'TRAIL', 'UNION', 'VALLEY', 'WAVE', 'YIELD', 'ZONE', 'ARCH',
+      'BOLT', 'CAPE', 'DRIFT', 'EARTH', 'FLASH', 'GATE', 'HAVEN', 'INLET',
+      'JADE', 'KNOT', 'LEAF', 'MOUNT', 'NORTH', 'ORBIT', 'PEAK', 'QUIET',
+      'ROCKY', 'SHORE', 'TOWER', 'UPPER', 'VISTA', 'WEST', 'YACHT', 'ZEAL'
+    ];
+
+    // Select 3 random words
+    const shuffled = [...wordList].sort(() => Math.random() - 0.5);
+    const words = shuffled.slice(0, 3);
+
+    // Generate a random number between 10 and 99
+    const number = Math.floor(Math.random() * 90) + 10;
+
+    // Combine into UUID format
+    const uuid = `${words[0]}-${words[1]}-${words[2]}-${number}`;
+    this.registerForm.patchValue({ browser_uuid: uuid });
   }
 
   private showSnackBar(

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -7,9 +7,9 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,6 +33,19 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { EmployeeFormDialogComponent } from './employee-form-dialog/employee-form-dialog.component';
 import { EmployeeDetailsDialogComponent } from './employee-details-dialog/employee-details-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+
+interface EmployeeListing {
+  id: number;
+  badge_number: string;
+  name: string;
+  payroll_type: string;
+  org_unit: string;
+  departments: string;
+  holiday_group: string;
+  status: string;
+  // Keep reference to original employee for actions
+  _employee: Employee;
+}
 
 @Component({
   selector: 'app-employee-management',
@@ -64,7 +77,7 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss',
 })
-export class EmployeeManagementComponent implements OnInit {
+export class EmployeeManagementComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -73,12 +86,14 @@ export class EmployeeManagementComponent implements OnInit {
   private orgUnitService = inject(OrgUnitService);
   private holidayGroupService = inject(HolidayGroupService);
 
-  employees: Employee[] = [];
+  @ViewChild(MatSort) sort!: MatSort;
+
+  dataSource = new MatTableDataSource<EmployeeListing>([]);
   departments: Department[] = [];
   orgUnits: OrgUnit[] = [];
   holidayGroups: HolidayGroup[] = [];
   managers: Employee[] = [];
-  
+
   displayedColumns: string[] = [
     'badge_number',
     'name',
@@ -119,6 +134,10 @@ export class EmployeeManagementComponent implements OnInit {
     this.setupSearchForm();
   }
 
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+  }
+
   private loadFormData() {
     // Load departments
     this.departmentService.getDepartments().subscribe({
@@ -153,7 +172,8 @@ export class EmployeeManagementComponent implements OnInit {
     // Load managers (employees who can be managers)
     this.employeeService.getEmployees().subscribe({
       next: (employees) => {
-        this.managers = employees;
+        // Filter out root employee (id=0)
+        this.managers = employees.filter(emp => emp.id !== 0);
       },
       error: (error) => {
         console.error('Error loading managers:', error);
@@ -183,7 +203,11 @@ export class EmployeeManagementComponent implements OnInit {
       )
       .subscribe({
         next: (employees) => {
-          this.employees = employees;
+          // Filter out root employee (id=0) and transform to EmployeeListing
+          const listings = employees
+            .filter(emp => emp.id !== 0)
+            .map(emp => this.transformToListing(emp));
+          this.dataSource.data = listings;
           this.isLoading = false;
         },
         error: (error) => {
@@ -193,6 +217,19 @@ export class EmployeeManagementComponent implements OnInit {
       });
   }
 
+  private transformToListing(emp: Employee): EmployeeListing {
+    return {
+      id: emp.id!,
+      badge_number: emp.badge_number,
+      name: `${emp.first_name} ${emp.last_name}`,
+      payroll_type: emp.payroll_type || '',
+      org_unit: emp.org_unit?.name || '',
+      departments: emp.departments?.map(d => d.name).join(', ') || '',
+      holiday_group: emp.holiday_group?.name || '',
+      status: emp.allow_clocking ? 'Active' : 'Inactive',
+      _employee: emp,
+    };
+  }
 
   addEmployee() {
     const dialogRef = this.dialog.open(EmployeeFormDialogComponent, {
@@ -207,7 +244,8 @@ export class EmployeeManagementComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.employees.push(result);
+        const newListing = this.transformToListing(result);
+        this.dataSource.data = [...this.dataSource.data, newListing];
         this.showSnackBar(
           `Employee "${result.first_name} ${result.last_name}" created successfully`,
           'success'
@@ -230,9 +268,12 @@ export class EmployeeManagementComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        const index = this.employees.findIndex((emp) => emp.id === employee.id);
+        const index = this.dataSource.data.findIndex((listing) => listing.id === employee.id);
         if (index > -1) {
-          this.employees[index] = result;
+          const updatedListing = this.transformToListing(result);
+          const newData = [...this.dataSource.data];
+          newData[index] = updatedListing;
+          this.dataSource.data = newData;
           this.showSnackBar('Employee updated successfully', 'success');
         }
       }
@@ -271,16 +312,13 @@ export class EmployeeManagementComponent implements OnInit {
 
       this.employeeService.deleteEmployee(employee.id!).subscribe({
         next: () => {
-          const index = this.employees.findIndex(
-            (emp) => emp.id === employee.id
+          this.dataSource.data = this.dataSource.data.filter(
+            (listing) => listing.id !== employee.id
           );
-          if (index > -1) {
-            this.employees.splice(index, 1);
-            this.showSnackBar(
-              `${employee.first_name} ${employee.last_name} has been deleted successfully`,
-              'success'
-            );
-          }
+          this.showSnackBar(
+            `${employee.first_name} ${employee.last_name} has been deleted successfully`,
+            'success'
+          );
           this.isLoading = false;
         },
         error: (error) => {

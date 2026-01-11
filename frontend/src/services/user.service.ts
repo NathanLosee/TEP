@@ -176,7 +176,7 @@ export class UserService {
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub || null;
+      return payload.badge_number || payload.sub || null;
     } catch {
       return null;
     }

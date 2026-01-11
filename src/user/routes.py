@@ -167,13 +167,18 @@ def update_user_password(
     badge_number: str,
     request: UserPasswordChange,
     db: Session = Depends(get_db),
+    caller_badge: str = Security(services.requires_permission, scopes=[]),
 ):
     """Update a user's password.
+
+    Users can change their own password (requires current password).
+    Users with user.update permission can change any user's password (no current password needed).
 
     Args:
         badge_number (str): User's badge number.
         request (UserPasswordChange): Request data for updating user.
         db (Session, optional): Database session for current request.
+        caller_badge (str): Badge number of the authenticated caller.
 
     Returns:
         UserResponse: The updated user.
@@ -192,19 +197,40 @@ def update_user_password(
         status.HTTP_404_NOT_FOUND,
     )
 
-    services.validate(
-        services.verify_password(request.password, user.password),
-        EXC_MSG_WRONG_PASSWORD,
-        status.HTTP_403_FORBIDDEN,
+    # Check if user is changing their own password or has admin permission
+    is_self_update = caller_badge == badge_number
+    caller_user = user_repository.get_user_by_badge_number(caller_badge, db)
+    has_admin_permission = any(
+        "user.update" in [perm.resource for perm in role.permissions]
+        for role in caller_user.auth_roles
     )
+
+    # If user is changing their own password, verify current password
+    if is_self_update and not has_admin_permission:
+        services.validate(
+            services.verify_password(request.password, user.password),
+            EXC_MSG_WRONG_PASSWORD,
+            status.HTTP_403_FORBIDDEN,
+        )
+    # If user has admin permission, they can change without current password
+    elif not has_admin_permission:
+        # User doesn't have permission to change other users' passwords
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to change other users' passwords",
+        )
 
     user = user_repository.update_user(
         user,
         UserBase(badge_number=badge_number, password=request.new_password),
         db,
     )
-    log_args = {"badge_number": user.badge_number}
-    services.create_event_log(IDENTIFIER, "UPDATE", log_args, "0", db)
+    log_args = {
+        "badge_number": user.badge_number,
+        "changed_by": caller_badge,
+        "is_self_update": is_self_update,
+    }
+    services.create_event_log(IDENTIFIER, "UPDATE_PASSWORD", log_args, caller_badge, db)
     return user
 
 

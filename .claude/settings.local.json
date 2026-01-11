@@ -16,7 +16,23 @@
       "Bash(done)",
       "Bash(cat:*)",
       "Bash(npm run test:*)",
-      "Bash(poetry run pytest:*)"
+      "Bash(poetry run pytest:*)",
+      "Bash(npm test:*)",
+      "Bash(while read f)",
+      "Bash(do spec=\"$f%.ts.spec.ts\")",
+      "Bash(if [ ! -f \"$spec\" ])",
+      "Bash(then echo \"$f - NO TEST\")",
+      "Bash(fi)",
+      "Bash(for f in */*.component.ts)",
+      "Bash(do if [ ! -f \"$f%.ts.spec.ts\" ])",
+      "Bash(then echo \"$f\")",
+      "Bash(npx ng build:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 15 poetry run uvicorn:*)",
+      "Bash(python -m alembic:*)",
+      "Bash(where:*)",
+      "Bash(python:*)"
     ]
   }
 }

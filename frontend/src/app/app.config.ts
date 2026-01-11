@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, APP_INITIALIZER } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
@@ -7,6 +7,30 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { baseUrlInterceptor } from '../interceptors/baseurl.interceptor';
 import { formDataInterceptor } from '../interceptors/formdata.interceptor';
 import { authRefreshInterceptor } from '../interceptors/auth-refresh.interceptor';
+import { PermissionService } from '../services/permission.service';
+
+/**
+ * Initialize permissions from stored access token on app startup
+ */
+function initializePermissions(permissionService: PermissionService) {
+  return () => {
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
+      try {
+        // Decode JWT token to extract permissions
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        permissionService.setPermissions({
+          scopes: payload.scopes || [],
+          badge_number: payload.sub || ''
+        });
+      } catch (error) {
+        console.error('Error decoding token during initialization:', error);
+        // Token is invalid, clear it
+        localStorage.removeItem('access_token');
+      }
+    }
+  };
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,5 +40,11 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([baseUrlInterceptor, formDataInterceptor, authRefreshInterceptor])
     ),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializePermissions,
+      deps: [PermissionService],
+      multi: true
+    }
   ],
 };

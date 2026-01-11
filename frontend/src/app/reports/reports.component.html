@@ -122,7 +122,7 @@
             class="form-field"
             *ngIf="reportForm.get('reportType')?.value === 'org_unit'"
           >
-            <mat-label>Select Org Unit</mat-label>
+            <mat-label>Select Organizational Unit</mat-label>
             <mat-select formControlName="orgUnit">
               <mat-option *ngFor="let unit of orgUnits" [value]="unit.id">
                 {{ unit.name }}
@@ -131,18 +131,14 @@
             <mat-icon matSuffix>account_tree</mat-icon>
           </mat-form-field>
 
-          <!-- PDF Detail Level -->
           <mat-form-field appearance="outline" class="form-field">
-            <mat-label>PDF Detail Level</mat-label>
+            <mat-label>Detail Level (PDF Export)</mat-label>
             <mat-select formControlName="detailLevel">
-              <mat-option
-                *ngFor="let level of detailLevels"
-                [value]="level.value"
-              >
+              <mat-option *ngFor="let level of detailLevels" [value]="level.value">
                 {{ level.label }}
               </mat-option>
             </mat-select>
-            <mat-icon matSuffix>layers</mat-icon>
+            <mat-icon matSuffix>description</mat-icon>
           </mat-form-field>
         </div>
       </form>
@@ -195,14 +191,14 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Drill-Down Report -->
+  <!-- Employee Reports with Calendar View -->
   <mat-card class="report-card" *ngIf="reportData && !isLoading">
     <mat-card-header>
-      <mat-card-title>Detailed Time Report</mat-card-title>
+      <mat-card-title>Employee Time Reports</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <div class="drill-down-container">
-        <!-- Employee Level -->
+      <div class="employees-container">
+        <!-- Employee Panel -->
         <div
           class="employee-panel"
           *ngFor="let employee of reportData.employees"
@@ -239,67 +235,81 @@
             </div>
           </div>
 
-          <!-- Employee Expanded Content -->
+          <!-- Employee Calendar View -->
           <div class="employee-content" *ngIf="isEmployeeExpanded(employee.employee_id)">
-            <!-- Month Level -->
-            <div class="month-panel" *ngFor="let month of employee.months">
-              <div
-                class="month-header"
-                (click)="toggleMonth(employee.employee_id, getMonthKey(month))"
-              >
-                <div class="month-info">
-                  <mat-icon class="expand-icon">
-                    {{ isMonthExpanded(employee.employee_id, getMonthKey(month)) ? 'expand_more' : 'chevron_right' }}
-                  </mat-icon>
-                  <span class="month-label">
-                    {{ month.year }}-{{ month.month.toString().padStart(2, '0') }}
-                  </span>
+            <div class="calendar-container" *ngIf="getEmployeeCalendar(employee.employee_id) as calendar">
+              <!-- Calendar Header with Navigation -->
+              <div class="calendar-header">
+                <button
+                  mat-icon-button
+                  (click)="previousMonth(employee.employee_id)"
+                  [disabled]="!calendar.canGoPrevious"
+                  class="nav-button"
+                >
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                <div class="month-year-display">
+                  {{ calendar.currentMonth | date: 'MMMM yyyy' }}
                 </div>
-                <div class="month-stats">
-                  <span class="month-hours">{{ month.total_hours | number: "1.2-2" }} hours</span>
-                </div>
+                <button
+                  mat-icon-button
+                  (click)="nextMonth(employee.employee_id)"
+                  [disabled]="!calendar.canGoNext"
+                  class="nav-button"
+                >
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
               </div>
 
-              <!-- Month Expanded Content -->
-              <div class="month-content" *ngIf="isMonthExpanded(employee.employee_id, getMonthKey(month))">
-                <!-- Day Level -->
-                <div class="day-panel" *ngFor="let day of month.days">
-                  <div
-                    class="day-header"
-                    (click)="toggleDay(employee.employee_id, getMonthKey(month), day.date)"
-                  >
-                    <div class="day-info">
-                      <mat-icon class="expand-icon">
-                        {{ isDayExpanded(employee.employee_id, getMonthKey(month), day.date) ? 'expand_more' : 'chevron_right' }}
-                      </mat-icon>
-                      <span class="day-label">{{ day.date }}</span>
-                    </div>
-                    <div class="day-stats">
-                      <span class="day-hours">{{ day.total_hours | number: "1.2-2" }} hours</span>
-                    </div>
-                  </div>
+              <!-- Calendar Grid -->
+              <div class="calendar-grid">
+                <!-- Day Headers -->
+                <div class="calendar-header-row">
+                  <div class="day-header">Sun</div>
+                  <div class="day-header">Mon</div>
+                  <div class="day-header">Tue</div>
+                  <div class="day-header">Wed</div>
+                  <div class="day-header">Thu</div>
+                  <div class="day-header">Fri</div>
+                  <div class="day-header">Sat</div>
+                </div>
 
-                  <!-- Day Expanded Content - Periods -->
-                  <div class="day-content" *ngIf="isDayExpanded(employee.employee_id, getMonthKey(month), day.date)">
-                    <div class="periods-table">
-                      <div class="period-row period-header-row">
-                        <div class="period-cell">Clock In</div>
-                        <div class="period-cell">Clock Out</div>
-                        <div class="period-cell">Hours</div>
-                      </div>
-                      <div class="period-row" *ngFor="let period of day.periods">
-                        <div class="period-cell">
-                          {{ period.clock_in | date: 'yyyy-MM-dd HH:mm' }}
+                <!-- Calendar Days -->
+                <div class="calendar-days">
+                  @for (day of calendar.calendarDays; track day.dateString) {
+                    <div
+                      class="calendar-day"
+                      [class.other-month]="!day.isCurrentMonth"
+                      [class.today]="day.isToday"
+                      [class.has-entries]="day.dayDetail"
+                    >
+                      <div class="day-number">{{ day.date.getDate() }}</div>
+                      @if (day.dayDetail) {
+                        <div class="day-entries">
+                          <div class="day-total">
+                            <mat-icon class="time-icon">schedule</mat-icon>
+                            <span class="hours-text">{{ day.dayDetail.total_hours | number: "1.2-2" }}h</span>
+                          </div>
+                          <div class="periods-list">
+                            @for (period of day.dayDetail.periods; track period.id) {
+                              <div class="period-item">
+                                <div class="period-time">
+                                  <span class="time-in">{{ period.clock_in | date: 'HH:mm' : userTimezone }}</span>
+                                  <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                                  <span class="time-out">
+                                    {{ period.clock_out ? (period.clock_out | date: 'HH:mm' : userTimezone) : '--:--' }}
+                                  </span>
+                                </div>
+                                <div class="period-hours">
+                                  {{ period.hours | number: "1.2-2" }}h
+                                </div>
+                              </div>
+                            }
+                          </div>
                         </div>
-                        <div class="period-cell">
-                          {{ period.clock_out ? (period.clock_out | date: 'yyyy-MM-dd HH:mm') : 'Not clocked out' }}
-                        </div>
-                        <div class="period-cell">
-                          {{ period.hours | number: "1.2-2" }}
-                        </div>
-                      </div>
+                      }
                     </div>
-                  </div>
+                  }
                 </div>
               </div>
             </div>

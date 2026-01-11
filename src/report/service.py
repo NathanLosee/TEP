@@ -105,16 +105,18 @@ def _get_employees_for_report(
     elif department_id:
         # Department report
         department = db.get(Department, department_id)
-        return department.employees if department else []
+        # Filter out root employee (id=0)
+        return [e for e in department.employees if e.id != 0] if department else []
 
     elif org_unit_id:
         # Org unit report
         org_unit = db.get(OrgUnit, org_unit_id)
-        return org_unit.employees if org_unit else []
+        # Filter out root employee (id=0)
+        return [e for e in org_unit.employees if e.id != 0] if org_unit else []
 
     else:
-        # All employees report
-        return db.scalars(select(Employee)).all()
+        # All employees report - filter out root employee (id=0)
+        return db.scalars(select(Employee).where(Employee.id != 0)).all()
 
 
 def _generate_employee_report(

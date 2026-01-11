@@ -7,6 +7,13 @@
     <h1>TEP Admin</h1>
   </div>
   <div class="toolbar-actions">
+    <button
+      mat-icon-button
+      matTooltip="Change Password"
+      (click)="openPasswordChangeDialog()"
+    >
+      <mat-icon>lock</mat-icon>
+    </button>
     <button mat-icon-button matTooltip="Logout" routerLink="/">
       <mat-icon>logout</mat-icon>
     </button>

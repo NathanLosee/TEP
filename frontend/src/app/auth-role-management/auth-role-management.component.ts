@@ -69,6 +69,7 @@ export class AuthRoleManagementComponent implements OnInit {
   authRoles: AuthRole[] = [];
   filteredRoles: AuthRole[] = [];
   selectedRole: AuthRole | null = null;
+  selectedRoleUsers: any[] = [];
 
   // Forms
   searchForm: FormGroup;
@@ -98,7 +99,8 @@ export class AuthRoleManagementComponent implements OnInit {
     this.isLoading = true;
     this.authRoleService.getAuthRoles().subscribe({
       next: (roles) => {
-        this.authRoles = roles;
+        // Filter out root role (id=0)
+        this.authRoles = roles.filter(role => role.id !== 0);
         this.filterRoles();
         this.isLoading = false;
       },
@@ -115,13 +117,16 @@ export class AuthRoleManagementComponent implements OnInit {
     });
   }
 
-  viewUsers(role: AuthRole) {
+  viewDetails(role: AuthRole) {
     this.selectedRole = role;
-    this.showUsersList = true;
+    this.showUsersList = false;
     this.showForm = false;
 
+    // Load users with this role
     this.authRoleService.getUsersByAuthRole(role.id!).subscribe({
       next: (users) => {
+        // Filter out root user (id=0)
+        this.selectedRoleUsers = users.filter(user => user.id !== 0);
         this.isLoading = false;
       },
       error: (error) => {

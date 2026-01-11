@@ -93,7 +93,8 @@ export class OrgUnitManagementComponent implements OnInit {
     this.isLoading = true;
     this.orgUnitService.getOrgUnits().subscribe({
       next: (orgUnits) => {
-        this.orgUnits = orgUnits;
+        // Filter out the root org unit (id=0)
+        this.orgUnits = orgUnits.filter(unit => unit.id !== 0);
         this.filteredOrgUnits = [...this.orgUnits];
         this.isLoading = false;
       },

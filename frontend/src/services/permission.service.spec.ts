@@ -90,9 +90,13 @@ describe('PermissionService', () => {
 
       service.setPermissions(permissions);
 
-      service.permissions$.pipe(take(1)).subscribe(perms => {
-        expect(perms).toBeNull();
-        done();
+      // Subscribe first, then clear - this way we catch the next emission
+      service.permissions$.pipe(take(2)).subscribe(perms => {
+        // First emission is current value (permissions), second is null after clear
+        if (perms === null) {
+          expect(perms).toBeNull();
+          done();
+        }
       });
 
       service.clearPermissions();
@@ -217,12 +221,14 @@ describe('PermissionService', () => {
 
     it('should react to permission changes', (done) => {
       let emissionCount = 0;
-      const expected = [false, true];
+      // BehaviorSubject emits current value (null) first, then emissions from setPermissions
+      // Emissions: null→false, {user.read}→false, {user.read,user.write}→true
+      const expected = [false, false, true];
 
-      service.hasPermission$('user.write').pipe(take(2)).subscribe(hasPermission => {
+      service.hasPermission$('user.write').pipe(take(3)).subscribe(hasPermission => {
         expect(hasPermission).toBe(expected[emissionCount]);
         emissionCount++;
-        if (emissionCount === 2) done();
+        if (emissionCount === 3) done();
       });
 
       service.setPermissions({ scopes: ['user.read'], badge_number: 'EMP001' });

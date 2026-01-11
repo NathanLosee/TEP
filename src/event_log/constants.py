@@ -63,6 +63,7 @@ EVENT_LOG_MSGS = {
     },
     REGISTERED_BROWSER_IDENTIFIER: {
         "CREATE": "Registered device {browser_uuid} created",
+        "RECOVER": "Registered device {browser_uuid} recovered",
         "DELETE": "Registered device {browser_uuid} deleted",
     },
     TIMECLOCK_IDENTIFIER: {
@@ -75,6 +76,7 @@ EVENT_LOG_MSGS = {
         "LOGIN": "User {badge_number} logged in",
         "CREATE": "User account for {badge_number} created",
         "UPDATE": "User account for {badge_number} updated",
+        "UPDATE_PASSWORD": "Password updated for {badge_number} by {changed_by}",
         "DELETE": "User account for {badge_number} deleted",
     },
 }

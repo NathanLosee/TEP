@@ -115,12 +115,12 @@
                       <div class="action-buttons">
                         <button
                           mat-icon-button
-                          matTooltip="View Users"
-                          (click)="viewUsers(role)"
+                          matTooltip="View Details"
+                          (click)="viewDetails(role)"
                           class="view-btn"
                           [disableIfNoPermission]="'auth_role.read'"
                         >
-                          <mat-icon>people</mat-icon>
+                          <mat-icon>info</mat-icon>
                         </button>
                         <button
                           mat-icon-button
@@ -167,9 +167,12 @@
                     </mat-card-header>
 
                     <mat-card-content>
-                      <!-- Role Permissions -->
+                      <mat-divider></mat-divider>
+
+                      <!-- Role Permissions Section -->
                       <div class="role-permissions-section">
                         <h3>
+                          <mat-icon>verified_user</mat-icon>
                           Permissions ({{ selectedRole.permissions.length }})
                         </h3>
                         <div class="permission-chips">
@@ -183,6 +186,29 @@
                             </mat-chip>
                           </mat-chip-set>
                         </div>
+                        <p *ngIf="selectedRole.permissions.length === 0" class="no-items">
+                          No permissions assigned to this role
+                        </p>
+                      </div>
+
+                      <mat-divider></mat-divider>
+
+                      <!-- Assigned Users Section -->
+                      <div class="role-users-section">
+                        <h3>
+                          <mat-icon>people</mat-icon>
+                          Assigned Users ({{ selectedRoleUsers.length }})
+                        </h3>
+                        <div class="users-list" *ngIf="selectedRoleUsers.length > 0">
+                          <mat-chip-set>
+                            <mat-chip *ngFor="let user of selectedRoleUsers">
+                              {{ user.badge_number }}
+                            </mat-chip>
+                          </mat-chip-set>
+                        </div>
+                        <p *ngIf="selectedRoleUsers.length === 0" class="no-items">
+                          No users assigned to this role
+                        </p>
                       </div>
                     </mat-card-content>
                   </mat-card>

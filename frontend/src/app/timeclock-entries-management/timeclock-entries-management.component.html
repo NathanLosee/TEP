@@ -113,14 +113,14 @@
           <!-- Time Entries Table -->
           <mat-card class="table-card">
             <mat-card-header>
-              <mat-card-title>Time Entries ({{ timeEntries.length }})</mat-card-title>
+              <mat-card-title>Time Entries ({{ dataSource.data.length }})</mat-card-title>
             </mat-card-header>
 
             <mat-card-content>
               <div class="table-container">
         <table
           mat-table
-          [dataSource]="timeEntries"
+          [dataSource]="dataSource"
           class="entries-table"
           matSort
         >
@@ -269,7 +269,7 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="!isLoading && timeEntries.length === 0" class="empty-state">
+      <div *ngIf="!isLoading && dataSource.data.length === 0" class="empty-state">
         <mat-icon class="empty-icon">schedule</mat-icon>
         <h3>No time entries found</h3>
         <p>Try adjusting your date range or search criteria.</p>

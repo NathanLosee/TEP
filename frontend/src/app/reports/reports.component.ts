@@ -23,11 +23,30 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 import {
   ReportService,
   ReportResponse,
-  EmployeeReportData
+  EmployeeReportData,
+  DayDetail,
+  TimePeriod
 } from "../../services/report.service";
 import { EmployeeService } from "../../services/employee.service";
 import { DepartmentService } from "../../services/department.service";
 import { OrgUnitService } from "../../services/org-unit.service";
+
+interface CalendarDay {
+  date: Date;
+  dateString: string; // YYYY-MM-DD format
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  dayDetail?: DayDetail;
+}
+
+interface EmployeeCalendar {
+  currentMonth: Date;
+  calendarDays: CalendarDay[];
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+  earliestDate?: Date;
+  latestDate?: Date;
+}
 
 @Component({
   selector: "app-reports",
@@ -81,12 +100,17 @@ export class ReportsComponent implements OnInit {
     { value: "detailed", label: "Full Detailed Report" },
   ];
 
-  // Track expansion state for drill-down
+  // Track expansion state for employees (show/hide calendar)
   expandedEmployees: Set<number> = new Set();
-  expandedMonths: Map<number, Set<string>> = new Map();
-  expandedDays: Map<number, Map<string, Set<string>>> = new Map();
+
+  // Calendar state for each employee
+  employeeCalendars: Map<number, EmployeeCalendar> = new Map();
+
+  userTimezone: string;
 
   constructor() {
+    this.userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     this.reportForm = this.fb.group({
       reportType: ["all"],
       dateRange: this.fb.group({
@@ -118,7 +142,8 @@ export class ReportsComponent implements OnInit {
   loadEmployees() {
     this.employeeService.getEmployees().subscribe({
       next: (data) => {
-        this.employees = data;
+        // Filter out root employee (id=0)
+        this.employees = data.filter(emp => emp.id !== 0);
       },
       error: (error) => {
         console.error("Error loading employees:", error);
@@ -142,7 +167,8 @@ export class ReportsComponent implements OnInit {
   loadOrgUnits() {
     this.orgUnitService.getOrgUnits().subscribe({
       next: (data) => {
-        this.orgUnits = data;
+        // Filter out root org unit (id=0)
+        this.orgUnits = data.filter(unit => unit.id !== 0);
       },
       error: (error) => {
         console.error("Error loading org units:", error);
@@ -174,8 +200,13 @@ export class ReportsComponent implements OnInit {
         this.reportData = data;
         this.isLoading = false;
         this.expandedEmployees.clear();
-        this.expandedMonths.clear();
-        this.expandedDays.clear();
+        this.employeeCalendars.clear();
+
+        // Initialize calendars for each employee
+        data.employees.forEach(employee => {
+          this.initializeEmployeeCalendar(employee);
+        });
+
         this.showSnackBar("Report generated successfully", "success");
       },
       error: (error) => {
@@ -233,46 +264,124 @@ export class ReportsComponent implements OnInit {
     return this.expandedEmployees.has(employeeId);
   }
 
-  toggleMonth(employeeId: number, monthKey: string) {
-    if (!this.expandedMonths.has(employeeId)) {
-      this.expandedMonths.set(employeeId, new Set());
+  getEmployeeCalendar(employeeId: number): EmployeeCalendar | undefined {
+    return this.employeeCalendars.get(employeeId);
+  }
+
+  initializeEmployeeCalendar(employee: EmployeeReportData) {
+    if (!this.reportData) return;
+
+    // Find earliest and latest dates in employee's data
+    let earliestDate: Date | undefined;
+    let latestDate: Date | undefined;
+
+    employee.months.forEach(month => {
+      month.days.forEach(day => {
+        const dayDate = new Date(day.date);
+        if (!earliestDate || dayDate < earliestDate) {
+          earliestDate = dayDate;
+        }
+        if (!latestDate || dayDate > latestDate) {
+          latestDate = dayDate;
+        }
+      });
+    });
+
+    // Start with the earliest month or report start date
+    const startMonth = earliestDate || new Date(this.reportData.start_date);
+
+    const calendar: EmployeeCalendar = {
+      currentMonth: new Date(startMonth.getFullYear(), startMonth.getMonth(), 1),
+      calendarDays: [],
+      canGoPrevious: true,
+      canGoNext: true,
+      earliestDate: earliestDate,
+      latestDate: latestDate,
+    };
+
+    this.updateEmployeeCalendar(employee.employee_id, calendar, employee);
+    this.employeeCalendars.set(employee.employee_id, calendar);
+  }
+
+  updateEmployeeCalendar(employeeId: number, calendar: EmployeeCalendar, employee: EmployeeReportData) {
+    const year = calendar.currentMonth.getFullYear();
+    const month = calendar.currentMonth.getMonth();
+
+    // Get first day of the month
+    const firstDay = new Date(year, month, 1);
+    const firstDayOfWeek = firstDay.getDay();
+
+    // Start from the Sunday before the first day of the month
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDayOfWeek);
+
+    // Build calendar days array (6 weeks = 42 days)
+    const calendarDays: CalendarDay[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Create a map of date strings to day details for quick lookup
+    const dayDetailsMap = new Map<string, DayDetail>();
+    employee.months.forEach(m => {
+      m.days.forEach(day => {
+        const dateStr = this.formatDate(new Date(day.date));
+        dayDetailsMap.set(dateStr, day);
+      });
+    });
+
+    for (let i = 0; i < 42; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      currentDate.setHours(0, 0, 0, 0);
+
+      const dateStr = this.formatDate(currentDate);
+      const dayDetail = dayDetailsMap.get(dateStr);
+
+      calendarDays.push({
+        date: new Date(currentDate),
+        dateString: dateStr,
+        isCurrentMonth: currentDate.getMonth() === month,
+        isToday: currentDate.getTime() === today.getTime(),
+        dayDetail: dayDetail,
+      });
     }
-    const months = this.expandedMonths.get(employeeId)!;
-    if (months.has(monthKey)) {
-      months.delete(monthKey);
-    } else {
-      months.add(monthKey);
+
+    calendar.calendarDays = calendarDays;
+
+    // Update navigation availability
+    if (calendar.earliestDate) {
+      const earliestMonth = new Date(calendar.earliestDate.getFullYear(), calendar.earliestDate.getMonth(), 1);
+      calendar.canGoPrevious = calendar.currentMonth > earliestMonth;
+    }
+
+    if (calendar.latestDate) {
+      const latestMonth = new Date(calendar.latestDate.getFullYear(), calendar.latestDate.getMonth(), 1);
+      calendar.canGoNext = calendar.currentMonth < latestMonth;
     }
   }
 
-  isMonthExpanded(employeeId: number, monthKey: string): boolean {
-    return this.expandedMonths.get(employeeId)?.has(monthKey) || false;
-  }
+  previousMonth(employeeId: number) {
+    const calendar = this.employeeCalendars.get(employeeId);
+    const employee = this.reportData?.employees.find(e => e.employee_id === employeeId);
 
-  toggleDay(employeeId: number, monthKey: string, dayKey: string) {
-    if (!this.expandedDays.has(employeeId)) {
-      this.expandedDays.set(employeeId, new Map());
-    }
-    const employeeDays = this.expandedDays.get(employeeId)!;
-    if (!employeeDays.has(monthKey)) {
-      employeeDays.set(monthKey, new Set());
-    }
-    const days = employeeDays.get(monthKey)!;
-    if (days.has(dayKey)) {
-      days.delete(dayKey);
-    } else {
-      days.add(dayKey);
+    if (calendar && employee && calendar.canGoPrevious) {
+      const newMonth = new Date(calendar.currentMonth);
+      newMonth.setMonth(newMonth.getMonth() - 1);
+      calendar.currentMonth = newMonth;
+      this.updateEmployeeCalendar(employeeId, calendar, employee);
     }
   }
 
-  isDayExpanded(employeeId: number, monthKey: string, dayKey: string): boolean {
-    return (
-      this.expandedDays.get(employeeId)?.get(monthKey)?.has(dayKey) || false
-    );
-  }
+  nextMonth(employeeId: number) {
+    const calendar = this.employeeCalendars.get(employeeId);
+    const employee = this.reportData?.employees.find(e => e.employee_id === employeeId);
 
-  getMonthKey(month: any): string {
-    return `${month.year}-${month.month.toString().padStart(2, "0")}`;
+    if (calendar && employee && calendar.canGoNext) {
+      const newMonth = new Date(calendar.currentMonth);
+      newMonth.setMonth(newMonth.getMonth() + 1);
+      calendar.currentMonth = newMonth;
+      this.updateEmployeeCalendar(employeeId, calendar, employee);
+    }
   }
 
   getTotalHours(): number {

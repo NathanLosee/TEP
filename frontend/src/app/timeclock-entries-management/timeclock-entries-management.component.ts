@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -19,8 +19,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatSortModule } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import {
@@ -32,11 +32,11 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
 
 interface TimeclockEntryListing {
   id?: number;
-  badgeNumber: string;
-  employeeName?: string;
-  clockIn: Date;
-  clockOut?: Date;
-  totalHours?: number;
+  badge_number: string;
+  employee_name?: string;
+  clock_in: Date;
+  clock_out?: Date;
+  total_hours?: number;
   status: string;
 }
 
@@ -69,13 +69,15 @@ interface TimeclockEntryListing {
   templateUrl: './timeclock-entries-management.component.html',
   styleUrl: './timeclock-entries-management.component.scss',
 })
-export class TimeclockEntriesManagementComponent implements OnInit {
+export class TimeclockEntriesManagementComponent implements OnInit, AfterViewInit {
   private timeclockService = inject(TimeclockService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   readonly errorDialog = inject(ErrorDialogComponent);
 
-  timeEntries: TimeclockEntryListing[] = [];
+  @ViewChild(MatSort) sort!: MatSort;
+
+  dataSource = new MatTableDataSource<TimeclockEntryListing>([]);
   displayedColumns: string[] = [
     'badge_number',
     'employee_name',
@@ -112,6 +114,10 @@ export class TimeclockEntriesManagementComponent implements OnInit {
     this.setupFilterForm();
   }
 
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+  }
+
   setDefaultDateRange() {
     const today = new Date();
     const startOfWeek = new Date(today);
@@ -144,10 +150,13 @@ export class TimeclockEntriesManagementComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          this.timeEntries = response.map((entry: any) => ({
-            ...entry,
-            employeeName: entry.first_name + ' ' + entry.last_name,
-            totalHours: entry.clock_out
+          const entries = response.map((entry: any) => ({
+            id: entry.id,
+            badge_number: entry.badge_number,
+            employee_name: entry.first_name + ' ' + entry.last_name,
+            clock_in: new Date(entry.clock_in),
+            clock_out: entry.clock_out ? new Date(entry.clock_out) : undefined,
+            total_hours: entry.clock_out
               ? this.calculateTotalHours(
                   new Date(entry.clock_in),
                   new Date(entry.clock_out)
@@ -155,6 +164,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
               : 0,
             status: this.getEntryStatus(entry),
           }));
+          this.dataSource.data = entries;
           this.isLoading = false;
         },
         error: (error) => {
@@ -168,11 +178,11 @@ export class TimeclockEntriesManagementComponent implements OnInit {
   }
 
   editEntry(entry: TimeclockEntryListing) {
-    this.showSnackBar(`Edit entry for ${entry.badgeNumber}`, 'info');
+    this.showSnackBar(`Edit entry for ${entry.badge_number}`, 'info');
   }
 
   deleteEntry(entry: TimeclockEntryListing) {
-    this.showSnackBar(`Delete entry for ${entry.badgeNumber}`, 'info');
+    this.showSnackBar(`Delete entry for ${entry.badge_number}`, 'info');
   }
 
   addManualEntry() {
@@ -211,15 +221,15 @@ export class TimeclockEntriesManagementComponent implements OnInit {
   }
 
   getActiveEntriesCount(): number {
-    return this.timeEntries.filter((e) => e.status === 'clocked_in').length;
+    return this.dataSource.data.filter((e) => e.status === 'clocked_in').length;
   }
 
   getCompletedEntriesCount(): number {
-    return this.timeEntries.filter((e) => e.status === 'clocked_out').length;
+    return this.dataSource.data.filter((e) => e.status === 'clocked_out').length;
   }
 
   getIncompleteEntriesCount(): number {
-    return this.timeEntries.filter((e) => e.status === 'incomplete').length;
+    return this.dataSource.data.filter((e) => e.status === 'incomplete').length;
   }
 
   private showSnackBar(

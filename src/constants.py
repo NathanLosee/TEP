@@ -46,5 +46,6 @@ RESOURCE_SCOPES = {
     "user.create": "Create User",
     "user.read": "Read User",
     "user.update": "Update User",
+    "user.update_self": "Update Own Password",
     "user.delete": "Delete User",
 }

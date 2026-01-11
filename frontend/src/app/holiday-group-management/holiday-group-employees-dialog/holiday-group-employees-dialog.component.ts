@@ -90,7 +90,8 @@ export class HolidayGroupEmployeesDialogComponent implements OnInit {
       .getEmployeesByHolidayGroup(this.holidayGroup.id!)
       .subscribe({
         next: (employees) => {
-          this.employees = employees;
+          // Filter out root employee (id=0)
+          this.employees = employees.filter(emp => emp.id !== 0);
           this.filterEmployees();
           this.isLoading = false;
         },

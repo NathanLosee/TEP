@@ -385,6 +385,64 @@ def create_event_log(
     db.commit()
 
 
+def get_license_status(db: Session) -> dict:
+    """Check current license status.
+
+    Args:
+        db (Session): Database session for the current request.
+
+    Returns:
+        dict: License status with keys:
+            - is_active (bool): Whether a license is currently active
+            - license_key (str | None): The active license key if one exists
+            - activated_at (datetime | None): When the license was activated
+            - server_id (str | None): Machine identifier if bound
+
+    """
+    import src.license.repository as license_repository
+
+    license_obj = license_repository.get_active_license(db)
+
+    if license_obj:
+        return {
+            "is_active": True,
+            "license_key": license_obj.license_key,
+            "activated_at": license_obj.activated_at,
+            "server_id": license_obj.server_id,
+        }
+    else:
+        return {
+            "is_active": False,
+            "license_key": None,
+            "activated_at": None,
+            "server_id": None,
+        }
+
+
+def requires_license(db: Session = Depends(get_db)) -> None:
+    """Dependency function to check if a valid license exists.
+
+    Raises HTTPException (403) if no active license is found.
+    This should be used as a dependency for admin endpoints.
+
+    Args:
+        db (Session): Database session for the current request.
+
+    Raises:
+        HTTPException: 403 Forbidden if no valid license exists.
+
+    """
+    from src.license.constants import EXC_MSG_LICENSE_REQUIRED
+
+    license_status = get_license_status(db)
+
+    if not license_status["is_active"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=EXC_MSG_LICENSE_REQUIRED,
+        )
+
+
 def clear_database():
     # Import all models needed for cleanup
     from src.auth_role.models import AuthRole, AuthRolePermission
@@ -482,8 +540,8 @@ def generate_dummy_data():
         from src.holiday_group.schemas import HolidayBase, HolidayGroupBase
         from src.org_unit import routes as org_unit_routes
         from src.org_unit.schemas import OrgUnitBase
-        from src.registered_browser import routes as browser_routes
-        from src.registered_browser.schemas import RegisteredBrowserBase
+        from src.registered_browser import repository as browser_repository
+        from src.registered_browser.schemas import RegisteredBrowserCreate
         from src.timeclock import routes as timeclock_routes
         from src.user import routes as user_routes
         from src.user.schemas import UserBase
@@ -878,13 +936,12 @@ def generate_dummy_data():
 
         # Register a dummy browser for testing timeclock functionality
         print("\n  Registering company browser for testing...")
-        test_browser = browser_routes.register_browser(
-            RegisteredBrowserBase(
+        test_browser = browser_repository.create_registered_browser(
+            RegisteredBrowserCreate(
                 browser_uuid="TEST-BROWSER-UUID-12345",
                 browser_name="Office Kiosk - Main Entrance"
             ),
-            db,
-            "0"
+            db
         )
         print(f"  [OK] Registered browser: {test_browser.browser_name}")
 

@@ -97,14 +97,14 @@
           <!-- Employee Table -->
           <mat-card class="table-card">
             <mat-card-header>
-              <mat-card-title>Employees ({{ employees.length }})</mat-card-title>
+              <mat-card-title>Employees ({{ dataSource.data.length }})</mat-card-title>
             </mat-card-header>
 
             <mat-card-content>
               <div class="table-container">
                 <table
                   mat-table
-                  [dataSource]="employees"
+                  [dataSource]="dataSource"
                   class="employee-table"
                   matSort
                   *ngIf="!isLoading"
@@ -126,10 +126,10 @@
             <td mat-cell *matCellDef="let employee">
               <div class="name-cell">
                 <div class="employee-name">
-                  {{ employee.first_name }} {{ employee.last_name }}
+                  {{ employee.name }}
                 </div>
                 <div class="employee-type">
-                  {{ employee.time_type ? "Full-time" : "Part-time" }}
+                  {{ employee._employee.time_type ? "Full-time" : "Part-time" }}
                 </div>
               </div>
             </td>
@@ -152,59 +152,50 @@
 
           <!-- Org Unit Column -->
           <ng-container matColumnDef="org_unit">
-            <th mat-header-cell *matHeaderCellDef>Org Unit</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Org Unit</th>
             <td mat-cell *matCellDef="let employee">
               <div class="org-unit-cell">
                 <mat-icon class="org-icon">business</mat-icon>
-                <span>{{ employee.org_unit?.name || "N/A" }}</span>
+                <span>{{ employee.org_unit || "N/A" }}</span>
               </div>
             </td>
           </ng-container>
 
           <!-- Departments Column -->
           <ng-container matColumnDef="departments">
-            <th mat-header-cell *matHeaderCellDef>Departments</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Departments</th>
             <td mat-cell *matCellDef="let employee">
               <div class="departments-cell">
-                <mat-chip-listbox>
-                  <mat-chip
-                    *ngFor="let dept of employee.departments"
-                    class="dept-chip"
-                  >
-                    {{ dept.name }}
-                  </mat-chip>
-                </mat-chip-listbox>
+                <span>{{ employee.departments || "None" }}</span>
               </div>
             </td>
           </ng-container>
 
           <!-- Holiday Group Column -->
           <ng-container matColumnDef="holiday_group">
-            <th mat-header-cell *matHeaderCellDef>Holiday Group</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Holiday Group</th>
             <td mat-cell *matCellDef="let employee">
               <div class="holiday-group-cell">
                 <mat-icon class="holiday-icon">event</mat-icon>
-                <span>{{ employee.holiday_group?.name || "None" }}</span>
+                <span>{{ employee.holiday_group || "None" }}</span>
               </div>
             </td>
           </ng-container>
 
           <!-- Status Column -->
           <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
             <td mat-cell *matCellDef="let employee">
               <div class="status-cell">
                 <div
                   class="status-indicator"
-                  [class.active]="employee.allow_clocking"
-                  [class.inactive]="!employee.allow_clocking"
+                  [class.active]="employee.status === 'Active'"
+                  [class.inactive]="employee.status === 'Inactive'"
                 >
                   <mat-icon>{{
-                    employee.allow_clocking ? "check_circle" : "cancel"
+                    employee.status === 'Active' ? "check_circle" : "cancel"
                   }}</mat-icon>
-                  <span>{{
-                    employee.allow_clocking ? "Active" : "Inactive"
-                  }}</span>
+                  <span>{{ employee.status }}</span>
                 </div>
               </div>
             </td>
@@ -218,7 +209,7 @@
                 <button
                   mat-icon-button
                   matTooltip="View Details"
-                  (click)="viewEmployee(employee)"
+                  (click)="viewEmployee(employee._employee)"
                   [disableIfNoPermission]="'employee.read'"
                 >
                   <mat-icon>visibility</mat-icon>
@@ -226,7 +217,7 @@
                 <button
                   mat-icon-button
                   matTooltip="Edit Employee"
-                  (click)="editEmployee(employee)"
+                  (click)="editEmployee(employee._employee)"
                   [disableIfNoPermission]="'employee.update'"
                 >
                   <mat-icon>edit</mat-icon>
@@ -234,8 +225,8 @@
                 <button
                   mat-icon-button
                   matTooltip="Delete Employee"
-                  [disabled]="!employee.allow_delete"
-                  (click)="deleteEmployee(employee)"
+                  [disabled]="!employee._employee.allow_delete"
+                  (click)="deleteEmployee(employee._employee)"
                   class="delete-btn"
                   [disableIfNoPermission]="'employee.delete'"
                 >
@@ -252,7 +243,7 @@
         <!-- Empty State -->
         <div
           class="empty-state"
-          *ngIf="employees.length === 0 && !isLoading"
+          *ngIf="dataSource.data.length === 0 && !isLoading"
         >
           <mat-icon class="empty-icon">people_outline</mat-icon>
           <h3>No employees found</h3>

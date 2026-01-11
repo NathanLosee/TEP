@@ -1,0 +1,182 @@
+.history-dialog {
+  h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0;
+  }
+}
+
+mat-dialog-content {
+  padding: 1.5rem;
+  min-height: 500px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  .month-year-selector {
+    font-size: 1.25rem;
+    font-weight: 500;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.month-year-picker {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+
+  mat-form-field {
+    width: 250px;
+  }
+}
+
+.calendar-grid {
+  .calendar-header-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    .day-header {
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--sys-on-surface-variant);
+      padding: 0.5rem;
+    }
+  }
+
+  .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+
+    .calendar-day {
+      min-height: 100px;
+      border: 1px solid var(--sys-outline-variant);
+      border-radius: 8px;
+      padding: 0.5rem;
+      background-color: var(--sys-surface);
+      position: relative;
+      overflow: hidden;
+
+      &.other-month {
+        background-color: var(--sys-surface-container-lowest);
+        opacity: 0.6;
+
+        .day-number {
+          color: var(--sys-on-surface-variant);
+        }
+      }
+
+      &.today {
+        border-color: var(--sys-primary);
+        border-width: 2px;
+
+        .day-number {
+          background-color: var(--sys-primary);
+          color: var(--sys-on-primary);
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      &.has-entries {
+        background-color: var(--sys-surface-container);
+      }
+
+      .day-number {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .day-entries {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .entry-summary {
+          background-color: var(--sys-primary-container);
+          color: var(--sys-on-primary-container);
+          border-radius: 4px;
+          padding: 0.25rem;
+          font-size: 0.75rem;
+
+          &.active {
+            background-color: var(--sys-tertiary-container);
+            color: var(--sys-on-tertiary-container);
+          }
+
+          .entry-time {
+            display: flex;
+            align-items: center;
+            gap: 0.125rem;
+
+            .time-icon {
+              font-size: 0.875rem;
+              width: 0.875rem;
+              height: 0.875rem;
+            }
+
+            span {
+              font-weight: 500;
+            }
+          }
+
+          .entry-duration {
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 0.125rem;
+            text-align: center;
+          }
+
+          .entry-active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            font-weight: 600;
+
+            mat-icon {
+              font-size: 0.875rem;
+              width: 0.875rem;
+              height: 0.875rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+[mat-dialog-actions] {
+  padding: 1rem;
+  margin: 0;
+}

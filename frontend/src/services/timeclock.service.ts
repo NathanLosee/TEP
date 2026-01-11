@@ -9,11 +9,11 @@ export interface Timeclock {
 
 export interface TimeclockEntry {
   id?: number;
-  clockIn: Date;
-  clockOut?: Date | null;
-  badgeNumber: string;
-  firstName: string;
-  lastName: string;
+  clock_in: string;
+  clock_out?: string | null;
+  badge_number: string;
+  first_name: string;
+  last_name: string;
 }
 
 /**
@@ -81,6 +81,27 @@ export class TimeclockService {
     }
 
     return this.http.get<TimeclockEntry[]>(`${this.baseUrl}`, {
+      params,
+    });
+  }
+
+  /**
+   * Get timeclock history for a specific employee (no permissions required)
+   * @param badgeNumber The employee badge number
+   * @param startDate Start date of the range
+   * @param endDate End date of the range
+   * @returns An array of timeclock entries for the employee
+   */
+  getEmployeeHistory(
+    badgeNumber: string,
+    startDate: Date,
+    endDate: Date
+  ): Observable<TimeclockEntry[]> {
+    let params = new HttpParams();
+    params = params.set('start_timestamp', startDate.toISOString());
+    params = params.set('end_timestamp', endDate.toISOString());
+
+    return this.http.get<TimeclockEntry[]>(`${this.baseUrl}/${badgeNumber}/history`, {
       params,
     });
   }

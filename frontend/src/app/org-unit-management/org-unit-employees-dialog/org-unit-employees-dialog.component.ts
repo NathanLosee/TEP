@@ -85,7 +85,8 @@ export class OrgUnitEmployeesDialogComponent implements OnInit {
     this.isLoading = true;
     this.orgUnitService.getEmployeesByOrgUnit(this.orgUnit.id!).subscribe({
       next: (employees) => {
-        this.employees = employees;
+        // Filter out root employee (id=0)
+        this.employees = employees.filter(emp => emp.id !== 0);
         this.filterEmployees();
         this.isLoading = false;
       },

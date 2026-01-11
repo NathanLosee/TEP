@@ -33,6 +33,8 @@ import {
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import { UserFormDialogComponent } from './user-management-form-dialog/user-form-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import { PasswordChangeDialogComponent } from '../password-change-dialog/password-change-dialog.component';
+import { PermissionService } from '../../services/permission.service';
 
 interface Employee {
   badge_number: string;
@@ -69,6 +71,7 @@ interface Employee {
 export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
   private authRoleService = inject(AuthRoleService);
+  private permissionService = inject(PermissionService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
@@ -77,13 +80,14 @@ export class UserManagementComponent implements OnInit {
   authRoles: AuthRole[] = [];
   employees: Employee[] = [];
   filteredUsers: User[] = [];
+  userRolesMap: Map<number, AuthRole[]> = new Map();
 
   // UI State
   isLoading = false;
   searchTerm = '';
 
   // Table columns
-  displayedColumns = ['badge_number', 'actions'];
+  displayedColumns = ['badge_number', 'roles', 'actions'];
 
   ngOnInit() {
     this.loadUsers();
@@ -95,7 +99,9 @@ export class UserManagementComponent implements OnInit {
     this.isLoading = true;
     this.userService.getUsers().subscribe({
       next: (users) => {
-        this.users = users;
+        // Filter out root user (id=0)
+        this.users = users.filter(user => user.id !== 0);
+        this.loadUserRoles();
         this.applySearchFilter();
         this.isLoading = false;
       },
@@ -106,6 +112,24 @@ export class UserManagementComponent implements OnInit {
         );
         this.isLoading = false;
       },
+    });
+  }
+
+  loadUserRoles() {
+    // Load auth roles for each user
+    this.users.forEach((user) => {
+      if (user.id) {
+        this.userService.getUserAuthRoles(user.id).subscribe({
+          next: (roles) => {
+            // Filter out root role (id=0)
+            const filteredRoles = roles.filter(role => role.id !== 0);
+            this.userRolesMap.set(user.id!, filteredRoles);
+          },
+          error: (error) => {
+            console.error(`Failed to load roles for user ${user.badge_number}`, error);
+          },
+        });
+      }
     });
   }
 
@@ -208,10 +232,31 @@ export class UserManagementComponent implements OnInit {
     return employee ? employee.name : 'Unknown Employee';
   }
 
-  getUserRoleNames(user: User): string[] {
-    // This would need to be populated from the backend or cached
-    // For now, return empty array as roles are loaded separately
-    return [];
+  getUserRoles(user: User): AuthRole[] {
+    if (!user.id) return [];
+    return this.userRolesMap.get(user.id) || [];
+  }
+
+  changeUserPassword(user: User) {
+    // Check if user has admin permission
+    const hasAdminPermission = this.permissionService.hasPermission('user.update');
+
+    const dialogRef = this.dialog.open(PasswordChangeDialogComponent, {
+      width: '500px',
+      data: {
+        badgeNumber: user.badge_number,
+        isAdmin: hasAdminPermission,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.showSnackBar(
+          `Password changed successfully for ${user.badge_number}`,
+          'success'
+        );
+      }
+    });
   }
 
   private showSnackBar(
