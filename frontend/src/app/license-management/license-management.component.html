@@ -1,0 +1,123 @@
+<div class="license-container">
+  <h1>License Management</h1>
+
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading license status...</p>
+    </div>
+  } @else {
+    <!-- Current License Status -->
+    <mat-card class="status-card">
+      <mat-card-header>
+        <mat-card-title>Current License Status</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (licenseStatus?.is_active) {
+          <div class="status-active">
+            <mat-icon>check_circle</mat-icon>
+            <div>
+              <h3>License Active</h3>
+              <p><strong>License Key:</strong> {{ licenseStatus?.license_key }}</p>
+              <p><strong>Activated:</strong> {{ licenseStatus?.activated_at | date:'medium' }}</p>
+              @if (licenseStatus?.server_id) {
+                <p><strong>Server ID:</strong> {{ licenseStatus?.server_id }}</p>
+              }
+            </div>
+          </div>
+          <button
+            mat-raised-button
+            color="warn"
+            (click)="deactivateLicense()"
+            [disabled]="isActivating"
+          >
+            Deactivate License
+          </button>
+        } @else {
+          <div class="status-inactive">
+            <mat-icon>warning</mat-icon>
+            <div>
+              <h3>No Active License</h3>
+              <p>Admin features are currently locked. Please activate a license below.</p>
+            </div>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- License Activation Form -->
+    @if (!licenseStatus?.is_active) {
+      <mat-card class="activation-card">
+        <mat-card-header>
+          <mat-card-title>Activate License</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="licenseForm" (ngSubmit)="activateLicense()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>License Key</mat-label>
+              <textarea
+                matInput
+                formControlName="license_key"
+                rows="3"
+                placeholder="Paste your 128-character license key here"
+                required
+              ></textarea>
+              <mat-hint>128-character hexadecimal string (Ed25519 signature)</mat-hint>
+              @if (licenseForm.get('license_key')?.hasError('pattern')) {
+                <mat-error>License key must be a 128-character hexadecimal string</mat-error>
+              }
+              @if (licenseForm.get('license_key')?.hasError('minlength') || licenseForm.get('license_key')?.hasError('maxlength')) {
+                <mat-error>License key must be exactly 128 characters</mat-error>
+              }
+              @if (licenseForm.get('license_key')?.hasError('required')) {
+                <mat-error>License key is required</mat-error>
+              }
+            </mat-form-field>
+
+            <div class="button-row">
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="!licenseForm.valid || isActivating"
+              >
+                @if (isActivating) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                  Activating...
+                } @else {
+                  Activate License
+                }
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Help Information -->
+    <mat-card class="help-card">
+      <mat-card-header>
+        <mat-card-title>License Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <h4>About Licensing</h4>
+        <p>
+          This application requires a valid license to access administrative features.
+          Core timeclock functionality remains available without a license.
+        </p>
+        <h4>License Features</h4>
+        <ul>
+          <li>Lifetime license (no expiration)</li>
+          <li>One license per server</li>
+          <li>Offline activation (no internet required)</li>
+          <li>Unlocks all administrative features</li>
+        </ul>
+        <h4>Need Help?</h4>
+        <p>
+          Contact your system administrator or MonteVista support for assistance
+          with license activation.
+        </p>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

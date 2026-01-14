@@ -1,21 +1,19 @@
+@use '../../styles/common' as *;
+
 .auth-role-management-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  @extend .page-container;
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: $spacing-lg;
 
   .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @extend .flex-between;
 
     .title-section {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: $gap-md;
 
       .page-icon {
         font-size: 2rem;
@@ -34,98 +32,10 @@
 
     .header-actions {
       display: flex;
-      gap: 12px;
+      gap: $gap-sm;
 
-      .export-btn {
-        border: 2px solid var(--sys-outline);
-
-        mat-icon {
-          margin-right: 8px;
-        }
-      }
-
-      .add-btn {
-        mat-icon {
-          margin-right: 8px;
-        }
-      }
-    }
-  }
-}
-
-.header-section {
-  margin-bottom: 32px;
-
-  .page-title {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 8px;
-
-    .title-icon {
-      font-size: 2.5rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      color: var(--sys-primary);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--sys-on-surface);
-    }
-  }
-
-  .page-description {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--sys-on-surface-variant);
-    margin-left: 56px;
-  }
-}
-
-.stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
-
-  .stat-card {
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-    }
-
-    .stat-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      gap: 8px;
-
-      .stat-icon {
-        font-size: 2rem;
-        width: 2rem;
-        height: 2rem;
-        color: var(--sys-primary);
-      }
-
-      .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--sys-on-surface);
-      }
-
-      .stat-label {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--sys-on-surface-variant);
-        text-align: center;
+      .add-btn mat-icon {
+        margin-right: $spacing-sm;
       }
     }
   }
@@ -133,20 +43,18 @@
 
 .main-tabs {
   backdrop-filter: blur(10px);
-  border-radius: 16px;
+  border-radius: $border-radius-lg;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 
   .tab-content {
-    padding: 24px;
+    padding: $padding-lg;
   }
 }
 
-.controls-section {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  align-items: flex-end;
+.search-section {
+  @extend .search-form;
+  margin-bottom: $spacing-lg;
 
   .search-field {
     flex: 1;
@@ -154,116 +62,8 @@
   }
 }
 
-.form-card {
-  margin-bottom: 24px;
-  background: var(--sys-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-
-  .full-width {
-    width: 100%;
-    margin-bottom: 16px;
-  }
-
-  .permissions-section {
-    margin-top: 24px;
-
-    h3 {
-      margin: 0 0 8px 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--sys-on-surface);
-    }
-
-    .permissions-description {
-      color: var(--sys-on-surface-variant);
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-    }
-
-    .permissions-accordion {
-      margin-bottom: 16px;
-
-      .permission-category {
-        margin-bottom: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-        mat-expansion-panel-header {
-          .mat-expansion-panel-header-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-
-            mat-icon {
-              font-size: 1.2rem;
-              width: 1.2rem;
-              height: 1.2rem;
-            }
-          }
-        }
-
-        .permission-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 12px;
-          padding: 16px 0;
-
-          .permission-item {
-            mat-checkbox {
-              width: 100%;
-
-              .permission-code {
-                font-family: "Roboto Mono", monospace;
-                font-size: 0.85rem;
-                color: var(--sys-primary);
-                font-weight: 600;
-                display: block;
-              }
-
-              .permission-description {
-                font-size: 0.8rem;
-                color: var(--sys-on-surface-variant);
-                display: block;
-                margin-top: 2px;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .selected-permissions-summary {
-      background: var(--sys-primary-container);
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 16px;
-
-      h4 {
-        margin: 0 0 12px 0;
-        color: var(--sys-on-primary-container);
-        font-size: 1rem;
-      }
-
-      .permission-chips {
-        mat-chip-set {
-          mat-chip {
-            background: var(--sys-primary);
-            color: var(--sys-on-primary);
-            font-family: "Roboto Mono", monospace;
-            font-size: 0.75rem;
-          }
-        }
-      }
-    }
-  }
-}
-
 .table-card {
-  background: var(--sys-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  @extend .card-container;
 
   .table-container {
     min-height: 200px;
@@ -275,15 +75,13 @@
         background: var(--sys-surface-variant);
         color: var(--sys-on-surface-variant);
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: $font-size-sm;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
 
-      .role-name {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+      .role-name-cell {
+        @extend .table-cell-content;
 
         .role-icon {
           color: var(--sys-primary);
@@ -292,184 +90,82 @@
           height: 1.2rem;
         }
 
-        span {
+        .role-name {
           font-weight: 600;
           color: var(--sys-on-surface);
         }
       }
 
       .permissions-cell {
-        .permission-count {
-          font-weight: 600;
-          color: var(--sys-on-surface);
-          display: block;
-          margin-bottom: 8px;
+        .permission-chip {
+          margin: 2px;
+          background: var(--sys-secondary-container);
+          color: var(--sys-on-secondary-container);
+          font-size: $font-size-xs;
+        }
+      }
+
+      .users-count-cell {
+        @extend .table-cell-content;
+
+        .count-icon {
+          color: var(--sys-tertiary);
+          font-size: 1.2rem;
+          width: 1.2rem;
+          height: 1.2rem;
         }
 
-        .permission-preview {
-          mat-chip-set {
-            mat-chip {
-              font-size: 0.75rem;
-              font-family: "Roboto Mono", monospace;
-
-              &.more-chip {
-                background: var(--sys-outline);
-                color: var(--sys-on-outline);
-              }
-            }
-          }
+        .count {
+          font-weight: 600;
+          color: var(--sys-on-surface);
         }
       }
 
       .action-buttons {
-        display: flex;
-        gap: 8px;
-      }
-    }
+        @extend .table-actions;
 
-    .empty-state,
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      text-align: center;
+        button {
+          min-width: auto;
+          width: 36px;
+          height: 36px;
 
-      .empty-icon {
-        font-size: 4rem;
-        width: 4rem;
-        height: 4rem;
-        color: var(--sys-outline);
-        margin-bottom: 16px;
-      }
-
-      h3 {
-        margin: 0 0 8px 0;
-        color: var(--sys-on-surface);
-      }
-
-      p {
-        color: var(--sys-on-surface-variant);
-        margin: 0 0 16px 0;
-      }
-    }
-  }
-}
-
-.role-details-card {
-  background: var(--sys-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-
-  .role-permissions-section {
-    margin-bottom: 24px;
-
-    h3 {
-      margin: 0 0 16px 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--sys-on-surface);
-    }
-
-    .permission-chips {
-      mat-chip-set {
-        mat-chip {
-          font-family: "Roboto Mono", monospace;
-          font-size: 0.8rem;
-          background: var(--sys-primary-container);
-          color: var(--sys-on-primary-container);
-        }
-      }
-    }
-  }
-
-  .role-users-section {
-    margin-top: 24px;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-
-      h3 {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--sys-on-surface);
-      }
-
-      mat-form-field {
-        width: 200px;
-      }
-    }
-
-    .users-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-
-      .user-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        background: var(--sys-surface-variant);
-        border-radius: 8px;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-          background: var(--sys-surface-container-high);
-        }
-
-        .user-info {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-
-          mat-icon {
+          &.view-btn,
+          &.edit-btn {
             color: var(--sys-primary);
+
+            &:hover {
+              background: rgba(var(--sys-primary-rgb), 0.08);
+            }
           }
 
-          span {
-            font-weight: 500;
-            color: var(--sys-on-surface);
+          &.delete-btn {
+            color: var(--sys-error);
+
+            &:hover {
+              background: rgba(var(--sys-error-rgb), 0.08);
+            }
           }
         }
       }
     }
 
-    .empty-users {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px;
-      text-align: center;
+    .empty-state {
+      @extend .empty-container;
+    }
 
-      mat-icon {
-        font-size: 3rem;
-        width: 3rem;
-        height: 3rem;
-        color: var(--sys-outline);
-        margin-bottom: 16px;
-      }
-
-      p {
-        color: var(--sys-on-surface-variant);
-        margin: 0;
-      }
+    .loading-container {
+      @extend .loading-container;
     }
   }
 }
 
 // Responsive design
-@media (max-width: 768px) {
+@media (max-width: $breakpoint-md) {
   .auth-role-management-container {
-    padding: 16px;
+    padding: $padding-md;
   }
 
-  .controls-section {
+  .search-section {
     flex-direction: column;
     align-items: stretch;
 
@@ -478,18 +174,14 @@
     }
   }
 
-  .stats-section {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .page-header .header-content {
+    flex-direction: column;
+    gap: $gap-md;
+    align-items: flex-start;
 
-  .permission-list {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-// Utility method for Angular component
-::ng-deep {
-  .mat-expansion-panel-header-title mat-icon {
-    margin-right: 8px;
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
   }
 }

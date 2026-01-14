@@ -16,7 +16,7 @@ export interface Department {
 @Injectable({ providedIn: 'root' })
 export class DepartmentService {
   private http = inject(HttpClient);
-  private baseUrl = 'departments';
+  private baseUrl = '/departments';
 
   /**
    * Create a new department

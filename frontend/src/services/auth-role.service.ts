@@ -21,7 +21,7 @@ export interface AuthRole {
 @Injectable({ providedIn: 'root' })
 export class AuthRoleService {
   private http = inject(HttpClient);
-  private baseUrl = 'auth_roles';
+  private baseUrl = '/auth_roles';
 
   /**
    * Create a new auth role

@@ -46,7 +46,7 @@ export interface EmployeeBase {
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
   private http = inject(HttpClient);
-  private baseUrl = 'employees';
+  private baseUrl = '/employees';
 
   /**
    * Create a new employee

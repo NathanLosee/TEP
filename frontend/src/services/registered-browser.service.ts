@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface RegisteredDevice {
+export interface RegisteredBrowser {
   id: number;
   browser_uuid: string;
   browser_name: string;
@@ -14,7 +14,7 @@ export interface RegisteredDevice {
   is_active: boolean;
 }
 
-export interface RegisteredDeviceCreate {
+export interface RegisteredBrowserCreate {
   browser_uuid: string;
   browser_name: string;
   fingerprint_hash?: string;
@@ -49,19 +49,19 @@ export interface BrowserRecoverResponse {
  * Service for handling registered browser operations
  */
 @Injectable({ providedIn: 'root' })
-export class RegisteredDeviceService {
+export class RegisteredBrowserService {
   private http = inject(HttpClient);
-  private baseUrl = 'registered_browsers';
+  private baseUrl = '/registered_browsers';
 
   /**
    * Register a new browser
    * @param browser The browser data to register
    * @returns The registered browser
    */
-  registerDevice(
-    browser: RegisteredDeviceCreate
-  ): Observable<RegisteredDevice> {
-    return this.http.post<RegisteredDevice>(`${this.baseUrl}`, browser);
+  registerBrowser(
+    browser: RegisteredBrowserCreate
+  ): Observable<RegisteredBrowser> {
+    return this.http.post<RegisteredBrowser>(`${this.baseUrl}`, browser);
   }
 
   /**
@@ -82,8 +82,8 @@ export class RegisteredDeviceService {
    * Get all registered browsers
    * @returns An array of all registered browsers
    */
-  getAllDevices(): Observable<RegisteredDevice[]> {
-    return this.http.get<RegisteredDevice[]>(`${this.baseUrl}`);
+  getAllBrowsers(): Observable<RegisteredBrowser[]> {
+    return this.http.get<RegisteredBrowser[]>(`${this.baseUrl}`);
   }
 
   /**
@@ -91,7 +91,7 @@ export class RegisteredDeviceService {
    * @param browserId The ID of the browser to delete
    * @returns An observable indicating completion
    */
-  deleteDevice(browserId: number): Observable<void> {
+  deleteBrowser(browserId: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${browserId}`);
   }
 

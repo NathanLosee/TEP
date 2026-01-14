@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
 
-import src.holiday_group.repository as holiday_repository
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
 from src.employee.schemas import EmployeeExtended
@@ -14,9 +13,17 @@ from src.holiday_group.constants import (
     EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
     IDENTIFIER,
 )
+from src.holiday_group.repository import (
+    create_holiday_group as create_holiday_group_in_db,
+    delete_holiday_group,
+    get_holiday_group_by_id,
+    get_holiday_group_by_name,
+    get_holiday_groups,
+    update_holiday_group_by_id as update_holiday_group_by_id_in_db,
+)
 from src.holiday_group.schemas import HolidayGroupBase, HolidayGroupExtended
 from src.holiday_group.utils import get_holidays_for_year
-from src.services import create_event_log, requires_permission, validate
+from src.services import create_event_log, requires_license, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
 
@@ -43,16 +50,14 @@ def create_holiday_group(
         HolidayGroupExtended: The created holiday group.
 
     """
-    duplicate_holiday_group = holiday_repository.get_holiday_group_by_name(
-        request.name, db
-    )
+    duplicate_holiday_group = get_holiday_group_by_name(request.name, db)
     validate(
         duplicate_holiday_group is None,
         EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    holiday_group = holiday_repository.create_holiday_group(request, db)
+    holiday_group = create_holiday_group_in_db(request, db)
     log_args = {"holiday_group_name": holiday_group.name}
     create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return holiday_group
@@ -78,7 +83,7 @@ def get_holiday_groups(
         list[HolidayGroupExtended]: The retrieved holiday groups.
 
     """
-    return holiday_repository.get_holiday_groups(db)
+    return get_holiday_groups(db)
 
 
 @router.get(
@@ -103,7 +108,7 @@ def get_holiday_group_by_id(
         HolidayGroupExtended: The retrieved holiday group.
 
     """
-    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    holiday_group = get_holiday_group_by_id(id, db)
     validate(
         holiday_group,
         EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
@@ -135,7 +140,7 @@ def get_employees_by_holiday_group(
         list[EmployeeExtended]: The retrieved employees.
 
     """
-    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    holiday_group = get_holiday_group_by_id(id, db)
     validate(
         holiday_group,
         EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
@@ -168,7 +173,7 @@ def get_holidays_for_year_by_group(
         list[dict]: List of holiday instances with name, start_date, end_date.
 
     """
-    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    holiday_group = get_holiday_group_by_id(id, db)
     validate(
         holiday_group,
         EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
@@ -208,25 +213,21 @@ def update_holiday_group_by_id(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    holiday_group = get_holiday_group_by_id(id, db)
     validate(
         holiday_group,
         EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    duplicate_holiday_group = holiday_repository.get_holiday_group_by_name(
-        request.name, db
-    )
+    duplicate_holiday_group = get_holiday_group_by_name(request.name, db)
     validate(
         duplicate_holiday_group is None or duplicate_holiday_group.id == id,
         EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    holiday_group = holiday_repository.update_holiday_group_by_id(
-        holiday_group, request, db
-    )
+    holiday_group = update_holiday_group_by_id_in_db(holiday_group, request, db)
     log_args = {"holiday_group_name": holiday_group.name}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return holiday_group
@@ -250,7 +251,7 @@ def delete_holiday_group_by_id(
         db (Session): Database session for current request.
 
     """
-    holiday_group = holiday_repository.get_holiday_group_by_id(id, db)
+    holiday_group = get_holiday_group_by_id(id, db)
     validate(
         holiday_group,
         EXC_MSG_HOLIDAY_GROUP_NOT_FOUND,
@@ -262,6 +263,6 @@ def delete_holiday_group_by_id(
         status.HTTP_409_CONFLICT,
     )
 
-    holiday_repository.delete_holiday_group(holiday_group, db)
+    delete_holiday_group(holiday_group, db)
     log_args = {"holiday_group_name": holiday_group.name}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

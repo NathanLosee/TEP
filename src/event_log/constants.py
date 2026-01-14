@@ -10,6 +10,7 @@ from src.department.constants import (
 )
 from src.employee.constants import IDENTIFIER as EMPLOYEE_IDENTIFIER
 from src.holiday_group.constants import IDENTIFIER as HOLIDAY_GROUP_IDENTIFIER
+from src.license.constants import IDENTIFIER as LICENSE_IDENTIFIER
 from src.org_unit.constants import IDENTIFIER as ORG_UNIT_IDENTIFIER
 from src.registered_browser.constants import (
     IDENTIFIER as REGISTERED_BROWSER_IDENTIFIER,
@@ -56,15 +57,19 @@ EVENT_LOG_MSGS = {
         "UPDATE": "Holiday {holiday_group_name} updated",
         "DELETE": "Holiday {holiday_group_name} deleted",
     },
+    LICENSE_IDENTIFIER: {
+        "ACTIVATE": "License {license_key} activated",
+        "DEACTIVATE": "License {license_key} deactivated",
+    },
     ORG_UNIT_IDENTIFIER: {
         "CREATE": "Org unit {org_unit_name} created",
         "UPDATE": "Org unit {org_unit_name} updated",
         "DELETE": "Org unit {org_unit_name} deleted",
     },
     REGISTERED_BROWSER_IDENTIFIER: {
-        "CREATE": "Registered device {browser_uuid} created",
-        "RECOVER": "Registered device {browser_uuid} recovered",
-        "DELETE": "Registered device {browser_uuid} deleted",
+        "CREATE": "Registered browser {browser_uuid} created",
+        "RECOVER": "Registered browser {browser_uuid} recovered",
+        "DELETE": "Registered browser {browser_uuid} deleted",
     },
     TIMECLOCK_IDENTIFIER: {
         "CLOCK_IN": "Employee {badge_number} clocked in",

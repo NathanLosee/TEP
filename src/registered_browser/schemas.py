@@ -33,12 +33,14 @@ class RegisteredBrowserCreate(RegisteredBrowserBase):
     """Schema for creating a new browser registration.
 
     Attributes:
+        browser_uuid (Optional[str]): Browser's unique UUID (auto-generated if not provided).
         fingerprint_hash (str): Hash of browser fingerprint.
         user_agent (str): Browser user agent string.
         ip_address (str): IP address at registration time.
 
     """
 
+    browser_uuid: Optional[str] = None  # Make UUID optional for auto-generation
     fingerprint_hash: Optional[str] = None
     user_agent: Optional[str] = None
     ip_address: Optional[str] = None

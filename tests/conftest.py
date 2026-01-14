@@ -20,6 +20,10 @@ from src.employee.constants import BASE_URL as EMPLOYEE_URL
 from src.employee.models import Employee
 from src.event_log.constants import BASE_URL as EVENT_LOG_URL
 from src.holiday_group.constants import BASE_URL as HOLIDAY_GROUP_URL
+from src.license.key_generator import (
+    generate_key_pair,
+    generate_license_key as _generate_license_key,
+)
 from src.main import app, settings
 from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 from src.org_unit.models import OrgUnit
@@ -289,14 +293,142 @@ def test_client():
     yield test_app
 
 
-@pytest.fixture(autouse=True)
-def login_root_user(test_client: TestClient):
+# Cache the root user auth token per module to avoid repeated logins
+_module_auth_token = {}
+
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_test_module(test_client: TestClient, request):
+    """Setup test module: login once and activate license once per module.
+
+    This fixture runs once per test module to reduce overhead from
+    repeated login and license activation/deactivation operations.
+    """
+    module_name = request.module.__name__
+
+    # Login once per module and cache the token
     test_client.cookies.clear()
     test_client.headers.clear()
     login_data = {"username": "0", "password": "password123"}
     response = test_client.post(f"{USER_URL}/login", data=login_data)
-    test_client.headers.update(
-        {"Authorization": f"Bearer {response.json()['access_token']}"}
+    auth_token = response.json()['access_token']
+    _module_auth_token[module_name] = auth_token
+    test_client.headers.update({"Authorization": f"Bearer {auth_token}"})
+
+    # Activate a test license for this module
+    test_client.delete("/licenses/deactivate")  # Clear any existing license
+    license_key = generate_test_license_key()
+    activation_response = test_client.post(
+        "/licenses/activate",
+        json={"license_key": license_key},
     )
 
+    # Verify activation succeeded
+    if activation_response.status_code != 201:
+        raise RuntimeError(
+            f"Failed to activate test license: {activation_response.status_code} - "
+            f"{activation_response.text}"
+        )
+
     yield
+
+    # Cleanup
+    if module_name in _module_auth_token:
+        del _module_auth_token[module_name]
+
+
+@pytest.fixture(autouse=True)
+def restore_auth(test_client: TestClient, request):
+    """Restore authentication before each test.
+
+    This restores the cached auth token from module setup,
+    allowing tests that clear headers to still work correctly.
+    """
+    module_name = request.module.__name__
+
+    # Restore auth before test
+    if module_name in _module_auth_token:
+        test_client.headers.update(
+            {"Authorization": f"Bearer {_module_auth_token[module_name]}"}
+        )
+
+    yield
+
+    # Restore auth after test (in case test cleared it)
+    if module_name in _module_auth_token:
+        test_client.cookies.clear()
+        test_client.headers.update(
+            {"Authorization": f"Bearer {_module_auth_token[module_name]}"}
+        )
+
+
+# Generate a test key pair once for the entire test session
+_test_private_key, _test_public_key = generate_key_pair()
+
+# Store test signatures and their corresponding messages for verification
+_test_signatures = {}
+
+# Patch the PUBLIC_KEY_PEM in the key_generator module to use test public key
+import src.license.key_generator as key_gen_module
+key_gen_module.PUBLIC_KEY_PEM = _test_public_key
+
+# Patch the verify_license_key function to accept our test signatures
+_original_verify = key_gen_module.verify_license_key
+
+def _test_verify_license_key(license_key: str) -> bool:
+    """Test version of verify_license_key that verifies against test signatures."""
+    if license_key in _test_signatures:
+        # This is a test signature, verify it
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.exceptions import InvalidSignature
+
+        try:
+            public_key = serialization.load_pem_public_key(_test_public_key)
+            if not isinstance(public_key, Ed25519PublicKey):
+                return False
+
+            signature_bytes = bytes.fromhex(license_key)
+            message = _test_signatures[license_key]
+            public_key.verify(signature_bytes, message)
+            return True
+        except (InvalidSignature, ValueError):
+            return False
+    else:
+        # Fall back to original verification for non-test keys
+        return _original_verify(license_key)
+
+key_gen_module.verify_license_key = _test_verify_license_key
+
+# Also patch it in the routes module where it was imported
+import src.license.routes as license_routes_module
+license_routes_module.verify_license_key = _test_verify_license_key
+
+
+def generate_test_license_key() -> str:
+    """Generate a test license key (Ed25519 signature) for testing purposes.
+
+    Each call generates a unique license key by signing a random message.
+
+    Returns:
+        str: Hex-encoded Ed25519 signature (128 characters).
+    """
+    import secrets
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives import serialization
+
+    # Generate a unique message for each license key
+    random_message = secrets.token_bytes(32)
+
+    # Load private key and sign
+    private_key = serialization.load_pem_private_key(_test_private_key, password=None)
+    if not isinstance(private_key, Ed25519PrivateKey):
+        raise ValueError("Invalid private key type")
+
+    signature = private_key.sign(random_message)
+    signature_hex = signature.hex()
+
+    # Store the message for this signature so we can verify it later
+    _test_signatures[signature_hex] = random_message
+
+    return signature_hex

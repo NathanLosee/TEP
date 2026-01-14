@@ -39,12 +39,21 @@ def get_db():
     Yields:
         Session: A database session.
 
+    Notes:
+        The session is properly closed even if an exception occurs during close().
+        This prevents exception propagation from the finally block.
+
     """
     db = SessionLocal()
     try:
         yield db
     finally:
-        db.close()
+        try:
+            db.close()
+        except Exception as e:
+            # Log the error but don't propagate it
+            # This prevents masking exceptions from the try block
+            print(f"Warning: Error closing database session: {e}")
 
 
 DatabaseSession = Annotated[SessionLocal, Depends(get_db)]

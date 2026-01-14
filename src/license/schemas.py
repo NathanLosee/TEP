@@ -10,14 +10,12 @@ class LicenseActivate(BaseModel):
     """Schema for license activation request.
 
     Attributes:
-        license_key (str): The license key to activate.
-        signature (str): Cryptographic signature for verification.
+        license_key (str): The Ed25519 signature that serves as the license key.
         server_id (str): Optional machine identifier for binding.
 
     """
 
-    license_key: str = Field(..., min_length=1)
-    signature: str = Field(..., min_length=1)
+    license_key: str = Field(..., min_length=64, max_length=256, description="Ed25519 signature in hex format")
     server_id: Optional[str] = None
 
 

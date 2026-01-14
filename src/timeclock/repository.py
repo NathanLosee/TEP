@@ -94,13 +94,11 @@ def get_timeclock_entries(
         TimeclockEntry.clock_in <= end_timestamp,
     )
     if badge_number:
-        query = query.where(
-            TimeclockEntry.badge_number.contains(f"{badge_number}")
-        )
+        query = query.where(TimeclockEntry.badge_number.contains(badge_number))
     if first_name:
-        query = query.where(Employee.first_name.contains(f"{first_name}"))
+        query = query.where(Employee.first_name.contains(first_name))
     if last_name:
-        query = query.where(Employee.last_name.contains(f"{last_name}"))
+        query = query.where(Employee.last_name.contains(last_name))
     results = db.execute(query).all()
     return [
         TimeclockEntryWithName(

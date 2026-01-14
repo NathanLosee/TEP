@@ -6,7 +6,7 @@ import { Employee } from './employee.service';
 describe('HolidayGroupService', () => {
   let service: HolidayGroupService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'holiday_groups';
+  const baseUrl = '/holiday_groups';
 
   // Mock data
   const mockRecurringHoliday: Holiday = {

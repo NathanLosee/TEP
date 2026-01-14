@@ -76,7 +76,12 @@ def create_root_user_if_not_exists():
     This function checks if a root user exists in the database.
     If not, it creates one with all permissions.
 
+    In production, ROOT_PASSWORD environment variable must be set.
+    In development, a secure random password is generated.
+
     """
+    from src.main import settings
+
     db = SessionLocal()
 
     root_org_unit = db.get(OrgUnit, 0)
@@ -110,10 +115,38 @@ def create_root_user_if_not_exists():
 
     root_user = db.get(User, 0)
     if not root_user:
+        # Get root password from environment
+        root_password = os.getenv("ROOT_PASSWORD")
+
+        if not root_password:
+            # In production, require ROOT_PASSWORD to be set
+            if settings.ENVIRONMENT.lower() == "production":
+                raise RuntimeError(
+                    "ROOT_PASSWORD environment variable must be set in production. "
+                    "Generate a secure password and set it before starting the application."
+                )
+
+            # In development/test, generate a random secure password
+            import secrets
+            import string
+
+            alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+            root_password = "".join(secrets.choice(alphabet) for _ in range(16))
+
+            print("=" * 70)
+            print("IMPORTANT: Root user password has been auto-generated")
+            print("=" * 70)
+            print(f"Username: 0")
+            print(f"Password: {root_password}")
+            print("=" * 70)
+            print("SAVE THIS PASSWORD! You will need it to log in.")
+            print("Set ROOT_PASSWORD environment variable to customize this password.")
+            print("=" * 70)
+
         root_user = User(
             id=0,
             badge_number=root_employee.badge_number,
-            password=hash_password("password"),
+            password=hash_password(root_password),
         )
         db.add(root_user)
         db.commit()
@@ -140,8 +173,27 @@ def create_root_user_if_not_exists():
 
 
 def load_keys():
-    """Load the RSA private and public keys from local file."""
+    """Load the RSA private and public keys from local file.
+
+    The private key is encrypted with a password from environment variable
+    JWT_KEY_PASSWORD. If not set, falls back to unencrypted for development.
+    """
     global rsa_private_key, rsa_public_key, signing_bytes, verifying_bytes
+
+    # Get encryption password from environment (None if not set)
+    key_password = os.getenv("JWT_KEY_PASSWORD")
+    encryption_password = key_password.encode() if key_password else None
+
+    # Determine encryption algorithm
+    if encryption_password:
+        encryption_algo = serialization.BestAvailableEncryption(encryption_password)
+    else:
+        encryption_algo = serialization.NoEncryption()
+        print(
+            "WARNING: JWT_KEY_PASSWORD not set. "
+            "Private key will be stored unencrypted. "
+            "Set JWT_KEY_PASSWORD environment variable for production."
+        )
 
     if not os.path.exists("rsa_private_key.pem"):
         rsa_private_key = rsa.generate_private_key(
@@ -152,13 +204,13 @@ def load_keys():
                 rsa_private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.TraditionalOpenSSL,
-                    encryption_algorithm=serialization.NoEncryption(),
+                    encryption_algorithm=encryption_algo,
                 )
             )
     else:
         with open("rsa_private_key.pem", "rb") as private_key_file:
             rsa_private_key = serialization.load_pem_private_key(
-                private_key_file.read(), password=None
+                private_key_file.read(), password=encryption_password
             )
     rsa_public_key = rsa_private_key.public_key()
 

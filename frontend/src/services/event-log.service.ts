@@ -20,7 +20,7 @@ export interface EventLogBase {
 @Injectable({ providedIn: 'root' })
 export class EventLogService {
   private http = inject(HttpClient);
-  private baseUrl = 'event_log';
+  private baseUrl = '/event_log';
 
   /**
    * Create a new event log entry

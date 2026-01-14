@@ -13,12 +13,20 @@ from fastapi import (
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-import src.services as services
-import src.user.repository as user_repository
 from src.auth_role.schemas import AuthRoleExtended
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
 from src.main import settings
+from src.services import (
+    algorithm,
+    create_event_log,
+    generate_access_token,
+    generate_refresh_token,
+    requires_permission,
+    validate,
+    verify_password,
+    verifying_bytes,
+)
 from src.user.constants import (
     BASE_URL,
     EXC_MSG_ACCESS_TOKEN_NOT_FOUND,
@@ -30,6 +38,17 @@ from src.user.constants import (
     EXC_MSG_WRONG_PASSWORD,
     IDENTIFIER,
     MSG_LOGOUT_SUCCESS,
+)
+from src.user.repository import (
+    clean_invalidated_tokens,
+    create_user as create_user_in_db,
+    delete_user as delete_user_from_db,
+    get_invalidated_tokens,
+    get_user_by_badge_number as get_user_by_badge_number_from_db,
+    get_user_by_id as get_user_by_id_from_db,
+    get_users as get_users_from_db,
+    invalidate_token,
+    update_user as update_user_in_db,
 )
 from src.user.schemas import UserBase, UserPasswordChange, UserResponse
 
@@ -44,9 +63,7 @@ router = APIRouter(prefix=BASE_URL, tags=["user"])
 def create_user(
     request: UserBase,
     db: Session = Depends(get_db),
-    caller_badge: str = Security(
-        services.requires_permission, scopes=["user.create"]
-    ),
+    caller_badge: str = Security(requires_permission, scopes=["user.create"]),
 ):
     """Insert new user data.
 
@@ -58,18 +75,16 @@ def create_user(
         UserResponse: The created user.
 
     """
-    duplicate_user = user_repository.get_user_by_badge_number(
-        request.badge_number, db
-    )
-    services.validate(
+    duplicate_user = get_user_by_badge_number_from_db(request.badge_number, db)
+    validate(
         duplicate_user is None,
         EXC_MSG_USER_WITH_ID_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    user = user_repository.create_user(request, db)
+    user = create_user_in_db(request, db)
     log_args = {"badge_number": user.badge_number}
-    services.create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
+    create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return user
 
 
@@ -80,9 +95,7 @@ def create_user(
 )
 def get_users(
     db: Session = Depends(get_db),
-    caller_badge: str = Security(
-        services.requires_permission, scopes=["user.read"]
-    ),
+    caller_badge: str = Security(requires_permission, scopes=["user.read"]),
 ):
     """Retrieve all existing users.
 
@@ -93,7 +106,7 @@ def get_users(
         list[UserResponse]: The retrieved users.
 
     """
-    return user_repository.get_users(db)
+    return get_users_from_db(db)
 
 
 @router.get(
@@ -104,9 +117,7 @@ def get_users(
 def get_user_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_badge: str = Security(
-        services.requires_permission, scopes=["user.read"]
-    ),
+    caller_badge: str = Security(requires_permission, scopes=["user.read"]),
 ):
     """Retrieve a user by a provided id.
 
@@ -118,8 +129,8 @@ def get_user_by_id(
         UserResponse: The user with the provided id.
 
     """
-    user = user_repository.get_user_by_id(id, db)
-    services.validate(
+    user = get_user_by_id_from_db(id, db)
+    validate(
         user,
         EXC_MSG_USER_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
@@ -135,9 +146,7 @@ def get_user_by_id(
 def get_user_auth_roles(
     id: int,
     db: Session = Depends(get_db),
-    caller_badge: str = Security(
-        services.requires_permission, scopes=["user.read"]
-    ),
+    caller_badge: str = Security(requires_permission, scopes=["user.read"]),
 ):
     """Retrieve a user's auth roles by a provided id.
 
@@ -149,8 +158,8 @@ def get_user_auth_roles(
         list[AuthRoleExtended]: The user's auth roles.
 
     """
-    user = user_repository.get_user_by_id(id, db)
-    services.validate(
+    user = get_user_by_id_from_db(id, db)
+    validate(
         user,
         EXC_MSG_USER_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
@@ -167,7 +176,7 @@ def update_user_password(
     badge_number: str,
     request: UserPasswordChange,
     db: Session = Depends(get_db),
-    caller_badge: str = Security(services.requires_permission, scopes=[]),
+    caller_badge: str = Security(requires_permission, scopes=[]),
 ):
     """Update a user's password.
 
@@ -184,14 +193,14 @@ def update_user_password(
         UserResponse: The updated user.
 
     """
-    services.validate(
+    validate(
         request.badge_number == badge_number,
         EXC_MSG_IDS_DO_NOT_MATCH,
         status.HTTP_400_BAD_REQUEST,
     )
 
-    user = user_repository.get_user_by_badge_number(badge_number, db)
-    services.validate(
+    user = get_user_by_badge_number_from_db(badge_number, db)
+    validate(
         user,
         EXC_MSG_USER_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
@@ -199,7 +208,7 @@ def update_user_password(
 
     # Check if user is changing their own password or has admin permission
     is_self_update = caller_badge == badge_number
-    caller_user = user_repository.get_user_by_badge_number(caller_badge, db)
+    caller_user = get_user_by_badge_number_from_db(caller_badge, db)
     has_admin_permission = any(
         "user.update" in [perm.resource for perm in role.permissions]
         for role in caller_user.auth_roles
@@ -207,8 +216,8 @@ def update_user_password(
 
     # If user is changing their own password, verify current password
     if is_self_update and not has_admin_permission:
-        services.validate(
-            services.verify_password(request.password, user.password),
+        validate(
+            verify_password(request.password, user.password),
             EXC_MSG_WRONG_PASSWORD,
             status.HTTP_403_FORBIDDEN,
         )
@@ -220,7 +229,7 @@ def update_user_password(
             detail="You don't have permission to change other users' passwords",
         )
 
-    user = user_repository.update_user(
+    user = update_user_in_db(
         user,
         UserBase(badge_number=badge_number, password=request.new_password),
         db,
@@ -230,7 +239,7 @@ def update_user_password(
         "changed_by": caller_badge,
         "is_self_update": is_self_update,
     }
-    services.create_event_log(IDENTIFIER, "UPDATE_PASSWORD", log_args, caller_badge, db)
+    create_event_log(IDENTIFIER, "UPDATE_PASSWORD", log_args, caller_badge, db)
     return user
 
 
@@ -241,9 +250,7 @@ def update_user_password(
 def delete_user_by_id(
     id: int,
     db: Session = Depends(get_db),
-    caller_badge: str = Security(
-        services.requires_permission, scopes=["user.delete"]
-    ),
+    caller_badge: str = Security(requires_permission, scopes=["user.delete"]),
 ):
     """Delete a user by a provided id.
 
@@ -252,16 +259,16 @@ def delete_user_by_id(
         db (Session, optional): Database session for current request.
 
     """
-    user = user_repository.get_user_by_id(id, db)
-    services.validate(
+    user = get_user_by_id_from_db(id, db)
+    validate(
         user,
         EXC_MSG_USER_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    user_repository.delete_user(user, db)
+    delete_user_from_db(user, db)
     log_args = {"badge_number": user.badge_number}
-    services.create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
+    create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 
 
 @router.post(
@@ -283,22 +290,22 @@ def login(
         dict: Access token and token type.
 
     """
-    user = user_repository.get_user_by_badge_number(login.username, db)
-    services.validate(
+    user = get_user_by_badge_number_from_db(login.username, db)
+    validate(
         user,
         EXC_MSG_LOGIN_FAILED,
         status.HTTP_401_UNAUTHORIZED,
     )
-    services.validate(
-        services.verify_password(login.password, user.password),
+    validate(
+        verify_password(login.password, user.password),
         EXC_MSG_LOGIN_FAILED,
         status.HTTP_401_UNAUTHORIZED,
     )
 
-    user_repository.clean_invalidated_tokens(db)
+    clean_invalidated_tokens(db)
 
-    access_token = services.generate_access_token(user)
-    refresh_token = services.generate_refresh_token(user)
+    access_token = generate_access_token(user)
+    refresh_token = generate_refresh_token(user)
 
     response.set_cookie(
         key="refresh_token",
@@ -308,9 +315,7 @@ def login(
         samesite="lax",
     )
     log_args = {"badge_number": user.badge_number}
-    services.create_event_log(
-        IDENTIFIER, "LOGIN", log_args, user.badge_number, db
-    )
+    create_event_log(IDENTIFIER, "LOGIN", log_args, user.badge_number, db)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -333,24 +338,24 @@ def refresh_token(
 
     """
     refresh_token = request.cookies.get("refresh_token")
-    services.validate(
+    validate(
         refresh_token,
         EXC_MSG_REFRESH_TOKEN_NOT_FOUND,
         status.HTTP_401_UNAUTHORIZED,
     )
 
-    services.validate(
-        refresh_token not in user_repository.get_invalidated_tokens(db),
+    validate(
+        refresh_token not in get_invalidated_tokens(db),
         EXC_MSG_REFRESH_TOKEN_INVALID,
         status.HTTP_401_UNAUTHORIZED,
     )
 
     try:
         payload = jwt.decode(
-            refresh_token, services.verifying_bytes, algorithms=[services.algorithm]
+            refresh_token, verifying_bytes, algorithms=[algorithm]
         )
         badge_number = payload.get("badge_number")
-        services.validate(
+        validate(
             badge_number,
             EXC_MSG_REFRESH_TOKEN_INVALID,
             status.HTTP_401_UNAUTHORIZED,
@@ -366,14 +371,14 @@ def refresh_token(
             detail=EXC_MSG_REFRESH_TOKEN_INVALID,
         )
 
-    user = user_repository.get_user_by_badge_number(badge_number, db)
-    services.validate(
+    user = get_user_by_badge_number_from_db(badge_number, db)
+    validate(
         user,
         EXC_MSG_REFRESH_TOKEN_INVALID,
         status.HTTP_401_UNAUTHORIZED,
     )
 
-    new_access_token = services.generate_access_token(user)
+    new_access_token = generate_access_token(user)
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 
@@ -393,20 +398,20 @@ def logout(request: Request, db: Session = Depends(get_db)):
 
     """
     access_token = request.headers.get("Authorization")
-    services.validate(
+    validate(
         access_token,
         EXC_MSG_ACCESS_TOKEN_NOT_FOUND,
         status.HTTP_401_UNAUTHORIZED,
     )
 
     refresh_token = request.cookies.get("refresh_token")
-    services.validate(
+    validate(
         refresh_token,
         EXC_MSG_REFRESH_TOKEN_NOT_FOUND,
         status.HTTP_401_UNAUTHORIZED,
     )
 
-    user_repository.invalidate_token(access_token.split(" ")[1], db)
-    user_repository.invalidate_token(refresh_token, db)
+    invalidate_token(access_token.split(" ")[1], db)
+    invalidate_token(refresh_token, db)
 
     return {"message": MSG_LOGOUT_SUCCESS}

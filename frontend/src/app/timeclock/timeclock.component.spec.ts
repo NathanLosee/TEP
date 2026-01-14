@@ -6,34 +6,73 @@ import { of, throwError } from 'rxjs';
 
 import { TimeclockComponent, TimeclockDialog } from './timeclock.component';
 import { TimeclockService } from '../../services/timeclock.service';
+import { BrowserUuidService } from '../../services/browser-uuid.service';
+import { RegisteredBrowserService } from '../../services/registered-browser.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 describe('TimeclockComponent', () => {
   let component: TimeclockComponent;
   let fixture: ComponentFixture<TimeclockComponent>;
   let timeclockServiceSpy: jasmine.SpyObj<TimeclockService>;
+  let browserUuidServiceSpy: jasmine.SpyObj<BrowserUuidService>;
+  let registeredBrowserServiceSpy: jasmine.SpyObj<RegisteredBrowserService>;
   let dialogSpy: jasmine.SpyObj<MatDialog>;
   let errorDialogSpy: jasmine.SpyObj<ErrorDialogComponent>;
 
   beforeEach(async () => {
     const timeclockSpy = jasmine.createSpyObj('TimeclockService', ['timeclock', 'checkStatus']);
+    const browserUuidSpy = jasmine.createSpyObj('BrowserUuidService', [
+      'getBrowserUuid',
+      'getBrowserName',
+      'generateFingerprint',
+      'setBrowserUuid',
+      'clearBrowserUuid'
+    ]);
+    const registeredBrowserSpy = jasmine.createSpyObj('RegisteredBrowserService', [
+      'verifyBrowser',
+      'getAllBrowsers',
+      'registerBrowser',
+      'deleteBrowser',
+      'recoverBrowser'
+    ]);
     const matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
     const errorSpy = jasmine.createSpyObj('ErrorDialogComponent', ['openErrorDialog']);
 
     await TestBed.configureTestingModule({
-      imports: [TimeclockComponent, FormsModule, BrowserAnimationsModule],
-      providers: [
-        { provide: TimeclockService, useValue: timeclockSpy },
-        { provide: MatDialog, useValue: matDialogSpy },
-        { provide: ErrorDialogComponent, useValue: errorSpy }
-      ]
-    }).compileComponents();
+      imports: [TimeclockComponent, FormsModule, BrowserAnimationsModule]
+    })
+    .overrideComponent(TimeclockComponent, {
+      set: {
+        providers: [
+          { provide: TimeclockService, useValue: timeclockSpy },
+          { provide: BrowserUuidService, useValue: browserUuidSpy },
+          { provide: RegisteredBrowserService, useValue: registeredBrowserSpy },
+          { provide: MatDialog, useValue: matDialogSpy },
+          { provide: ErrorDialogComponent, useValue: errorSpy }
+        ]
+      }
+    })
+    .compileComponents();
+
+    timeclockServiceSpy = timeclockSpy;
+    browserUuidServiceSpy = browserUuidSpy;
+    registeredBrowserServiceSpy = registeredBrowserSpy;
+    dialogSpy = matDialogSpy;
+    errorDialogSpy = errorSpy;
+
+    // Set up default return values for browser services
+    browserUuidServiceSpy.generateFingerprint.and.returnValue(Promise.resolve('test-fingerprint'));
+    browserUuidServiceSpy.getBrowserUuid.and.returnValue('TEST-UUID-123');
+    browserUuidServiceSpy.getBrowserName.and.returnValue('Test Browser');
+    registeredBrowserServiceSpy.verifyBrowser.and.returnValue(of({
+      verified: true,
+      browser_uuid: 'TEST-UUID-123',
+      browser_name: 'Test Browser',
+      restored: false
+    }));
 
     fixture = TestBed.createComponent(TimeclockComponent);
     component = fixture.componentInstance;
-    timeclockServiceSpy = TestBed.inject(TimeclockService) as jasmine.SpyObj<TimeclockService>;
-    dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
-    errorDialogSpy = TestBed.inject(ErrorDialogComponent) as jasmine.SpyObj<ErrorDialogComponent>;
 
     fixture.detectChanges();
   });

@@ -7,28 +7,23 @@ This makes them easy to type and remember while maintaining uniqueness.
 """
 
 import random
+from pathlib import Path
 from typing import Set
 
-# Word list for generating memorable UUIDs
-# Using short, common words that are easy to spell and pronounce
-WORD_LIST = [
-    "APPLE", "BEACH", "CLOUD", "DELTA", "EAGLE", "FLAME", "GRASS", "HOUSE",
-    "IVORY", "JADE", "KITE", "LIGHT", "MOON", "NIGHT", "OCEAN", "PEARL",
-    "QUIET", "RIVER", "STONE", "TIGER", "ULTRA", "VENUS", "WATER", "XENON",
-    "YOUTH", "ZEBRA", "AMBER", "BLADE", "CEDAR", "DUNE", "EMBER", "FROST",
-    "GROVE", "HAWK", "IRIS", "JET", "KING", "LOTUS", "MIST", "NOVA",
-    "OPAL", "PINE", "QUARTZ", "RAVEN", "SAGE", "THORN", "UNITY", "VINE",
-    "WOLF", "XRAY", "YELLOW", "ZINC", "ARCTIC", "BLAZE", "CORAL", "DAWN",
-    "ECHO", "FLARE", "GLOW", "HALO", "ICE", "JADE", "KELP", "LAVA",
-    "MAPLE", "NECTAR", "ORBIT", "PRISM", "QUEST", "RIDGE", "SOLAR", "TIDE",
-    "URBAN", "VORTEX", "WHALE", "XYLEM", "YARN", "ZENITH", "AZURE", "BRICK",
-    "CRISP", "DREAM", "EDGE", "FIELD", "GRAIN", "HAVEN", "ISLAND", "JEWEL",
-    "KNIGHT", "LAKE", "MEADOW", "NORTH", "OLIVE", "PLAIN", "QUEST", "RANGE",
-    "SLOPE", "TRAIL", "UNION", "VALLEY", "WAVE", "YIELD", "ZONE", "ARCH",
-    "BOLT", "CAPE", "DRIFT", "EARTH", "FLASH", "GATE", "HAVEN", "INLET",
-    "JADE", "KNOT", "LEAF", "MOUNT", "NORTH", "ORBIT", "PEAK", "QUIET",
-    "ROCKY", "SHORE", "TOWER", "UPPER", "VISTA", "WEST", "YACHT", "ZEAL"
-]
+
+def _load_word_list() -> list[str]:
+    """Load word list from words.txt file.
+
+    Returns:
+        list[str]: List of uppercase words
+    """
+    words_file = Path(__file__).parent.parent.parent / "words.txt"
+    with open(words_file, "r", encoding="utf-8") as f:
+        return [line.strip().upper() for line in f if line.strip()]
+
+
+# Load word list from external file
+WORD_LIST = _load_word_list()
 
 
 def generate_readable_uuid() -> str:

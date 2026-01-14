@@ -8,7 +8,7 @@ import { Department } from './department.service';
 describe('EmployeeService', () => {
   let service: EmployeeService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'employees';
+  const baseUrl = '/employees';
 
   // Mock data
   const mockOrgUnit: OrgUnit = {

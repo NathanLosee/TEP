@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
 
-import src.org_unit.repository as org_unit_repository
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
 from src.employee.schemas import EmployeeExtended
@@ -14,8 +13,16 @@ from src.org_unit.constants import (
     EXC_MSG_ORG_NOT_FOUND,
     IDENTIFIER,
 )
+from src.org_unit.repository import (
+    create_org_unit as create_org_unit_in_db,
+    delete_org_unit as delete_org_unit_from_db,
+    get_org_unit_by_id,
+    get_org_unit_by_name,
+    get_org_units,
+    update_org_unit as update_org_unit_in_db,
+)
 from src.org_unit.schemas import OrgUnitBase, OrgUnitExtended
-from src.services import create_event_log, requires_permission, validate
+from src.services import create_event_log, requires_license, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["org_unit"])
 
@@ -42,16 +49,14 @@ def create_org_unit(
         OrgUnitExtended: The created org unit.
 
     """
-    duplicate_org_unit = org_unit_repository.get_org_unit_by_name(
-        request.name, db
-    )
+    duplicate_org_unit = get_org_unit_by_name(request.name, db)
     validate(
         duplicate_org_unit is None,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    org_unit = org_unit_repository.create_org_unit(request, db)
+    org_unit = create_org_unit_in_db(request, db)
     log_args = {"org_unit_name": org_unit.name}
     create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return org_unit
@@ -77,7 +82,7 @@ def get_org_units(
         list[OrgUnitExtended]: The retrieved org units.
 
     """
-    return org_unit_repository.get_org_units(db)
+    return get_org_units(db)
 
 
 @router.get(
@@ -102,7 +107,7 @@ def get_org_unit(
         OrgUnitExtended: The retrieved org unit.
 
     """
-    org_unit = org_unit_repository.get_org_unit_by_id(id, db)
+    org_unit = get_org_unit_by_id(id, db)
     validate(
         org_unit,
         EXC_MSG_ORG_NOT_FOUND,
@@ -174,23 +179,21 @@ def update_org_unit(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    org_unit = org_unit_repository.get_org_unit_by_id(id, db)
+    org_unit = get_org_unit_by_id(id, db)
     validate(
         org_unit,
         EXC_MSG_ORG_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    duplicate_org_unit = org_unit_repository.get_org_unit_by_name(
-        request.name, db
-    )
+    duplicate_org_unit = get_org_unit_by_name(request.name, db)
     validate(
         duplicate_org_unit is None or duplicate_org_unit.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    org_unit = org_unit_repository.update_org_unit(org_unit, request, db)
+    org_unit = update_org_unit_in_db(org_unit, request, db)
     log_args = {"org_unit_name": org_unit.name}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return org_unit
@@ -211,7 +214,7 @@ def delete_org_unit(
         db (Session): Database session for current request.
 
     """
-    org_unit = org_unit_repository.get_org_unit_by_id(id, db)
+    org_unit = get_org_unit_by_id(id, db)
     validate(
         org_unit,
         EXC_MSG_ORG_NOT_FOUND,
@@ -223,6 +226,6 @@ def delete_org_unit(
         status.HTTP_409_CONFLICT,
     )
 
-    org_unit_repository.delete_org_unit(org_unit, db)
+    delete_org_unit_from_db(org_unit, db)
     log_args = {"org_unit_name": org_unit.name}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

@@ -1,22 +1,20 @@
+@use '../../styles/common' as *;
+
 .time-entries-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  @extend .page-container;
   background: var(--sys-surface);
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: $spacing-lg;
 
   .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @extend .flex-between;
 
     .title-section {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: $gap-md;
 
       .page-icon {
         font-size: 2rem;
@@ -35,20 +33,18 @@
 
     .header-actions {
       display: flex;
-      gap: 12px;
+      gap: $gap-sm;
 
       .export-btn {
         border: 2px solid var(--sys-outline);
 
         mat-icon {
-          margin-right: 8px;
+          margin-right: $spacing-sm;
         }
       }
 
-      .add-btn {
-        mat-icon {
-          margin-right: 8px;
-        }
+      .add-btn mat-icon {
+        margin-right: $spacing-sm;
       }
     }
   }
@@ -56,30 +52,30 @@
 
 .main-tabs {
   backdrop-filter: blur(10px);
-  border-radius: 16px;
+  border-radius: $border-radius-lg;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 
   .tab-content {
-    padding: 24px;
+    padding: $padding-lg;
   }
 }
 
 .filter-section {
-  margin-bottom: 24px;
+  margin-bottom: $spacing-lg;
 }
 
 .stats-section {
-  margin-bottom: 24px;
+  margin-bottom: $spacing-lg;
 
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    gap: $gap-md;
 
     .stat-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: $border-radius-md;
+      box-shadow: $shadow-md;
       transition: all 0.3s ease;
 
       &:hover {
@@ -88,12 +84,11 @@
       }
 
       .stat-content {
-        display: flex;
-        flex-direction: column;
+        @extend .flex-column;
         align-items: center;
         justify-content: center;
-        padding: 24px;
-        gap: 12px;
+        padding: $padding-lg;
+        gap: $gap-sm;
 
         .stat-icon {
           font-size: 2.5rem;
@@ -115,13 +110,13 @@
         }
 
         .stat-value {
-          font-size: 2rem;
-          font-weight: 700;
+          font-size: $font-size-xxl;
+          font-weight: $font-weight-bold;
           color: var(--sys-on-surface);
         }
 
         .stat-label {
-          font-size: 0.875rem;
+          font-size: $font-size-sm;
           font-weight: 500;
           color: var(--sys-on-surface-variant);
           text-align: center;
@@ -132,20 +127,19 @@
 }
 
 .filter-card {
-  margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @extend .card-container;
+  margin-bottom: $spacing-lg;
 
   .filter-form {
     .filter-row {
       display: grid;
       grid-template-columns: auto 1fr 1fr;
-      gap: 16px;
+      gap: $gap-md;
       align-items: center;
 
       .date-range-section {
         display: flex;
-        gap: 12px;
+        gap: $gap-sm;
 
         .date-field {
           min-width: 140px;
@@ -160,15 +154,13 @@
 }
 
 .table-card {
-  background: var(--sys-surface);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  @extend .card-container;
 
   .table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: $spacing-md;
 
     h2 {
       margin: 0;
@@ -179,7 +171,7 @@
 
     .table-actions {
       display: flex;
-      gap: 8px;
+      gap: $gap-xs;
     }
   }
 }
@@ -197,14 +189,14 @@
       background: var(--sys-surface-variant);
       color: var(--sys-on-surface-variant);
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: $font-size-sm;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     td {
       border-bottom: 1px solid var(--sys-outline-variant);
-      padding: 16px 12px;
+      padding: $spacing-md $spacing-sm;
     }
 
     tr:hover {
@@ -227,40 +219,18 @@
     }
   }
 
-  .empty-state,
+  .empty-state {
+    @extend .empty-container;
+  }
+
   .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 24px;
-    text-align: center;
-
-    .empty-icon {
-      font-size: 4rem;
-      width: 4rem;
-      height: 4rem;
-      color: var(--sys-outline);
-      margin-bottom: 16px;
-    }
-
-    h3 {
-      margin: 0 0 8px 0;
-      color: var(--sys-on-surface);
-    }
-
-    p {
-      color: var(--sys-on-surface-variant);
-      margin: 0 0 16px 0;
-    }
+    @extend .loading-container;
   }
 }
 
 // Cell Styles
 .badge-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @extend .table-cell-content;
 
   .badge-icon {
     font-size: 1.2rem;
@@ -275,9 +245,7 @@
 }
 
 .employee-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @extend .table-cell-content;
 
   .employee-icon {
     font-size: 1.1rem;
@@ -288,7 +256,7 @@
 
 .time-cell {
   .time-date {
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     margin-bottom: 2px;
   }
 
@@ -300,8 +268,7 @@
 }
 
 .no-clock-out {
-  display: flex;
-  align-items: center;
+  @extend .table-cell-content;
   gap: 6px;
 
   mat-icon {
@@ -312,14 +279,12 @@
 
   span {
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: $font-size-sm;
   }
 }
 
 .hours-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @extend .table-cell-content;
 
   .hours-icon {
     font-size: 1.1rem;
@@ -362,7 +327,7 @@
 }
 
 .action-buttons {
-  display: flex;
+  @extend .table-actions;
   gap: 4px;
 
   button {
@@ -380,58 +345,11 @@
   }
 }
 
-// Loading and Empty States
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-
-  p {
-    margin-top: 16px;
-    color: var(--sys-on-surface-variant);
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-
-  .empty-icon {
-    font-size: 4rem;
-    width: 4rem;
-    height: 4rem;
-    color: var(--sys-outline);
-    margin-bottom: 16px;
-  }
-
-  h3 {
-    margin: 0 0 8px 0;
-    color: var(--sys-on-surface);
-  }
-
-  p {
-    margin: 0 0 24px 0;
-    color: var(--sys-on-surface-variant);
-  }
-
-  button {
-    mat-icon {
-      margin-right: 8px;
-    }
-  }
-}
-
 // Responsive Design
-@media (max-width: 1024px) {
+@media (max-width: $breakpoint-lg) {
   .filter-form .filter-row {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: $gap-sm;
 
     .date-range-section {
       justify-content: stretch;
@@ -445,7 +363,7 @@
 
   .page-header .header-content {
     flex-direction: column;
-    gap: 16px;
+    gap: $gap-md;
     align-items: flex-start;
 
     .header-actions {
@@ -455,9 +373,9 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: $breakpoint-md) {
   .time-entries-container {
-    padding: 16px;
+    padding: $padding-md;
   }
 
   .header-actions {
@@ -469,13 +387,13 @@
   }
 
   .table-container {
-    font-size: 0.875rem;
+    font-size: $font-size-sm;
   }
 
   .entries-table {
     td,
     th {
-      padding: 12px 8px;
+      padding: $spacing-sm $spacing-xs;
     }
   }
 
@@ -484,7 +402,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: $breakpoint-sm) {
   .stats-grid {
     grid-template-columns: 1fr;
   }

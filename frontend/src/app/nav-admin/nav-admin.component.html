@@ -43,104 +43,115 @@
 
       <mat-divider></mat-divider>
 
-      <h3 mat-subheader>Employee Management</h3>
-      <a
-        *hasPermission="'timeclock.read'"
-        mat-list-item
-        routerLink="/admin/timeclock-entries"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>event_note</mat-icon>
-        <span matListItemTitle>Timeclock Entries</span>
-      </a>
-      <a
-        *hasPermission="'employee.read'"
-        mat-list-item
-        routerLink="/admin/employees"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>people</mat-icon>
-        <span matListItemTitle>Employees</span>
-      </a>
-      <a
-        *hasPermission="'department.read'"
-        mat-list-item
-        routerLink="/admin/departments"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>business</mat-icon>
-        <span matListItemTitle>Departments</span>
-      </a>
-      <a
-        *hasPermission="'org_unit.read'"
-        mat-list-item
-        routerLink="/admin/org-units"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>account_tree</mat-icon>
-        <span matListItemTitle>Org Units</span>
-      </a>
-      <a
-        *hasPermission="'holiday_group.read'"
-        mat-list-item
-        routerLink="/admin/holiday-groups"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>event</mat-icon>
-        <span matListItemTitle>Holiday Groups</span>
-      </a>
+      <ng-container *requiresLicense>
+        <h3 mat-subheader>Employee Management</h3>
+        <a
+          *hasPermission="'timeclock.read'"
+          mat-list-item
+          routerLink="/admin/timeclock-entries"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>event_note</mat-icon>
+          <span matListItemTitle>Timeclock Entries</span>
+        </a>
+        <a
+          *hasPermission="'employee.read'"
+          mat-list-item
+          routerLink="/admin/employees"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>people</mat-icon>
+          <span matListItemTitle>Employees</span>
+        </a>
+        <a
+          *hasPermission="'department.read'"
+          mat-list-item
+          routerLink="/admin/departments"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>business</mat-icon>
+          <span matListItemTitle>Departments</span>
+        </a>
+        <a
+          *hasPermission="'org_unit.read'"
+          mat-list-item
+          routerLink="/admin/org-units"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>account_tree</mat-icon>
+          <span matListItemTitle>Org Units</span>
+        </a>
+        <a
+          *hasPermission="'holiday_group.read'"
+          mat-list-item
+          routerLink="/admin/holiday-groups"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>event</mat-icon>
+          <span matListItemTitle>Holiday Groups</span>
+        </a>
 
-      <mat-divider></mat-divider>
+        <mat-divider></mat-divider>
 
-      <h3 mat-subheader>Reports</h3>
-      <a
-        *hasPermission="'report.read'"
-        mat-list-item
-        routerLink="/admin/reports"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>assessment</mat-icon>
-        <span matListItemTitle>Time Reports</span>
-      </a>
+        <h3 mat-subheader>Reports</h3>
+        <a
+          *hasPermission="'report.read'"
+          mat-list-item
+          routerLink="/admin/reports"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>assessment</mat-icon>
+          <span matListItemTitle>Time Reports</span>
+        </a>
 
-      <mat-divider></mat-divider>
+        <mat-divider></mat-divider>
 
-      <h3 mat-subheader>User & Security Management</h3>
+        <h3 mat-subheader>User & Security Management</h3>
+        <a
+          *hasPermission="'user.read'"
+          mat-list-item
+          routerLink="/admin/users"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>account_circle</mat-icon>
+          <span matListItemTitle>User Accounts</span>
+        </a>
+        <a
+          *hasPermission="'auth_role.read'"
+          mat-list-item
+          routerLink="/admin/auth-roles"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>security</mat-icon>
+          <span matListItemTitle>Auth Roles</span>
+        </a>
+        <a
+          *hasPermission="'registered_browser.read'"
+          mat-list-item
+          routerLink="/admin/registered-browsers"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>web</mat-icon>
+          <span matListItemTitle>Registered Browsers</span>
+        </a>
+        <a
+          *hasPermission="'event_log.read'"
+          mat-list-item
+          routerLink="/admin/event-logs"
+          routerLinkActive="active-link"
+        >
+          <mat-icon matListItemIcon>history</mat-icon>
+          <span matListItemTitle>Event Logs</span>
+        </a>
+      </ng-container>
       <a
-        *hasPermission="'user.read'"
+        *hasPermission="'auth_role.create'"
         mat-list-item
-        routerLink="/admin/users"
+        routerLink="/admin/license"
         routerLinkActive="active-link"
       >
-        <mat-icon matListItemIcon>account_circle</mat-icon>
-        <span matListItemTitle>User Accounts</span>
-      </a>
-      <a
-        *hasPermission="'auth_role.read'"
-        mat-list-item
-        routerLink="/admin/auth-roles"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>security</mat-icon>
-        <span matListItemTitle>Auth Roles</span>
-      </a>
-      <a
-        *hasPermission="'registered_browser.read'"
-        mat-list-item
-        routerLink="/admin/registered-devices"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>devices</mat-icon>
-        <span matListItemTitle>Registered Devices</span>
-      </a>
-      <a
-        *hasPermission="'event_log.read'"
-        mat-list-item
-        routerLink="/admin/event-logs"
-        routerLinkActive="active-link"
-      >
-        <mat-icon matListItemIcon>history</mat-icon>
-        <span matListItemTitle>Event Logs</span>
+        <mat-icon matListItemIcon>vpn_key</mat-icon>
+        <span matListItemTitle>License</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>

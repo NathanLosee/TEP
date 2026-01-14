@@ -23,7 +23,7 @@ export interface TimeclockEntry {
 @Injectable({ providedIn: 'root' })
 export class TimeclockService {
   private http = inject(HttpClient);
-  baseUrl = 'timeclock';
+  baseUrl = '/timeclock';
 
   /**
    * Clock in/out for an employee

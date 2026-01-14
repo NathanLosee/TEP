@@ -1,15 +1,14 @@
 """Module for license key generation and validation.
 
 This module handles:
-- License key format validation
+- License key format validation (Ed25519 signature in hex format)
 - Cryptographic signature verification using Ed25519
 - License key generation (for separate licensing tool)
 
-License key format: WORD-WORD-WORD-NN-WORD-WORD-WORD-NN
-Example: EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88
+The license key IS the Ed25519 signature itself (hex-encoded, 128 characters).
+This eliminates the need for separate key + signature fields.
 """
 
-import random
 from typing import Tuple
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -19,93 +18,69 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
 
-# Word list for generating memorable license keys (same as device UUIDs)
-WORD_LIST = [
-    "APPLE", "BEACH", "CLOUD", "DELTA", "EAGLE", "FLAME", "GRASS", "HOUSE",
-    "IVORY", "JADE", "KITE", "LIGHT", "MOON", "NIGHT", "OCEAN", "PEARL",
-    "QUIET", "RIVER", "STONE", "TIGER", "ULTRA", "VENUS", "WATER", "XENON",
-    "YOUTH", "ZEBRA", "AMBER", "BLADE", "CEDAR", "DUNE", "EMBER", "FROST",
-    "GROVE", "HAWK", "IRIS", "JET", "KING", "LOTUS", "MIST", "NOVA",
-    "OPAL", "PINE", "QUARTZ", "RAVEN", "SAGE", "THORN", "UNITY", "VINE",
-    "WOLF", "XRAY", "YELLOW", "ZINC", "ARCTIC", "BLAZE", "CORAL", "DAWN",
-    "ECHO", "FLARE", "GLOW", "HALO", "ICE", "JADE", "KELP", "LAVA",
-    "MAPLE", "NECTAR", "ORBIT", "PRISM", "QUEST", "RIDGE", "SOLAR", "TIDE",
-    "URBAN", "VORTEX", "WHALE", "XYLEM", "YARN", "ZENITH", "AZURE", "BRICK",
-    "CRISP", "DREAM", "EDGE", "FIELD", "GRAIN", "HAVEN", "ISLAND", "JEWEL",
-    "KNIGHT", "LAKE", "MEADOW", "NORTH", "OLIVE", "PLAIN", "QUEST", "RANGE",
-    "SLOPE", "TRAIL", "UNION", "VALLEY", "WAVE", "YIELD", "ZONE", "ARCH",
-    "BOLT", "CAPE", "DRIFT", "EARTH", "FLASH", "GATE", "HAVEN", "INLET",
-    "JADE", "KNOT", "LEAF", "MOUNT", "NORTH", "ORBIT", "PEAK", "QUIET",
-    "ROCKY", "SHORE", "TOWER", "UPPER", "VISTA", "WEST", "YACHT", "ZEAL"
-]
-
 # Public key for signature verification (embedded in application)
 # This is a placeholder - you'll generate your own key pair
 PUBLIC_KEY_PEM = b"""-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqoWTT8pSNlLJT3cT8E=
 -----END PUBLIC KEY-----"""
 
+# Message that gets signed to create the license key
+# This should be a constant unique to your application
+LICENSE_MESSAGE = b"TEP-License-v1"
 
-def generate_license_key() -> str:
-    """Generate a human-readable license key.
 
-    Format: WORD1-WORD2-WORD3-NN-WORD4-WORD5-WORD6-NN
+def generate_license_key(private_key_pem: bytes) -> str:
+    """Generate a license key by signing the standard license message.
+
+    Args:
+        private_key_pem: The private key in PEM format
 
     Returns:
-        str: A license key like "EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88"
+        str: The Ed25519 signature in hex format (128 characters)
 
     Note:
         This function is intended for use in a separate license generation tool,
-        not within the main application.
+        not within the main application. The private key should never be
+        embedded in the application.
     """
-    # Select 6 random words
-    words = random.sample(WORD_LIST, 6)
+    # Load private key
+    private_key = serialization.load_pem_private_key(private_key_pem, password=None)
+    if not isinstance(private_key, Ed25519PrivateKey):
+        raise ValueError("Invalid private key type")
 
-    # Generate 2 random numbers between 10 and 99
-    num1 = random.randint(10, 99)
-    num2 = random.randint(10, 99)
+    # Sign the standard license message
+    signature = private_key.sign(LICENSE_MESSAGE)
 
-    # Combine into license key format
-    return f"{words[0]}-{words[1]}-{words[2]}-{num1}-{words[3]}-{words[4]}-{words[5]}-{num2}"
+    # Return as hex string
+    return signature.hex()
 
 
 def validate_license_key_format(license_key: str) -> bool:
     """Validate that a license key matches the expected format.
 
     Args:
-        license_key: The license key string to validate
+        license_key: The license key string to validate (hex-encoded Ed25519 signature)
 
     Returns:
-        bool: True if the license key matches format WORD-WORD-WORD-NN-WORD-WORD-WORD-NN
+        bool: True if the license key is a valid hex string of correct length (128 chars)
     """
-    parts = license_key.split("-")
-
-    # Must have exactly 8 parts
-    if len(parts) != 8:
+    # Ed25519 signatures are 64 bytes, which is 128 hex characters
+    if len(license_key) != 128:
         return False
 
-    # Check pattern: word, word, word, number, word, word, word, number
-    expected_pattern = [True, True, True, False, True, True, True, False]
-
-    for i, is_word in enumerate(expected_pattern):
-        if is_word:
-            # Should be uppercase letters
-            if not parts[i].isupper() or not parts[i].isalpha():
-                return False
-        else:
-            # Should be a 2-digit number
-            if not parts[i].isdigit() or len(parts[i]) != 2:
-                return False
-
-    return True
+    # Must be valid hexadecimal
+    try:
+        bytes.fromhex(license_key)
+        return True
+    except ValueError:
+        return False
 
 
-def verify_license_signature(license_key: str, signature: str) -> bool:
-    """Verify the cryptographic signature of a license key.
+def verify_license_key(license_key: str) -> bool:
+    """Verify the cryptographic signature that serves as the license key.
 
     Args:
-        license_key: The license key to verify
-        signature: The signature string (hex-encoded)
+        license_key: The license key (hex-encoded Ed25519 signature) to verify
 
     Returns:
         bool: True if the signature is valid
@@ -120,10 +95,10 @@ def verify_license_signature(license_key: str, signature: str) -> bool:
             raise ValueError("Invalid public key type")
 
         # Decode signature from hex
-        signature_bytes = bytes.fromhex(signature)
+        signature_bytes = bytes.fromhex(license_key)
 
-        # Verify signature
-        public_key.verify(signature_bytes, license_key.encode("utf-8"))
+        # Verify signature against the standard license message
+        public_key.verify(signature_bytes, LICENSE_MESSAGE)
         return True
 
     except (InvalidSignature, ValueError):
@@ -166,27 +141,3 @@ def generate_key_pair() -> Tuple[bytes, bytes]:
     return (private_pem, public_pem)
 
 
-def sign_license_key(license_key: str, private_key_pem: bytes) -> str:
-    """Sign a license key with a private key.
-
-    Args:
-        license_key: The license key to sign
-        private_key_pem: The private key in PEM format
-
-    Returns:
-        str: Hex-encoded signature
-
-    Note:
-        This function is for use in your separate license generation tool.
-        The private key should never be embedded in the application.
-    """
-    # Load private key
-    private_key = serialization.load_pem_private_key(private_key_pem, password=None)
-    if not isinstance(private_key, Ed25519PrivateKey):
-        raise ValueError("Invalid private key type")
-
-    # Sign the license key
-    signature = private_key.sign(license_key.encode("utf-8"))
-
-    # Return as hex string
-    return signature.hex()

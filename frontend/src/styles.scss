@@ -1,5 +1,9 @@
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
+
+// Import shared variables and common styles FIRST (before any other rules)
+@use 'styles/variables' as *;
+@use 'styles/common';
 @use "@angular/material" as mat;
 // Plus imports for other components in your app.
 
@@ -107,47 +111,47 @@ body {
 }
 
 .gap-8 {
-  gap: 8px;
+  gap: $gap-xs;
 }
 
 .gap-16 {
-  gap: 16px;
+  gap: $gap-md;
 }
 
 .gap-24 {
-  gap: 24px;
+  gap: $gap-lg;
 }
 
 .mb-16 {
-  margin-bottom: 16px;
+  margin-bottom: $spacing-md;
 }
 
 .mb-24 {
-  margin-bottom: 24px;
+  margin-bottom: $spacing-lg;
 }
 
 .mt-16 {
-  margin-top: 16px;
+  margin-top: $spacing-md;
 }
 
 .mt-24 {
-  margin-top: 24px;
+  margin-top: $spacing-lg;
 }
 
 .p-16 {
-  padding: 16px;
+  padding: $padding-md;
 }
 
 .p-24 {
-  padding: 24px;
+  padding: $padding-lg;
 }
 
 .border-radius-8 {
-  border-radius: 8px;
+  border-radius: $border-radius-md;
 }
 
 .border-radius-12 {
-  border-radius: 12px;
+  border-radius: $border-radius-lg;
 }
 
 // Material Design 3 enhancements

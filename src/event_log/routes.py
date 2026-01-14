@@ -5,12 +5,18 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
 
-import src.event_log.repository as event_log_repository
-import src.user.repository as user_repository
 from src.database import get_db
 from src.event_log.constants import BASE_URL, EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND
+from src.event_log.repository import (
+    create_event_log as create_event_log_in_db,
+    delete_event_log_entry,
+    filter_logs_by_permissions,
+    get_event_log_by_id,
+    get_event_log_entries,
+)
 from src.event_log.schemas import EventLogBase, EventLogExtended
 from src.services import requires_permission, validate
+from src.user.repository import get_user_by_badge_number
 
 router = APIRouter(prefix=BASE_URL, tags=["event_log"])
 
@@ -37,8 +43,8 @@ def create_event_log(
         EventLogExtended: The created event log entry.
 
     """
-    user_repository.get_user_by_badge_number(request.badge_number, db)
-    return event_log_repository.create_event_log(request, db)
+    get_user_by_badge_number(request.badge_number, db)
+    return create_event_log_in_db(request, db)
 
 
 @router.get(
@@ -79,17 +85,15 @@ def get_event_log_entries(
 
     """
     # Get the caller's user object to check permissions
-    caller_user = user_repository.get_user_by_badge_number(caller_badge, db)
+    caller_user = get_user_by_badge_number(caller_badge, db)
 
     # Get all event logs matching the criteria
-    all_logs = event_log_repository.get_event_log_entries(
+    all_logs = get_event_log_entries(
         start_timestamp, end_timestamp, badge_number, log_filter, db
     )
 
     # Filter logs based on caller's permissions
-    filtered_logs = event_log_repository.filter_logs_by_permissions(
-        all_logs, caller_user, db
-    )
+    filtered_logs = filter_logs_by_permissions(all_logs, caller_user, db)
 
     return filtered_logs
 
@@ -116,7 +120,7 @@ def get_event_log_by_id(
         EventLogExtended: The retrieved event log entry.
 
     """
-    event_log = event_log_repository.get_event_log_by_id(id, db)
+    event_log = get_event_log_by_id(id, db)
     validate(
         event_log,
         EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND,
@@ -144,11 +148,11 @@ def delete_event_log_by_id(
         db (Session): Database session for current request.
 
     """
-    event_log = event_log_repository.get_event_log_by_id(id, db)
+    event_log = get_event_log_by_id(id, db)
     validate(
         event_log,
         EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    event_log_repository.delete_event_log_entry(event_log, db)
+    delete_event_log_entry(event_log, db)

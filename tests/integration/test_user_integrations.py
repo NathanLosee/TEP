@@ -177,8 +177,8 @@ def test_update_user_password_200(
     user = create_user(user_data, test_client)
     user_data["new_password"] = "new_password"
 
-    test_client.cookies.clear()
-    test_client.headers.clear()
+    # Login as the user to perform self-service password update
+    login_user(user_data, test_client)
     response = test_client.put(
         f"{BASE_URL}/{user["badge_number"]}",
         json=user_data,
@@ -190,6 +190,7 @@ def test_update_user_password_200(
         "badge_number": user["badge_number"],
     }
 
+    # Verify user can login with new password
     user_data["password"] = "new_password"
     login_user(user_data, test_client)
 
@@ -244,7 +245,11 @@ def test_update_user_password_403_wrong_password(
     employee_data["org_unit_id"] = org_unit["id"]
     employee = create_employee(employee_data, test_client)
     user_data["badge_number"] = employee["badge_number"]
+    original_password = user_data["password"]
     test_client.post(BASE_URL, json=user_data)
+
+    # Login as the user, then try to update password with wrong current password
+    login_user(user_data, test_client)
     user_data["password"] = "wrong_password"
     user_data["new_password"] = "new_password"
 

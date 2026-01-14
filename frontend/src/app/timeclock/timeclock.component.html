@@ -50,56 +50,60 @@
       </button>
     </div>
 
-    <!-- Device Registration Status Indicator -->
+    <!-- Browser Registration Status Indicator -->
     <mat-card class="device-status-card">
       <mat-card-content>
         <div class="device-status-indicator">
-          <mat-icon [class.registered]="isDeviceRegistered" [class.unregistered]="!isDeviceRegistered">
-            {{ isDeviceRegistered ? 'business' : 'public' }}
+          <mat-icon [class.registered]="isBrowserRegistered" [class.unregistered]="!isBrowserRegistered">
+            {{ isBrowserRegistered ? 'business' : 'public' }}
           </mat-icon>
           <div class="status-text">
-            @if (isDeviceRegistered) {
-              <strong>Internal Device</strong>
+            @if (isBrowserRegistered) {
+              <strong>Internal Browser</strong>
             } @else {
-              <strong>External Device</strong>
+              <strong>External Browser</strong>
             }
-            @if (isDeviceRegistered && deviceName) {
-              <span class="device-name">{{ deviceName }}</span>
+            @if (isBrowserRegistered && browserName) {
+              <span class="device-name">{{ browserName }}</span>
             }
-            @if (!isDeviceRegistered) {
-              <span class="warning-text">Employees need External Clocking permission to clock in/out using this device</span>
+            @if (!isBrowserRegistered) {
+              <span class="warning-text">Employees need External Clocking permission to clock in/out using this browser</span>
             }
           </div>
         </div>
 
-        <!-- Device ID Recovery Section (shown when device is not registered) -->
-        @if (!isDeviceRegistered && !showRecoveryForm) {
+        <!-- Browser ID Recovery Section (shown when browser is not registered) -->
+        @if (!isBrowserRegistered && !showRecoveryForm) {
           <div class="recovery-link">
             <button mat-button (click)="showRecoveryForm = true">
               <mat-icon>vpn_key</mat-icon>
-              Have a device ID?
+              Have a browser ID?
             </button>
           </div>
         }
 
         @if (showRecoveryForm) {
           <div class="recovery-form">
-            <h3>Recover Device Registration</h3>
-            <p>Enter the device ID from this device's label</p>
+            <h3>Recover Browser Registration</h3>
+            <p>Enter the browser ID from this browser's label</p>
             <p class="format-hint">Format: WORD-WORD-WORD-NUMBER</p>
             <mat-form-field appearance="outline" class="recovery-input">
-              <mat-label>Device ID</mat-label>
+              <mat-label>Browser ID</mat-label>
               <input matInput [(ngModel)]="recoveryCode" placeholder="EAGLE-RIVER-MOUNTAIN-42" [disabled]="isRecovering" />
             </mat-form-field>
             <div class="recovery-actions">
               <button mat-button (click)="cancelRecovery()">Cancel</button>
-              <button mat-raised-button color="primary" (click)="recoverDevice()" [disabled]="!recoveryCode || isRecovering">
+              <button mat-raised-button color="primary" (click)="recoverBrowser()" [disabled]="!recoveryCode || isRecovering">
                 @if (isRecovering) {
-                  <mat-icon>hourglass_empty</mat-icon>
-                  Recovering...
+                  <ng-container>
+                    <mat-icon>hourglass_empty</mat-icon>
+                    Recovering...
+                  </ng-container>
                 } @else {
-                  <mat-icon>restore</mat-icon>
-                  Recover
+                  <ng-container>
+                    <mat-icon>restore</mat-icon>
+                    Recover
+                  </ng-container>
                 }
               </button>
             </div>

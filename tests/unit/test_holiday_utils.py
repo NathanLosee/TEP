@@ -54,6 +54,30 @@ class TestGetNthWeekdayOfMonth:
         # Last Sunday of December 2024 is December 29
         assert result == date(2024, 12, 29)
 
+    def test_leap_year_february(self):
+        """Test handling leap year February (29 days)."""
+        result = get_nth_weekday_of_month(2024, 2, 3, 5)
+        # Last Thursday of February 2024 (leap year) is February 29
+        assert result == date(2024, 2, 29)
+
+    def test_non_leap_year_february(self):
+        """Test handling non-leap year February (28 days)."""
+        result = get_nth_weekday_of_month(2023, 2, 1, 5)
+        # Last Tuesday of February 2023 (non-leap year) is February 28
+        assert result == date(2023, 2, 28)
+
+    def test_month_with_31_days(self):
+        """Test handling month with 31 days (January)."""
+        result = get_nth_weekday_of_month(2024, 1, 2, 5)
+        # Last Wednesday of January 2024 is January 31
+        assert result == date(2024, 1, 31)
+
+    def test_month_with_30_days(self):
+        """Test handling month with 30 days (April)."""
+        result = get_nth_weekday_of_month(2024, 4, 1, 5)
+        # Last Tuesday of April 2024 is April 30
+        assert result == date(2024, 4, 30)
+
 
 class TestGenerateHolidayForYear:
     """Tests for generate_holiday_for_year function."""
@@ -142,6 +166,42 @@ class TestGenerateHolidayForYear:
                 "invalid_type",
                 12,
             )
+
+    def test_fixed_holiday_leap_day(self):
+        """Test generating leap day (Feb 29) in leap year."""
+        start_date, end_date = generate_holiday_for_year(
+            "Leap Day",
+            2024,
+            "fixed",
+            2,
+            recurrence_day=29,
+        )
+        assert start_date == date(2024, 2, 29)
+        assert end_date == date(2024, 2, 29)
+
+    def test_fixed_holiday_month_boundary(self):
+        """Test generating holiday on month boundary (1st and 31st)."""
+        # First day of month
+        start_date, end_date = generate_holiday_for_year(
+            "First Day",
+            2024,
+            "fixed",
+            3,
+            recurrence_day=1,
+        )
+        assert start_date == date(2024, 3, 1)
+        assert end_date == date(2024, 3, 1)
+
+        # Last day of month (31st)
+        start_date, end_date = generate_holiday_for_year(
+            "Last Day",
+            2024,
+            "fixed",
+            3,
+            recurrence_day=31,
+        )
+        assert start_date == date(2024, 3, 31)
+        assert end_date == date(2024, 3, 31)
 
 
 class TestGetHolidaysForYear:

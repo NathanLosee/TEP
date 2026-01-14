@@ -6,17 +6,26 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Header, Security, status
 from sqlalchemy.orm import Session
 
-import src.employee.routes as employee_routes
-import src.registered_browser.repository as browser_repository
-import src.timeclock.repository as timeclock_repository
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
+from src.employee.routes import get_employee_by_badge_number, search_for_employees
+from src.registered_browser.repository import get_registered_browser_by_uuid
 from src.services import create_event_log, requires_permission, validate
 from src.timeclock.constants import (
     BASE_URL,
     EXC_MSG_EMPLOYEE_NOT_ALLOWED,
+    EXC_MSG_EXTERNAL_CLOCK_NOT_AUTHORIZED,
+    EXC_MSG_REGISTERED_BROWSER_REQUIRED,
     EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
     IDENTIFIER,
+)
+from src.timeclock.repository import (
+    check_status,
+    delete_timeclock_entry,
+    get_timeclock_entries,
+    get_timeclock_entry_by_id,
+    timeclock,
+    update_timeclock_entry_by_id as update_timeclock_entry_by_id_in_db,
 )
 from src.timeclock.schemas import TimeclockEntryBase, TimeclockEntryWithName
 
@@ -43,7 +52,7 @@ def timeclock(
         dict: Clock in/out status.
 
     """
-    employee = employee_routes.get_employee_by_badge_number(badge_number, db)
+    employee = get_employee_by_badge_number(badge_number, db)
     validate(
         employee.allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
@@ -53,9 +62,7 @@ def timeclock(
     # Check if browser UUID is provided (browser has saved UUID)
     if x_device_uuid:
         # Check if browser is registered in system
-        browser = browser_repository.get_registered_browser_by_uuid(
-            x_device_uuid, db
-        )
+        browser = get_registered_browser_by_uuid(x_device_uuid, db)
 
         if browser:
             # Registered company browser - anyone can use it
@@ -64,14 +71,14 @@ def timeclock(
             # Unregistered browser - only employees with external_clock_allowed can use
             validate(
                 employee.external_clock_allowed,
-                "Employee is not authorized to clock from unregistered browsers",
+                EXC_MSG_EXTERNAL_CLOCK_NOT_AUTHORIZED,
                 status.HTTP_403_FORBIDDEN,
             )
     else:
         # No browser UUID - only employees with external_clock_allowed can clock
         validate(
             employee.external_clock_allowed,
-            "Employee must clock from a registered company browser",
+            EXC_MSG_REGISTERED_BROWSER_REQUIRED,
             status.HTTP_403_FORBIDDEN,
         )
 
@@ -79,7 +86,7 @@ def timeclock(
     if x_device_uuid:
         log_args["device_uuid"] = x_device_uuid
 
-    if timeclock_repository.timeclock(badge_number, db):
+    if timeclock(badge_number, db):
         create_event_log(IDENTIFIER, "CLOCK_IN", log_args, "0", db)
         return {"status": "success", "message": "Clocked in"}
     else:
@@ -105,16 +112,14 @@ def check_status(
         dict: Clock in/out status.
 
     """
-    employees = employee_routes.search_for_employees(
-        badge_number=badge_number, db=db
-    )
+    employees = search_for_employees(badge_number=badge_number, db=db)
     validate(
         len(employees) == 1 and employees[0].allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    if timeclock_repository.check_status(badge_number, db):
+    if check_status(badge_number, db):
         return {"status": "success", "message": "Clocked in"}
     else:
         return {"status": "success", "message": "Clocked out"}
@@ -144,16 +149,14 @@ def get_employee_history(
         list[TimeclockEntryWithName]: The retrieved timeclock entries.
 
     """
-    employees = employee_routes.search_for_employees(
-        badge_number=badge_number, db=db
-    )
+    employees = search_for_employees(badge_number=badge_number, db=db)
     validate(
         len(employees) == 1 and employees[0].allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    return timeclock_repository.get_timeclock_entries(
+    return get_timeclock_entries(
         start_timestamp, end_timestamp, badge_number, None, None, db
     )
 
@@ -193,7 +196,7 @@ def get_timeclock_entries(
         list[TimeclockEntryBase]: The retrieved timeclock entries.
 
     """
-    return timeclock_repository.get_timeclock_entries(
+    return get_timeclock_entries(
         start_timestamp, end_timestamp, badge_number, first_name, last_name, db
     )
 
@@ -228,16 +231,14 @@ def update_timeclock_by_id(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    timeclock = timeclock_repository.get_timeclock_entry_by_id(id, db)
+    timeclock = get_timeclock_entry_by_id(id, db)
     validate(
         timeclock,
         EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    timeclock_entry = timeclock_repository.update_timeclock_entry_by_id(
-        timeclock, request, db
-    )
+    timeclock_entry = update_timeclock_entry_by_id_in_db(timeclock, request, db)
     log_args = {"timeclock_entry_id": timeclock_entry.id}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return timeclock_entry
@@ -261,13 +262,13 @@ def delete_timeclock_by_id(
         db (Session): Database session for current request.
 
     """
-    timeclock_entry = timeclock_repository.get_timeclock_entry_by_id(id, db)
+    timeclock_entry = get_timeclock_entry_by_id(id, db)
     validate(
         timeclock_entry,
         EXC_MSG_TIMECLOCK_ENTRY_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    timeclock_repository.delete_timeclock_entry(timeclock_entry, db)
+    delete_timeclock_entry(timeclock_entry, db)
     log_args = {"timeclock_entry_id": timeclock_entry.id}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)

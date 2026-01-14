@@ -1,206 +1,314 @@
-# Python Super Health API Project
+# TEP - Timeclock and Employee Payroll
 
-REST API for Super Health business operations. Allows for the management of information about patients and their encounters with care providers.
+REST API and web application for employee timeclock management and payroll processing. Supports employee clocking in/out, report generation, organizational structure management, and comprehensive administrative features.
+
+## Features
+
+- **Employee Timeclock**: Clock in/out functionality with browser-based device registration
+- **Payroll Reports**: Generate detailed payroll reports with overtime and holiday calculations
+- **Employee Management**: Manage employee records, departments, and organizational units
+- **Role-Based Access Control**: Granular permissions system with customizable auth roles
+- **License Management**: Ed25519 cryptographic license activation for admin features
+- **Event Logging**: Comprehensive audit trail for all system operations
+- **Holiday Groups**: Configurable holiday calendars with recurring holiday support
+- **Registered Browsers**: Secure browser registration system for controlled timeclock access
+
+## Technology Stack
+
+### Backend
+- **Python 3.13+** with Poetry dependency management
+- **FastAPI** web framework
+- **SQLAlchemy** ORM with Alembic migrations
+- **SQLite** database (development)
+- **JWT** authentication with RSA-256
+- **Ed25519** cryptographic signatures for license verification
+
+### Frontend
+- **Angular 19+** standalone components
+- **Angular Material** (Material Design 3)
+- **TypeScript** with RxJS for reactive programming
+- **Jasmine/Karma** for testing
 
 ## Prerequisites
 
-This application was initialized with python 3.11.5. You can check your version by running `python --version` from the terminal/command prompt. To download the version 3.11.5 of Python, visit <a href="https://www.python.org/downloads/release/python-3115/" target="_blank">https://www.python.org/downloads/release/python-3115/</a>.
+### Backend Requirements
+- **Python 3.13+**: Check version with `python --version`
+  - Download: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+- **Poetry 1.6+**: Check version with `poetry --version`
+  - Install: [https://python-poetry.org/docs/#installation](https://python-poetry.org/docs/#installation)
 
-Also, you must have Poetry installed. The version of Poetry used to create this application was 1.6.1. You can verify your version by typing `poetry --version` in the terminal/command prompt. To download poetry on your computer, visit <a href="https://python-poetry.org/docs/#installation" target="_blank">https://python-poetry.org/docs/#installation</a>.
+### Frontend Requirements
+- **Node.js 18+** and **npm 9+**: Check with `node --version` and `npm --version`
+  - Download: [https://nodejs.org/](https://nodejs.org/)
 
-This application utilizes a locally-running PostgreSQL database. To download and install PostgreSQL, visit <a href="https://www.postgresql.org/download/" target="_blank">https://www.postgresql.org/download/</a>
+## Setup Instructions
 
-**Set up the Project-Level Environment Variables**
+### Backend Setup
 
-1. Create a file in the root directory named `.env`.
-2. Open the file and add the following default credentials and configuration:
+1. **Create virtual environment and install dependencies**
+   ```bash
+   poetry install
+   ```
 
-```text
-LOG_LEVEL=INFO
-POSTGRES_USER=<your postgres user>
-POSTGRES_PASSWORD=<your postgres password>
-POSTGRES_DB=super_health
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+2. **Set up environment variables** (optional)
+
+   Create a `.env` file in the root directory:
+   ```text
+   LOG_LEVEL=INFO
+   ENVIRONMENT=development
+   CORS_ORIGINS=http://localhost:4200
+   ROOT_PASSWORD=your_secure_password_here
+   ```
+
+3. **Activate virtual environment**
+   ```bash
+   poetry shell
+   ```
+
+4. **Run database migrations**
+   ```bash
+   poetry run alembic upgrade head
+   ```
+
+5. **Generate RSA key pair for JWT authentication**
+
+   The application will automatically generate keys on first run if they don't exist.
+
+### Frontend Setup
+
+1. **Navigate to frontend directory**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment** (if needed)
+
+   Edit `frontend/src/environments/environment.development.ts`:
+   ```typescript
+   export const environment = {
+     production: false,
+     apiUrl: 'http://localhost:8000',
+   };
+   ```
+
+## Running the Application
+
+### Start Backend Server
+
+From the root directory:
+```bash
+poetry run uvicorn src.main:app --reload
 ```
 
-**Set up the virtual environment and load the packages**
+The API will be available at:
+- **API**: http://127.0.0.1:8000
+- **Swagger Docs**: http://127.0.0.1:8000/docs
+- **ReDoc**: http://127.0.0.1:8000/redoc
 
-1. Open a terminal/command prompt at the root directory.
-2. Enter the following command to create a virtual environment and install the packages: `poetry install`.
-3. Follow the instructions given under [Switching to a different virtual environment](#switching-to-a-different-virtual-environment) if you ran into this error message:
+### Start Frontend Development Server
 
-```text
-The currently activated Python version 3.12.0 is not supported by the project (^3.11.0, <3.12.0).
-Trying to find and use a compatible version.
-
-Poetry was unable to find a compatible version. If you have one, you can explicitly use it via the "env use" command.
+From the `frontend/` directory:
+```bash
+npm start
 ```
 
-4. Ensure that the virtual environment has been created in `.venv`.
-5. Get the path to your virtual environment: `poetry env info --path`.
-6. To set up the Python interpreter for your project in VSCode, you need to do the following steps. First, open the command palette by pressing `Ctrl+Shift+P`. Then, type `"Python: Select Interpreter"` and choose the option that shows the path to your project's python.exe file (Windows) or python file (MacOS). It usually has a star icon next to it. Alternatively, you can enter the path manually by choosing the `Enter interpreter path...` option.
+The application will be available at:
+- **Web App**: http://localhost:4200
 
-**Prepare the database**
+### Default Credentials
 
-Create a database named `super_health` in your locally running PostgreSQL instance.
+**Root User (Development)**
+- **Badge Number**: `0`
+- **Password**: `password123` (or value of `ROOT_PASSWORD` env var)
 
-**Run the Alembic migrations**
+**Important**: Change the root password in production!
 
-1. Open a terminal/command prompt window at the root directory.
-2. To update your database to the latest Alembic migration, run the command: `poetry run alembic upgrade head`.
-3. You can check the Alembic versions applied to your database by looking at the rows in the `alembic_version` table or by entering the command: `poetry run alembic history`.
+## Testing
 
-#### Switching to a different virtual environment
+### Backend Testing
 
-1. Download and install Python version 3.11.5: https://www.python.org/downloads/release/python-3115/
-2. Open a terminal/command prompt window.
-3. Run the command: `py -0p`. Copy the path to `-V:3.11` and replace the backlashes with forward-slashes. For example: `C:/Users/mpalacio/AppData/Local/Programs/Python/Python311/python.exe`
-4. From the root directory, run the command: `poetry env use /full/path/to/python`. Replacing the path with the one from step 3.
-5. Ensure that the virtual environment has been created in `.venv`.
-6. Get the path to your virtual environment: `poetry env info --path`.
-7. To set up the Python interpreter for your project in VSCode, you need to do the following steps. First, open the command palette by pressing `Ctrl+Shift+P`. Then, type `"Python: Select Interpreter"` and choose the option that shows the path to your project's python.exe file (Windows) or python file (MacOS). It usually has a star icon next to it. Alternatively, you can enter the path manually by choosing the `Enter interpreter path...` option.
-
-## Usage
-
-### Startup
-
-1. Open a terminal/command prompt window at the root directory.
-2. Run the command: `poetry run uvicorn src.main:app --reload`
-3. The API local development server is available on http://127.0.0.1:8000. You should see a json response by visiting the link:
-
-```json
-{
-  "message": "Welcome to the Python Super Health API project!"
-}
+Run all tests:
+```bash
+poetry run pytest tests/
 ```
 
-4. To view the Swagger docs generated by the API, visit: http://127.0.0.1:8000/docs.
+Run only integration tests:
+```bash
+poetry run pytest tests/integration/
+```
 
-### Shutdown
+Run only unit tests:
+```bash
+poetry run pytest tests/unit/
+```
 
-1. `Ctrl-C` in the terminal window running the uvicorn server.
+Run with coverage report:
+```bash
+poetry run pytest tests/ --cov=src --cov-report=html:cov_html --cov-report=term-missing
+```
 
-### Routes
+### Frontend Testing
 
-Legend for regular expressions:\
-D = Numeric digit\
-L = Alphabetic character\
-N = Alphabetic Names character (includes hyphens and apostrophe)\
-A = Alphanumeric character\
-\* = Previous character can repeat
+From the `frontend/` directory:
 
-#### ENCOUNTER
-_REQUEST SCHEMA_\
-patient_id - Type: Integer, must reference an existing patient in the database\
-notes - Type: String, optional\
-visit_code - Type: String, regex = `ADA DAD`, all letters capitalized\
-provider - Type: String\
-billing_code - Type: String, regex = `DDD.DDD.DDD-DD`\
-icd10 - Type: String, regex = `ADD`, letter capitalized\
-total_cost - Type: Float, two-decimal precision, non-negative\
-copay - Type: Float, two-decimal precision, non-negative\
-chief_complaint - Type: String\
-pulse - Type: Integer, optional, non-negative\
-systolic - Type: Integer, optional, non-negative\
-diastolic - Type: Integer, optional, non-negative\
-encounter_date - Type: Date, format = `YYYY-MM-DD`
+Run tests in watch mode:
+```bash
+npm test
+```
 
-- **POST** `/patients/<patient_id>/encounters`\
-  Creates new encounter for patient with `patient_id`.\
-  Requires JSON body following schema.
-  - **HTTP 201**: Returns new encounter on success.
-  - **HTTP 400**: Field validation fails.
-  - **HTTP 400**: `patient_id` in path and `patient_id` in body do not match.
-  - **HTTP 404**: Patient with `patient_id` not found.
-- **GET** `/patients/<patient_id>/encounters`\
-  Gets all encounters for patient with `patient_id`.
-  - **HTTP 200**: Returns list of encounters for patient on success.
-  - **HTTP 404**: Patient with `patient_id` not found.
-- **PUT** `/patients/<patient_id>/encounters/{encounter_id}`\
-  Updates encounter with `enounter_id` for patient with `patient_id`.\
-  Requires JSON body following schema with additional integer field `id` for encounter being updated.
-  - **HTTP 201**: Returns updated encounter on success.
-  - **HTTP 400**: Field validation fails.
-  - **HTTP 400**: `patient_id` in path and body do not match.
-  - **HTTP 400**: `encounter_id` in path and `id` in body do not match.
-  - **HTTP 404**: Patient with `patient_id` not found.
-  - **HTTP 404**: Encounter with `encounter_id` not found.
-  - **HTTP 404**: Encounter with `encounter_id` does not involve patient with `patient_id`.
+Run tests once:
+```bash
+npm test -- --watch=false --browsers=ChromeHeadless
+```
 
-#### PATIENT
-_REQUEST SCHEMA_\
-first_name - Type: String, regex = `N*`\
-last_name - Type: String, regex = `N*`\
-ssn - Type: String, regex = `DDD-DD-DDDD`\
-email - Type: String, valid email format\
-street - Type: String\
-city - Type: String\
-state - Type: String, must be valid two-letter US state abbreviation\
-postal - Type: String, regex = `DDDDD` or `DDDDD-DDDD`\
-age - Type: Integer, non-negative\
-height - Type: Integer, non-negative\
-weight - Type: Integer, non-negative\
-insurance - Type: String\
-gender - Type: String, must be one of `male`, `female`, `other`
+## Project Structure
 
-- **POST** `/patients`\
-  Creates new patient.\
-  Requires JSON body following schema.
-  - **HTTP 201**: Returns new patient on success.
-  - **HTTP 400**: Field validation fails.
-  - **HTTP 409**: Patient email is already in use.
-- **GET** `/patients`\
-  Gets all patients.
-  - **HTTP 200**: Returns list of patients on success.
-- **GET** `/patients/<patient_id>`\
-  Gets patient with `patient_id`.
-  - **HTTP 200**: Returns patient on success.
-  - **HTTP 404**: Patient with `patient_id` not found.
-- **PUT** `/patients/<patient_id>`\
-  Updates patient with `patient_id`.\
-  Requires JSON body following schema with additional integer field `id` for patient being updated.
-  - **HTTP 201**: Returns updated patient on success.
-  - **HTTP 400**: Field validation fails.
-  - **HTTP 400**: `patient_id` in path and `id` in body do not match.
-  - **HTTP 404**: Patient with `patient_id` not found.
-  - **HTTP 409**: Patient email is already in use by another existing patient.
-- **DELETE** `/patients/<patient_id>`\
-  Deletes patient with `patient_id`.
-  - **HTTP 204**: No returned body on success.
-  - **HTTP 404**: Patient with `patient_id` not found.
-  - **HTTP 409**: Patient with `patient_id` has encounters and cannot be deleted.
+```
+TEP/
+├── src/                          # Backend source code
+│   ├── auth_role/               # Role-based access control
+│   ├── department/              # Department management
+│   ├── employee/                # Employee records
+│   ├── event_log/               # Audit logging
+│   ├── holiday_group/           # Holiday calendar management
+│   ├── license/                 # License activation/verification
+│   ├── org_unit/                # Organizational units
+│   ├── registered_browser/      # Browser registration for timeclock
+│   ├── report/                  # Payroll report generation
+│   ├── timeclock/               # Clock in/out operations
+│   ├── user/                    # User authentication
+│   ├── config.py               # Application configuration
+│   ├── constants.py            # Global constants
+│   ├── database.py             # Database connection
+│   ├── main.py                 # FastAPI application entry point
+│   └── services.py             # Shared service functions
+├── frontend/                    # Angular frontend application
+│   ├── src/
+│   │   ├── app/                # Angular components
+│   │   ├── services/           # API client services
+│   │   └── styles/             # Global styles
+├── tests/                       # Backend tests
+│   ├── integration/            # API integration tests
+│   └── unit/                   # Unit tests
+├── alembic/                    # Database migrations
+├── pyproject.toml              # Poetry dependencies
+└── README.md                   # This file
+```
 
-## Testing the project
+## API Overview
 
-### Prepare the database
+### Core Modules
 
-Create a database named `super_health_test` in your locally running PostgreSQL instance.
+- **Authentication** (`/users/login`, `/users/logout`)
+  - JWT-based authentication with refresh tokens
+  - Password change functionality
 
-### Linting the project
+- **Timeclock** (`/timeclock/{badge_number}`)
+  - Clock in/out operations
+  - Timeclock status checking
+  - Entry management
 
-Flake8 is used as the linting tool for this project.
+- **Employees** (`/employees`)
+  - CRUD operations for employee records
+  - Search and filtering
+  - Department and org unit associations
 
-1. Open a terminal/command prompt window at the root directory.
-2. Run the command: `flake8 src`
-3. Recommendations will be printed, if there are any.
+- **Reports** (`/reports`)
+  - Payroll report generation
+  - PDF export functionality
+  - Filtering by employee, department, org unit, date range
 
-### Testing the API with coverage report
+- **Admin Features** (require valid license)
+  - Auth role management
+  - Department management
+  - Organizational unit management
+  - Holiday group management
+  - Registered browser management
+  - Event log viewing
 
-1. Open a terminal/command prompt window.
-2. From the root directory, run the command: `poetry run pytest tests`
-3. This command will run all the API test cases.
-4. Use `tests/unit` to run exclusively unit tests.
-5. Use `tests/integration` to run exclusively integration tests.
-6. Run with options `--cov=src --cov-report=html:cov_html --cov-report=term-missing` to display a coverage report in the terminal. It will also generate a `cov_html` folder with the html version of the coverage report.
+### License System
 
-### Postman testing
+The application uses a **cryptographic license system** to control access to administrative features:
 
-1. In Postman, import [Super Health Collection](SuperHealth Collection.postman_collection.json)
-2. Run the transactions in-order.
+- **License Format**: Ed25519 cryptographic signatures (128-character hex strings)
+- **Activation**: Offline activation via admin interface
+- **Scope**: Admin features are locked without valid license; timeclock functionality remains available
+- **License Status**: Publicly accessible at `/licenses/status` (no authentication required)
+
+To activate a license:
+1. Log in as an administrator
+2. Navigate to License Management
+3. Enter the license key
+4. Click "Activate License"
+
+## Development
+
+### Database Migrations
+
+Create a new migration:
+```bash
+poetry run alembic revision --autogenerate -m "Description of changes"
+```
+
+Apply migrations:
+```bash
+poetry run alembic upgrade head
+```
+
+Rollback one migration:
+```bash
+poetry run alembic downgrade -1
+```
+
+### Code Quality
+
+The project uses:
+- **Black** for Python code formatting
+- **Flake8** for Python linting
+- **ESLint** for TypeScript linting
+- **Prettier** for TypeScript formatting
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `ENVIRONMENT` | `development` | Environment mode (development, production, test) |
+| `CORS_ORIGINS` | `http://localhost:4200` | Allowed CORS origins (comma-separated) |
+| `ROOT_PASSWORD` | `password` | Default root user password |
+| `DATABASE_URL` | `sqlite:///tep.sqlite` | Database connection string |
+
+## Security Considerations
+
+1. **Change default root password** in production environments
+2. **Configure CORS origins** appropriately for your deployment
+3. **Use HTTPS** in production
+4. **Secure license keys** - private keys must never be embedded in the application
+5. **Regular backups** of the SQLite database
+
+## Troubleshooting
+
+### Backend won't start
+- Verify Python version: `python --version` (must be 3.13+)
+- Ensure dependencies installed: `poetry install`
+- Check database migrations: `poetry run alembic upgrade head`
+
+### Frontend won't compile
+- Verify Node.js version: `node --version` (must be 18+)
+- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+
+### Tests failing
+- Ensure test database is clean
+- Check for port conflicts (8000 for backend, 4200 for frontend)
+- Run tests in isolation: `poetry run pytest tests/integration/test_specific.py`
 
 ## License
 
-Copyright (C) 2024 Catalyte. All Rights Reserved.\
-Unauthorized copying of this project or resulting data, via any medium, is strictly prohibited.\
+Copyright © 2024-2026. All Rights Reserved.
+
 Proprietary and confidential.

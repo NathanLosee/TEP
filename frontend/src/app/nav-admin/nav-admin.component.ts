@@ -10,6 +10,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RouterModule } from '@angular/router';
 import { HasPermissionDirective } from '../directives/has-permission.directive';
+import { RequiresLicenseDirective } from '../directives/requires-license.directive';
 import { PasswordChangeDialogComponent } from '../password-change-dialog/password-change-dialog.component';
 import { UserService } from '../../services/user.service';
 
@@ -28,6 +29,7 @@ import { UserService } from '../../services/user.service';
     MatSnackBarModule,
     RouterModule,
     HasPermissionDirective,
+    RequiresLicenseDirective,
   ],
   templateUrl: './nav-admin.component.html',
   styleUrl: './nav-admin.component.scss',

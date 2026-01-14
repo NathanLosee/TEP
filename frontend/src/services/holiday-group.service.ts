@@ -27,7 +27,7 @@ export interface HolidayGroup {
 @Injectable({ providedIn: 'root' })
 export class HolidayGroupService {
   private http = inject(HttpClient);
-  private baseUrl = 'holiday_groups';
+  private baseUrl = '/holiday_groups';
 
   /**
    * Create a new holiday group

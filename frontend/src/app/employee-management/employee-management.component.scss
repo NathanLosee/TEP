@@ -1,22 +1,22 @@
+@use '../../styles/common' as *;
+
 .employee-management-container {
-  padding: 24px;
+  padding: $padding-lg;
   max-width: 1400px;
   margin: 0 auto;
   background: var(--sys-surface);
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: $spacing-lg;
 
   .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @extend .flex-between;
 
     .title-section {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: $gap-md;
 
       .page-icon {
         font-size: 2rem;
@@ -35,19 +35,19 @@
 
     .header-actions {
       display: flex;
-      gap: 12px;
+      gap: $gap-sm;
 
       .export-btn {
         border: 2px solid var(--sys-outline);
 
         mat-icon {
-          margin-right: 8px;
+          margin-right: $spacing-sm;
         }
       }
 
       .add-btn {
         mat-icon {
-          margin-right: 8px;
+          margin-right: $spacing-sm;
         }
       }
     }
@@ -55,15 +55,14 @@
 }
 
 .search-card {
-  margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @extend .card-container;
+  margin-bottom: $spacing-lg;
 
   .search-form {
     .search-row {
       display: grid;
       grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 16px;
+      gap: $gap-md;
       align-items: center;
 
       .search-field {
@@ -157,40 +156,18 @@
     }
   }
 
-  .empty-state,
+  .empty-state {
+    @extend .empty-container;
+  }
+
   .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 24px;
-    text-align: center;
-
-    .empty-icon {
-      font-size: 4rem;
-      width: 4rem;
-      height: 4rem;
-      color: var(--sys-outline);
-      margin-bottom: 16px;
-    }
-
-    h3 {
-      margin: 0 0 8px 0;
-      color: var(--sys-on-surface);
-    }
-
-    p {
-      color: var(--sys-on-surface-variant);
-      margin: 0 0 16px 0;
-    }
+    @extend .loading-container;
   }
 }
 
 // Cell Styles
 .badge-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @extend .table-cell-content;
 
   .badge-icon {
     color: var(--sys-primary);
@@ -228,9 +205,7 @@
 }
 
 .org-unit-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @extend .table-cell-content;
 
   .org-icon {
     color: var(--sys-tertiary);
@@ -284,8 +259,7 @@
 }
 
 .action-buttons {
-  display: flex;
-  gap: 4px;
+  @extend .table-actions;
 
   button {
     min-width: auto;
@@ -304,58 +278,16 @@
   }
 }
 
-// Loading and Empty States
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-
-  p {
-    margin-top: 16px;
-    color: var(--sys-on-surface-variant);
-  }
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-
-  .empty-icon {
-    font-size: 4rem;
-    width: 4rem;
-    height: 4rem;
-    color: var(--sys-outline);
-    margin-bottom: 16px;
-  }
-
-  h3 {
-    margin: 0 0 8px 0;
-    color: var(--sys-on-surface);
-  }
-
-  p {
-    margin: 0 0 24px 0;
-    color: var(--sys-on-surface-variant);
-  }
-
-  button {
-    mat-icon {
-      margin-right: 8px;
-    }
-  }
+// Additional specific button styling for empty state
+.empty-state button mat-icon {
+  margin-right: $spacing-sm;
 }
 
 // Responsive Design
-@media (max-width: 1024px) {
+@media (max-width: $breakpoint-lg) {
   .search-form .search-row {
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: $gap-sm;
 
     .search-field {
       grid-column: 1 / -1;
@@ -364,7 +296,7 @@
 
   .page-header .header-content {
     flex-direction: column;
-    gap: 16px;
+    gap: $gap-md;
     align-items: flex-start;
 
     .header-actions {
@@ -374,9 +306,9 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: $breakpoint-md) {
   .employee-management-container {
-    padding: 16px;
+    padding: $padding-md;
   }
 
   .search-form .search-row {

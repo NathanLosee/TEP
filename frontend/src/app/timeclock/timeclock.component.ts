@@ -20,8 +20,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { interval, Subscription } from 'rxjs';
 import { TimeclockService, TimeclockEntry } from '../../services/timeclock.service';
-import { DeviceUuidService } from '../../services/device-uuid.service';
-import { RegisteredDeviceService } from '../../services/registered-device.service';
+import { BrowserUuidService } from '../../services/browser-uuid.service';
+import { RegisteredBrowserService } from '../../services/registered-browser.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 interface CalendarDay {
@@ -50,16 +50,16 @@ interface CalendarDay {
 })
 export class TimeclockComponent implements OnInit, OnDestroy {
   private timeclockService = inject(TimeclockService);
-  private deviceUuidService = inject(DeviceUuidService);
-  private registeredDeviceService = inject(RegisteredDeviceService);
+  private browserUuidService = inject(BrowserUuidService);
+  private registeredBrowserService = inject(RegisteredBrowserService);
   private clockSubscription?: Subscription;
   readonly dialog = inject(MatDialog);
   readonly errorDialog = inject(ErrorDialogComponent);
 
   currentDateAndTime = Date.now();
   badgeNumber: string;
-  isDeviceRegistered = false;
-  deviceName: string | null = null;
+  isBrowserRegistered = false;
+  browserName: string | null = null;
 
   // Recovery form state
   showRecoveryForm = false;
@@ -78,43 +78,43 @@ export class TimeclockComponent implements OnInit, OnDestroy {
       this.currentDateAndTime = Date.now();
     });
 
-    // Check device registration status
-    await this.checkDeviceRegistration();
+    // Check browser registration status
+    await this.checkBrowserRegistration();
   }
 
-  async checkDeviceRegistration() {
+  async checkBrowserRegistration() {
     try {
-      const fingerprint = await this.deviceUuidService.generateFingerprint();
-      const storedUuid = this.deviceUuidService.getDeviceUuid();
+      const fingerprint = await this.browserUuidService.generateFingerprint();
+      const storedUuid = this.browserUuidService.getBrowserUuid();
 
-      this.registeredDeviceService
+      this.registeredBrowserService
         .verifyBrowser({
           fingerprint_hash: fingerprint,
           browser_uuid: storedUuid || undefined,
         })
         .subscribe({
           next: (response) => {
-            this.isDeviceRegistered = response.verified;
-            this.deviceName = response.browser_name || null;
+            this.isBrowserRegistered = response.verified;
+            this.browserName = response.browser_name || null;
 
             // If UUID was restored from fingerprint, update localStorage
             if (response.restored && response.browser_uuid) {
-              this.deviceUuidService.setDeviceUuid(
+              this.browserUuidService.setBrowserUuid(
                 response.browser_uuid,
                 response.browser_name
               );
             }
           },
           error: (error) => {
-            console.error('Device verification failed:', error);
-            this.isDeviceRegistered = false;
-            this.deviceName = null;
+            console.error('Browser verification failed:', error);
+            this.isBrowserRegistered = false;
+            this.browserName = null;
           },
         });
     } catch (error) {
       console.error('Failed to generate fingerprint:', error);
-      this.isDeviceRegistered = false;
-      this.deviceName = null;
+      this.isBrowserRegistered = false;
+      this.browserName = null;
     }
   }
 
@@ -164,9 +164,9 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Recover device registration using device ID
+   * Recover browser registration using browser ID
    */
-  async recoverDevice() {
+  async recoverBrowser() {
     if (!this.recoveryCode || this.isRecovering) {
       return;
     }
@@ -176,21 +176,21 @@ export class TimeclockComponent implements OnInit, OnDestroy {
     this.isRecovering = true;
 
     try {
-      // Format the device ID (uppercase, trim whitespace)
+      // Format the browser ID (uppercase, trim whitespace)
       const formattedCode = this.recoveryCode.toUpperCase().trim();
 
       // Check if this UUID conflicts with current session
-      if (this.deviceUuidService.isUuidInActiveSession(formattedCode)) {
-        this.recoveryError = 'This device ID is already in use in another browser session on this device.';
+      if (this.browserUuidService.isUuidInActiveSession(formattedCode)) {
+        this.recoveryError = 'This browser ID is already in use in another browser session on this device.';
         this.isRecovering = false;
         return;
       }
 
       // Generate fingerprint for recovery
-      const fingerprint = await this.deviceUuidService.generateFingerprint();
+      const fingerprint = await this.browserUuidService.generateFingerprint();
 
       // Call recovery endpoint
-      this.registeredDeviceService
+      this.registeredBrowserService
         .recoverBrowser({
           recovery_code: formattedCode,
           fingerprint_hash: fingerprint,
@@ -198,21 +198,21 @@ export class TimeclockComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (response) => {
             // Save recovered UUID to localStorage and sessionStorage
-            this.deviceUuidService.setDeviceUuid(
+            this.browserUuidService.setBrowserUuid(
               response.browser_uuid,
               response.browser_name
             );
 
             // Update UI state
-            this.isDeviceRegistered = true;
-            this.deviceName = response.browser_name;
+            this.isBrowserRegistered = true;
+            this.browserName = response.browser_name;
             this.showRecoveryForm = false;
             this.recoveryCode = '';
             this.isRecovering = false;
             this.recoveryError = null;
 
             // Show success message
-            alert(`Device registration recovered successfully!\nDevice: ${response.browser_name}`);
+            alert(`Browser registration recovered successfully!\nBrowser: ${response.browser_name}`);
           },
           error: (error) => {
             console.error('Recovery failed:', error);
@@ -220,11 +220,11 @@ export class TimeclockComponent implements OnInit, OnDestroy {
 
             // Display user-friendly error message
             if (error.status === 404) {
-              this.recoveryError = 'Device ID not found or device is inactive.';
+              this.recoveryError = 'Browser ID not found or browser is inactive.';
             } else if (error.status === 400) {
-              this.recoveryError = 'Invalid device ID format. Expected: WORD-WORD-WORD-NUMBER';
+              this.recoveryError = 'Invalid browser ID format. Expected: WORD-WORD-WORD-NUMBER';
             } else {
-              this.recoveryError = 'Recovery failed. Please check your device ID and try again.';
+              this.recoveryError = 'Recovery failed. Please check your browser ID and try again.';
             }
           },
         });

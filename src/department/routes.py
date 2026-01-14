@@ -3,8 +3,6 @@
 from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
 
-import src.department.repository as department_repository
-import src.employee.routes as employee_routes
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
 from src.department.constants import (
@@ -17,9 +15,20 @@ from src.department.constants import (
     IDENTIFIER,
     MEMBERSHIP_IDENTIFIER,
 )
+from src.department.repository import (
+    create_department as create_department_in_db,
+    create_membership,
+    delete_department as delete_department_from_db,
+    delete_membership,
+    get_department_by_id,
+    get_department_by_name,
+    get_departments,
+    update_department as update_department_in_db,
+)
 from src.department.schemas import DepartmentBase, DepartmentExtended
+from src.employee.routes import get_employee_by_id
 from src.employee.schemas import EmployeeExtended
-from src.services import create_event_log, requires_permission, validate
+from src.services import create_event_log, requires_license, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["department"])
 
@@ -46,16 +55,14 @@ def create_department(
         DepartmentExtended: The created department.
 
     """
-    duplicate_department = department_repository.get_department_by_name(
-        request.name, db
-    )
+    duplicate_department = get_department_by_name(request.name, db)
     validate(
         duplicate_department is None,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    department = department_repository.create_department(request, db)
+    department = create_department_in_db(request, db)
     log_args = {"department_name": department.name}
     create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return department
@@ -86,23 +93,21 @@ def create_department_membership(
             department.
 
     """
-    department = department_repository.get_department_by_id(department_id, db)
+    department = get_department_by_id(department_id, db)
     validate(
         department,
         EXC_MSG_DEPARTMENT_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    employee = employee_routes.get_employee_by_id(employee_id, db)
+    employee = get_employee_by_id(employee_id, db)
     validate(
         employee not in department.employees,
         EXC_MSG_EMPLOYEE_IS_MEMBER,
         status.HTTP_409_CONFLICT,
     )
 
-    department = department_repository.create_membership(
-        department_id, employee_id, db
-    )
+    department = create_membership(department_id, employee_id, db)
     log_args = {
         "department_name": department.name,
         "badge_number": employee.badge_number,
@@ -133,7 +138,7 @@ def get_departments(
         list[DepartmentExtended]: The retrieved departments.
 
     """
-    return department_repository.get_departments(db)
+    return get_departments(db)
 
 
 @router.get(
@@ -158,7 +163,7 @@ def get_department(
         DepartmentExtended: The retrieved department.
 
     """
-    department = department_repository.get_department_by_id(id, db)
+    department = get_department_by_id(id, db)
     validate(
         department,
         EXC_MSG_DEPARTMENT_NOT_FOUND,
@@ -231,25 +236,21 @@ def update_department(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    department = department_repository.get_department_by_id(id, db)
+    department = get_department_by_id(id, db)
     validate(
         department,
         EXC_MSG_DEPARTMENT_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    duplicate_department = department_repository.get_department_by_name(
-        request.name, db
-    )
+    duplicate_department = get_department_by_name(request.name, db)
     validate(
         duplicate_department is None or duplicate_department.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    department = department_repository.update_department(
-        department, request, db
-    )
+    department = update_department_in_db(department, request, db)
     log_args = {"department_name": department.name}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return department
@@ -273,7 +274,7 @@ def delete_department(
         db (Session): Database session for current request.
 
     """
-    department = department_repository.get_department_by_id(id, db)
+    department = get_department_by_id(id, db)
     validate(
         department,
         EXC_MSG_DEPARTMENT_NOT_FOUND,
@@ -285,7 +286,7 @@ def delete_department(
         status.HTTP_409_CONFLICT,
     )
 
-    department_repository.delete_department(department, db)
+    delete_department_from_db(department, db)
     log_args = {"department_name": department.name}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 
@@ -316,23 +317,21 @@ def delete_department_membership(
             department.
 
     """
-    department = department_repository.get_department_by_id(department_id, db)
+    department = get_department_by_id(department_id, db)
     validate(
         department,
         EXC_MSG_DEPARTMENT_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    employee = employee_routes.get_employee_by_id(employee_id, db)
+    employee = get_employee_by_id(employee_id, db)
     validate(
         employee in department.employees,
         EXC_MSG_EMPLOYEE_NOT_MEMBER,
         status.HTTP_404_NOT_FOUND,
     )
 
-    department = department_repository.delete_membership(
-        department_id, employee_id, db
-    )
+    department = delete_membership(department_id, employee_id, db)
     log_args = {
         "department_name": department.name,
         "badge_number": employee.badge_number,

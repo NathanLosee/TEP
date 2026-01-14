@@ -55,7 +55,6 @@ def create_license(request: LicenseActivate, db: Session) -> License:
     """
     license_obj = License(
         license_key=request.license_key,
-        signature=request.signature,
         server_id=request.server_id,
         is_active=True,
     )

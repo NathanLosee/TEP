@@ -3,8 +3,6 @@
 from fastapi import APIRouter, Depends, Security, status
 from sqlalchemy.orm import Session
 
-import src.auth_role.repository as auth_role_repository
-import src.user.routes as user_routes
 from src.auth_role.constants import (
     BASE_URL,
     EXC_MSG_AUTH_ROLE_NOT_FOUND,
@@ -15,10 +13,26 @@ from src.auth_role.constants import (
     IDENTIFIER,
     MEMBERSHIP_IDENTIFIER,
 )
+from src.auth_role.repository import (
+    create_auth_role as create_auth_role_in_db,
+    create_membership,
+    delete_auth_role as delete_auth_role_from_db,
+    delete_membership,
+    get_auth_role_by_id as get_auth_role_by_id_from_db,
+    get_auth_role_by_name,
+    get_auth_roles as get_auth_roles_from_db,
+    update_auth_role as update_auth_role_in_db,
+)
 from src.auth_role.schemas import AuthRoleBase, AuthRoleExtended
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
-from src.services import create_event_log, requires_permission, validate
+from src.services import (
+    create_event_log,
+    requires_license,
+    requires_permission,
+    validate,
+)
+from src.user.routes import get_user_by_id
 from src.user.schemas import UserResponse
 
 router = APIRouter(prefix=BASE_URL, tags=["auth_role"])
@@ -35,6 +49,7 @@ def create_auth_role(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new auth role.
 
@@ -46,16 +61,14 @@ def create_auth_role(
         AuthRoleExtended: The created auth role.
 
     """
-    duplicate_auth_role = auth_role_repository.get_auth_role_by_name(
-        request.name, db
-    )
+    duplicate_auth_role = get_auth_role_by_name(request.name, db)
     validate(
         duplicate_auth_role is None,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    auth_role = auth_role_repository.create_auth_role(request, db)
+    auth_role = create_auth_role_in_db(request, db)
     log_args = {"auth_role_name": auth_role.name}
     create_event_log(IDENTIFIER, "CREATE", log_args, caller_badge, db)
     return auth_role
@@ -73,6 +86,7 @@ def create_auth_role_membership(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.assign", "user.read"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new membership.
 
@@ -85,23 +99,21 @@ def create_auth_role_membership(
         list[UserResponse]: The updated list of users for the auth role.
 
     """
-    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
+    auth_role = get_auth_role_by_id_from_db(auth_role_id, db)
     validate(
         auth_role,
         EXC_MSG_AUTH_ROLE_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    user = user_routes.get_user_by_id(user_id, db)
+    user = get_user_by_id(user_id, db)
     validate(
         user not in auth_role.users,
         EXC_MSG_USER_IS_MEMBER,
         status.HTTP_409_CONFLICT,
     )
 
-    auth_role = auth_role_repository.create_membership(
-        auth_role_id, user_id, db
-    )
+    auth_role = create_membership(auth_role_id, user_id, db)
     log_args = {"auth_role_name": auth_role.name, "user_id": user.badge_number}
     create_event_log(
         MEMBERSHIP_IDENTIFIER, "CREATE", log_args, caller_badge, db
@@ -117,6 +129,7 @@ def create_auth_role_membership(
 def get_auth_roles(
     db: Session = Depends(get_db),
     user_id: int = Security(requires_permission, scopes=["auth_role.read"]),
+    _: None = Depends(requires_license),
 ):
     """Retrieve all auth roles.
 
@@ -127,7 +140,7 @@ def get_auth_roles(
         list[AuthRoleExtended]: The retrieved auth roles.
 
     """
-    return auth_role_repository.get_auth_roles(db)
+    return get_auth_roles_from_db(db)
 
 
 @router.get(
@@ -141,6 +154,7 @@ def get_auth_role_by_id(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.read"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Retrieve data for auth role with provided id.
 
@@ -152,7 +166,7 @@ def get_auth_role_by_id(
         AuthRoleExtended: The retrieved auth role.
 
     """
-    auth_role = auth_role_repository.get_auth_role_by_id(id, db)
+    auth_role = get_auth_role_by_id_from_db(id, db)
     validate(
         auth_role,
         EXC_MSG_AUTH_ROLE_NOT_FOUND,
@@ -173,6 +187,7 @@ def get_users_by_auth_role(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.read", "user.read"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Retrieve all users with a given auth role.
 
@@ -184,7 +199,7 @@ def get_users_by_auth_role(
         list[UserResponse]: The retrieved users for the given auth role.
 
     """
-    auth_role = get_auth_role_by_id(id, db)
+    auth_role = get_auth_role_by_id_from_db(id, db)
     validate(
         auth_role,
         EXC_MSG_AUTH_ROLE_NOT_FOUND,
@@ -206,6 +221,7 @@ def update_auth_role(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.update"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update auth role with provided id.
 
@@ -224,23 +240,21 @@ def update_auth_role(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    auth_role = auth_role_repository.get_auth_role_by_id(id, db)
+    auth_role = get_auth_role_by_id_from_db(id, db)
     validate(
         auth_role,
         EXC_MSG_AUTH_ROLE_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    dulicate_auth_role = auth_role_repository.get_auth_role_by_name(
-        request.name, db
-    )
+    dulicate_auth_role = get_auth_role_by_name(request.name, db)
     validate(
         dulicate_auth_role is None or dulicate_auth_role.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
-    auth_role = auth_role_repository.update_auth_role(auth_role, request, db)
+    auth_role = update_auth_role_in_db(auth_role, request, db)
     log_args = {"auth_role_name": auth_role.name}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return auth_role
@@ -253,6 +267,7 @@ def delete_auth_role(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete auth role with provided id.
 
@@ -261,7 +276,7 @@ def delete_auth_role(
         db (Session): Database session for current request.
 
     """
-    auth_role = auth_role_repository.get_auth_role_by_id(id, db)
+    auth_role = get_auth_role_by_id_from_db(id, db)
     validate(
         auth_role,
         EXC_MSG_AUTH_ROLE_NOT_FOUND,
@@ -273,7 +288,7 @@ def delete_auth_role(
         status.HTTP_409_CONFLICT,
     )
 
-    auth_role_repository.delete_auth_role(auth_role, db)
+    delete_auth_role_from_db(auth_role, db)
     log_args = {"auth_role_name": auth_role.name}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 
@@ -290,6 +305,7 @@ def delete_auth_role_membership(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.unassign", "user.read"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete membership.
 
@@ -302,23 +318,21 @@ def delete_auth_role_membership(
         list[UserResponse]: The updated list of users for the auth role.
 
     """
-    auth_role = auth_role_repository.get_auth_role_by_id(auth_role_id, db)
+    auth_role = get_auth_role_by_id_from_db(auth_role_id, db)
     validate(
         auth_role,
         EXC_MSG_AUTH_ROLE_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    user = user_routes.get_user_by_id(user_id, db)
+    user = get_user_by_id(user_id, db)
     validate(
         user in auth_role.users,
         EXC_MSG_USER_NOT_MEMBER,
         status.HTTP_404_NOT_FOUND,
     )
 
-    auth_role = auth_role_repository.delete_membership(
-        auth_role_id, user_id, db
-    )
+    auth_role = delete_membership(auth_role_id, user_id, db)
     log_args = {"auth_role_name": auth_role.name, "user_id": user.badge_number}
     create_event_log(
         MEMBERSHIP_IDENTIFIER, "DELETE", log_args, caller_badge, db

@@ -14,7 +14,7 @@ export interface OrgUnit {
 @Injectable({ providedIn: 'root' })
 export class OrgUnitService {
   private http = inject(HttpClient);
-  private baseUrl = 'org_units';
+  private baseUrl = '/org_units';
 
   /**
    * Create a new organizational unit

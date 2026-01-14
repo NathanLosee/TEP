@@ -9,14 +9,14 @@ const SESSION_UUID_KEY = 'tep_session_uuid'; // For duplicate detection
  * Service for managing browser UUID, name, and fingerprint
  */
 @Injectable({ providedIn: 'root' })
-export class DeviceUuidService {
+export class BrowserUuidService {
   private fpPromise = FingerprintJS.load();
 
   /**
    * Get the current browser UUID from localStorage
    * @returns The browser UUID or null if not set
    */
-  getDeviceUuid(): string | null {
+  getBrowserUuid(): string | null {
     return localStorage.getItem(BROWSER_UUID_KEY);
   }
 
@@ -41,7 +41,7 @@ export class DeviceUuidService {
    * @param uuid The UUID to save
    * @param name The browser name to save
    */
-  setDeviceUuid(uuid: string, name?: string): void {
+  setBrowserUuid(uuid: string, name?: string): void {
     // Store in localStorage for persistence
     localStorage.setItem(BROWSER_UUID_KEY, uuid);
     if (name) {
@@ -55,7 +55,7 @@ export class DeviceUuidService {
   /**
    * Clear the browser UUID and name from localStorage and sessionStorage
    */
-  clearDeviceUuid(): void {
+  clearBrowserUuid(): void {
     localStorage.removeItem(BROWSER_UUID_KEY);
     localStorage.removeItem(BROWSER_NAME_KEY);
     sessionStorage.removeItem(SESSION_UUID_KEY);
@@ -76,8 +76,8 @@ export class DeviceUuidService {
    * Check if a browser UUID is currently stored
    * @returns True if a UUID exists in localStorage
    */
-  hasDeviceUuid(): boolean {
-    return this.getDeviceUuid() !== null;
+  hasBrowserUuid(): boolean {
+    return this.getBrowserUuid() !== null;
   }
 
   /**

@@ -1,0 +1,222 @@
+// Common reusable styles - Import this in components that need these patterns
+@use 'sass:color';
+@forward 'variables';
+@use 'variables' as *;
+
+// Empty state container (used across 31+ components)
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $padding-xl;
+  text-align: center;
+  color: $text-secondary;
+  min-height: 200px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $spacing-md;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: $font-size-base;
+  }
+}
+
+// Loading container
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $padding-xl;
+  min-height: 200px;
+}
+
+// Form section (used in dialogs)
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: $gap-md;
+  margin-bottom: $spacing-lg;
+
+  h3 {
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+  }
+}
+
+// Table cell content layout
+.table-cell-content {
+  display: flex;
+  align-items: center;
+  gap: $gap-sm;
+
+  mat-icon {
+    color: $text-secondary;
+  }
+}
+
+// Status indicator (used for clocked in/out, active/inactive, etc.)
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: $gap-xs;
+  padding: $padding-xs $padding-sm;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &.status-success {
+    background-color: rgba($color-success, 0.1);
+    color: color.adjust($color-success, $lightness: -10%);
+  }
+
+  &.status-error {
+    background-color: rgba($color-error, 0.1);
+    color: color.adjust($color-error, $lightness: -10%);
+  }
+
+  &.status-warning {
+    background-color: rgba($color-warning, 0.1);
+    color: color.adjust($color-warning, $lightness: -15%);
+  }
+
+  &.status-info {
+    background-color: rgba($color-info, 0.1);
+    color: color.adjust($color-info, $lightness: -10%);
+  }
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Flexbox utilities
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  gap: $gap-md;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  gap: $gap-md;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+// Page container
+.page-container {
+  padding: $padding-lg;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  h1, h2 {
+    margin-top: 0;
+  }
+}
+
+// Card container
+.card-container {
+  background: var(--sys-surface);
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-md;
+  padding: $padding-lg;
+  margin-bottom: $spacing-lg;
+}
+
+// Search form layout (common across management pages)
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $gap-md;
+  margin-bottom: $spacing-lg;
+  align-items: flex-end;
+
+  mat-form-field {
+    flex: 1 1 200px;
+    min-width: 150px;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: $gap-sm;
+    align-items: center;
+  }
+}
+
+// Table actions (buttons in table cells)
+.table-actions {
+  display: flex;
+  gap: $gap-xs;
+  justify-content: flex-end;
+
+  button {
+    min-width: auto;
+  }
+}
+
+// Dialog actions (footer buttons in dialogs)
+.dialog-actions {
+  display: flex;
+  gap: $gap-sm;
+  justify-content: flex-end;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+// Responsive utilities
+@media (max-width: $breakpoint-md) {
+  .page-container {
+    padding: $padding-md;
+  }
+
+  .search-form {
+    mat-form-field {
+      flex: 1 1 100%;
+    }
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .page-container {
+    padding: $padding-sm;
+  }
+
+  .card-container {
+    padding: $padding-md;
+  }
+
+  .hide-small {
+    display: none !important;
+  }
+}

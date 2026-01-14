@@ -32,7 +32,14 @@
       "Bash(timeout 15 poetry run uvicorn:*)",
       "Bash(python -m alembic:*)",
       "Bash(where:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(comm -23:*)",
+      "Bash(perl:*)",
+      "Bash(grep:*)",
+      "Bash(tee:*)",
+      "Bash(.venvScriptspython.exe -m pytest tests/ -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/ -v --tb=short)"
     ]
   }
 }

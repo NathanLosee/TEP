@@ -27,9 +27,9 @@ import {
   DayDetail,
   TimePeriod
 } from "../../services/report.service";
-import { EmployeeService } from "../../services/employee.service";
-import { DepartmentService } from "../../services/department.service";
-import { OrgUnitService } from "../../services/org-unit.service";
+import { EmployeeService, Employee } from "../../services/employee.service";
+import { DepartmentService, Department } from "../../services/department.service";
+import { OrgUnitService, OrgUnit } from "../../services/org-unit.service";
 
 interface CalendarDay {
   date: Date;
@@ -83,9 +83,9 @@ export class ReportsComponent implements OnInit {
   isLoading = false;
   reportData: ReportResponse | null = null;
 
-  employees: any[] = [];
-  departments: any[] = [];
-  orgUnits: any[] = [];
+  employees: Employee[] = [];
+  departments: Department[] = [];
+  orgUnits: OrgUnit[] = [];
 
   reportTypes = [
     { value: "all", label: "All Employees" },

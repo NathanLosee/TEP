@@ -5,7 +5,7 @@ import { UserService, User, UserBase, AccessResponse } from './user.service';
 describe('UserService', () => {
   let service: UserService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'users';
+  const baseUrl = '/users';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

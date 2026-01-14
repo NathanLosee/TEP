@@ -62,7 +62,7 @@ export interface ReportRequest {
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private http = inject(HttpClient);
-  private baseUrl = 'reports';
+  private baseUrl = '/reports';
 
   /**
    * Generate a timeclock report

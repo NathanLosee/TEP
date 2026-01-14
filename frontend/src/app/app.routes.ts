@@ -11,7 +11,8 @@ import { ReportsComponent } from './reports/reports.component';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { AuthRoleManagementComponent } from './auth-role-management/auth-role-management.component';
 import { EventLogManagementComponent } from './event-log-management/event-log-management.component';
-import { RegisteredDeviceManagementComponent } from './registered-device-management/registered-device-management.component';
+import { RegisteredBrowserManagementComponent } from './registered-browser-management/registered-browser-management.component';
+import { LicenseManagementComponent } from './license-management/license-management.component';
 
 export const routes: Routes = [
   {
@@ -71,9 +72,9 @@ export const routes: Routes = [
         component: HolidayGroupManagementComponent,
       },
       {
-        title: 'Registered Devices',
-        path: 'registered-devices',
-        component: RegisteredDeviceManagementComponent,
+        title: 'Registered Browsers',
+        path: 'registered-browsers',
+        component: RegisteredBrowserManagementComponent,
       },
       {
         title: 'Time Reports',
@@ -84,6 +85,11 @@ export const routes: Routes = [
         title: 'Event Logs',
         path: 'event-logs',
         component: EventLogManagementComponent,
+      },
+      {
+        title: 'License Management',
+        path: 'license',
+        component: LicenseManagementComponent,
       },
     ],
   },

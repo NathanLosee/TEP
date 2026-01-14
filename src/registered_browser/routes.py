@@ -3,7 +3,6 @@
 from fastapi import APIRouter, Depends, Request, Security, status
 from sqlalchemy.orm import Session
 
-import src.registered_browser.repository as browser_repository
 from src.database import get_db
 from src.registered_browser.constants import (
     BASE_URL,
@@ -13,17 +12,30 @@ from src.registered_browser.constants import (
     IDENTIFIER,
 )
 from src.registered_browser.models import RegisteredBrowser
+from src.registered_browser.repository import (
+    clear_stale_sessions,
+    create_registered_browser,
+    delete_registered_browser,
+    get_all_browser_uuids,
+    get_all_registered_browsers,
+    get_registered_browser_by_fingerprint,
+    get_registered_browser_by_name,
+    get_registered_browser_by_uuid,
+    has_active_session_conflict,
+    start_active_session,
+    update_browser_fingerprint,
+)
 from src.registered_browser.schemas import (
     RegisteredBrowserCreate,
     RegisteredBrowserExtended,
-    RegisteredBrowserVerify,
     RegisteredBrowserRecover,
+    RegisteredBrowserVerify,
 )
 from src.registered_browser.uuid_generator import (
     generate_unique_uuid,
     validate_uuid_format,
 )
-from src.services import create_event_log, requires_permission, validate
+from src.services import create_event_log, requires_license, requires_permission, validate
 
 router = APIRouter(prefix=BASE_URL, tags=["registered_browsers"])
 
@@ -55,7 +67,7 @@ def register_browser(
     """
     # Generate UUID if not provided, using human-readable format
     if not request.browser_uuid:
-        existing_uuids = browser_repository.get_all_browser_uuids(db)
+        existing_uuids = get_all_browser_uuids(db)
         request.browser_uuid = generate_unique_uuid(existing_uuids)
     else:
         # Validate UUID format if provided
@@ -65,7 +77,7 @@ def register_browser(
             status.HTTP_400_BAD_REQUEST,
         )
         # Check if UUID already exists
-        existing_browser_uuid = browser_repository.get_registered_browser_by_uuid(
+        existing_browser_uuid = get_registered_browser_by_uuid(
             request.browser_uuid, db
         )
         validate(
@@ -75,7 +87,7 @@ def register_browser(
         )
 
     # Check if browser name already exists
-    existing_browser_name = browser_repository.get_registered_browser_by_name(
+    existing_browser_name = get_registered_browser_by_name(
         request.browser_name, db
     )
     validate(
@@ -88,7 +100,7 @@ def register_browser(
     if not request.ip_address:
         request.ip_address = http_request.client.host if http_request.client else None
 
-    browser = browser_repository.create_registered_browser(request, db)
+    browser = create_registered_browser(request, db)
     log_args = {
         "browser_id": browser.id,
         "browser_uuid": browser.browser_uuid,
@@ -117,18 +129,16 @@ def verify_browser(
 
     """
     # Clear any stale sessions before processing
-    browser_repository.clear_stale_sessions(db)
+    clear_stale_sessions(db)
 
     # First check if provided UUID exists and is active
     if request.browser_uuid:
-        browser_by_uuid = browser_repository.get_registered_browser_by_uuid(
+        browser_by_uuid = get_registered_browser_by_uuid(
             request.browser_uuid, db
         )
         if browser_by_uuid and browser_by_uuid.is_active:
             # Start or update active session
-            browser_repository.start_active_session(
-                browser_by_uuid, request.fingerprint_hash, db
-            )
+            start_active_session(browser_by_uuid, request.fingerprint_hash, db)
             return {
                 "browser_uuid": browser_by_uuid.browser_uuid,
                 "browser_name": browser_by_uuid.browser_name,
@@ -136,13 +146,13 @@ def verify_browser(
             }
 
     # Try to find by fingerprint
-    browser_by_fingerprint = browser_repository.get_registered_browser_by_fingerprint(
+    browser_by_fingerprint = get_registered_browser_by_fingerprint(
         request.fingerprint_hash, db
     )
 
     if browser_by_fingerprint:
         # Start or update active session
-        browser_repository.start_active_session(
+        start_active_session(
             browser_by_fingerprint, request.fingerprint_hash, db
         )
         return {
@@ -177,7 +187,7 @@ def get_registered_browsers(
         list[RegisteredBrowserExtended]: List of all registered browsers.
 
     """
-    return browser_repository.get_all_registered_browsers(db)
+    return get_all_registered_browsers(db)
 
 
 @router.delete(
@@ -205,7 +215,7 @@ def delete_registered_browser(
         status.HTTP_404_NOT_FOUND,
     )
 
-    browser_repository.delete_registered_browser(browser, db)
+    delete_registered_browser(browser, db)
     log_args = {"browser_id": browser_id, "browser_uuid": browser.browser_uuid}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 
@@ -237,7 +247,7 @@ def recover_browser(
 
     """
     # Clear any stale sessions before processing
-    browser_repository.clear_stale_sessions(db)
+    clear_stale_sessions(db)
 
     # Validate device ID format
     validate(
@@ -247,9 +257,7 @@ def recover_browser(
     )
 
     # Find browser by device ID (which is the UUID)
-    browser = browser_repository.get_registered_browser_by_uuid(
-        request.recovery_code, db
-    )
+    browser = get_registered_browser_by_uuid(request.recovery_code, db)
 
     validate(
         browser and browser.is_active,
@@ -259,22 +267,16 @@ def recover_browser(
 
     # Check if this device ID has an active session with a different fingerprint
     validate(
-        not browser_repository.has_active_session_conflict(
-            browser, request.fingerprint_hash
-        ),
+        not has_active_session_conflict(browser, request.fingerprint_hash),
         "This device ID is currently in use by another browser. Please wait a few minutes and try again, or contact an administrator if the device is no longer in use.",
         status.HTTP_409_CONFLICT,
     )
 
     # Update browser fingerprint to current device
-    browser_repository.update_browser_fingerprint(
-        browser, request.fingerprint_hash, db
-    )
+    update_browser_fingerprint(browser, request.fingerprint_hash, db)
 
     # Start active session for this browser
-    browser_repository.start_active_session(
-        browser, request.fingerprint_hash, db
-    )
+    start_active_session(browser, request.fingerprint_hash, db)
 
     # Note: Event logging is skipped for recovery since this is an unauthenticated
     # endpoint and there's no valid badge_number to associate with the log entry.

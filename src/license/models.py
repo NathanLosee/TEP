@@ -20,8 +20,7 @@ class License(Base):
 
     Attributes:
         id (int): License's unique identifier.
-        license_key (str): Unique license key.
-        signature (str): Cryptographic signature for verification.
+        license_key (str): The Ed25519 signature that serves as the license key.
         activated_at (datetime): When the license was activated.
         is_active (bool): Whether the license is currently active.
         server_id (str): Optional machine identifier for binding.
@@ -29,8 +28,9 @@ class License(Base):
     """
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    license_key: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
-    signature: Mapped[str] = mapped_column(nullable=False)
+    license_key: Mapped[str] = mapped_column(
+        unique=True, nullable=False, index=True
+    )
     activated_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now()
     )

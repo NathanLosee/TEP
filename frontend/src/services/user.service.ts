@@ -37,7 +37,7 @@ export interface AuthRole {
 export class UserService {
   private http = inject(HttpClient);
   private permissionService = inject(PermissionService);
-  private baseUrl = 'users';
+  private baseUrl = '/users';
 
   /**
    * Login a user and set permissions
