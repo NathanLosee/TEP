@@ -16,16 +16,16 @@ from src.employee.constants import (
 from src.employee.repository import (
     create_employee as create_employee_in_db,
     delete_employee,
-    get_employee_by_badge_number,
-    get_employee_by_id,
-    get_employees,
-    search_for_employees,
-    update_employee_badge_number,
+    get_employee_by_badge_number as get_employee_by_badge_number_from_db,
+    get_employee_by_id as get_employee_by_id_from_db,
+    get_employees as get_employees_from_db,
+    search_for_employees as search_for_employees_from_db,
+    update_employee_badge_number as update_employee_badge_number_in_db,
     update_employee_by_id as update_employee_by_id_in_db,
 )
 from src.employee.schemas import EmployeeBase, EmployeeExtended, EmployeeUpdate
 from src.services import create_event_log, requires_license, requires_permission, validate
-from src.user.routes import logout
+from src.user.repository import invalidate_token
 
 router = APIRouter(prefix=BASE_URL, tags=["employee"])
 
@@ -52,7 +52,7 @@ def create_employee(
         EmployeeExtended: The created employee.
 
     """
-    duplicate_employee = get_employee_by_badge_number(request.badge_number, db)
+    duplicate_employee = get_employee_by_badge_number_from_db(request.badge_number, db)
     validate(
         duplicate_employee is None,
         EXC_MSG_BADGE_NUMBER_EXISTS,
@@ -85,7 +85,7 @@ def get_employees(
         list[EmployeeExtended]: The retrieved employees.
 
     """
-    return get_employees(db)
+    return get_employees_from_db(db)
 
 
 @router.get(
@@ -120,7 +120,7 @@ def search_for_employees(
         list[EmployeeExtended]: The retrieved employees.
 
     """
-    employees = search_for_employees(
+    employees = search_for_employees_from_db(
         db,
         department_name,
         org_unit_name,
@@ -155,7 +155,7 @@ def get_employee_by_id(
         EmployeeExtended: The retrieved employee.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -187,7 +187,7 @@ def get_employee_by_badge_number(
         EmployeeExtended: The retrieved employee.
 
     """
-    employee = get_employee_by_badge_number(badge_number, db)
+    employee = get_employee_by_badge_number_from_db(badge_number, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -218,7 +218,7 @@ def get_employee_departments(
         list[str]: The retrieved department names.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -249,14 +249,14 @@ def get_employee_manager(
         dict: The retrieved manager's first and last name.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    manager = employee_repository.get_employee_by_id(employee.manager_id, db)
+    manager = get_employee_by_id_from_db(employee.manager_id, db)
     validate(
         manager,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -290,7 +290,7 @@ def get_employee_org_unit(
         str: The retrieved org unit's name.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -321,7 +321,7 @@ def get_employee_holiday_group(
         str: The retrieved holiday group's name.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -361,7 +361,7 @@ def update_employee_by_id(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
@@ -399,24 +399,30 @@ def update_employee_badge_number(
         EmployeeExtended: The updated employee.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    duplicate_employee = get_employee_by_badge_number(badge_number, db)
+    duplicate_employee = get_employee_by_badge_number_from_db(badge_number, db)
     validate(
         duplicate_employee is None,
         EXC_MSG_BADGE_NUMBER_EXISTS,
         status.HTTP_409_CONFLICT,
     )
 
+    # If user is updating their own badge number, invalidate their tokens
     if caller_badge == id:
-        logout(request, db)
+        access_token = request.headers.get("Authorization")
+        refresh_token = request.cookies.get("refresh_token")
+        if access_token and access_token.startswith("Bearer "):
+            invalidate_token(access_token.split(" ")[1], db)
+        if refresh_token:
+            invalidate_token(refresh_token, db)
 
-    employee = update_employee_badge_number(employee, badge_number, db)
+    employee = update_employee_badge_number_in_db(employee, badge_number, db)
     log_args = {
         "badge_number": employee.badge_number,
         "new_badge_number": badge_number,
@@ -440,7 +446,7 @@ def delete_employee_by_id(
         db (Session): Database session for current request.
 
     """
-    employee = get_employee_by_id(id, db)
+    employee = get_employee_by_id_from_db(id, db)
     validate(
         employee,
         EXC_MSG_EMPLOYEE_NOT_FOUND,

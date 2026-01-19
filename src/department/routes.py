@@ -22,11 +22,12 @@ from src.department.repository import (
     delete_membership,
     get_department_by_id,
     get_department_by_name,
-    get_departments,
+    get_departments as get_departments_from_db,
     update_department as update_department_in_db,
 )
 from src.department.schemas import DepartmentBase, DepartmentExtended
-from src.employee.routes import get_employee_by_id
+from src.employee.constants import EXC_MSG_EMPLOYEE_NOT_FOUND
+from src.employee.repository import get_employee_by_id as get_employee_by_id_from_db
 from src.employee.schemas import EmployeeExtended
 from src.services import create_event_log, requires_license, requires_permission, validate
 
@@ -100,7 +101,12 @@ def create_department_membership(
         status.HTTP_404_NOT_FOUND,
     )
 
-    employee = get_employee_by_id(employee_id, db)
+    employee = get_employee_by_id_from_db(employee_id, db)
+    validate(
+        employee,
+        EXC_MSG_EMPLOYEE_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
     validate(
         employee not in department.employees,
         EXC_MSG_EMPLOYEE_IS_MEMBER,
@@ -138,7 +144,7 @@ def get_departments(
         list[DepartmentExtended]: The retrieved departments.
 
     """
-    return get_departments(db)
+    return get_departments_from_db(db)
 
 
 @router.get(
@@ -196,7 +202,7 @@ def get_employees_by_department(
             department.
 
     """
-    department = get_department(id, db)
+    department = get_department_by_id(id, db)
     validate(
         department,
         EXC_MSG_DEPARTMENT_NOT_FOUND,
@@ -324,7 +330,12 @@ def delete_department_membership(
         status.HTTP_404_NOT_FOUND,
     )
 
-    employee = get_employee_by_id(employee_id, db)
+    employee = get_employee_by_id_from_db(employee_id, db)
+    validate(
+        employee,
+        EXC_MSG_EMPLOYEE_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
     validate(
         employee in department.employees,
         EXC_MSG_EMPLOYEE_NOT_MEMBER,

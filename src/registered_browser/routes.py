@@ -14,8 +14,8 @@ from src.registered_browser.constants import (
 from src.registered_browser.models import RegisteredBrowser
 from src.registered_browser.repository import (
     clear_stale_sessions,
-    create_registered_browser,
-    delete_registered_browser,
+    create_registered_browser as create_registered_browser_in_db,
+    delete_registered_browser as delete_registered_browser_from_db,
     get_all_browser_uuids,
     get_all_registered_browsers,
     get_registered_browser_by_fingerprint,
@@ -100,7 +100,7 @@ def register_browser(
     if not request.ip_address:
         request.ip_address = http_request.client.host if http_request.client else None
 
-    browser = create_registered_browser(request, db)
+    browser = create_registered_browser_in_db(request, db)
     log_args = {
         "browser_id": browser.id,
         "browser_uuid": browser.browser_uuid,
@@ -194,7 +194,7 @@ def get_registered_browsers(
     "/{browser_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_registered_browser(
+def delete_browser(
     browser_id: int,
     db: Session = Depends(get_db),
     caller_badge: str = Security(
@@ -215,7 +215,7 @@ def delete_registered_browser(
         status.HTTP_404_NOT_FOUND,
     )
 
-    delete_registered_browser(browser, db)
+    delete_registered_browser_from_db(browser, db)
     log_args = {"browser_id": browser_id, "browser_uuid": browser.browser_uuid}
     create_event_log(IDENTIFIER, "DELETE", log_args, caller_badge, db)
 

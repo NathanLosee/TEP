@@ -17,6 +17,7 @@ from src.auth_role.schemas import AuthRoleExtended
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
 from src.main import settings
+import src.services as services
 from src.services import (
     algorithm,
     create_event_log,
@@ -25,7 +26,6 @@ from src.services import (
     requires_permission,
     validate,
     verify_password,
-    verifying_bytes,
 )
 from src.user.constants import (
     BASE_URL,
@@ -352,7 +352,7 @@ def refresh_token(
 
     try:
         payload = jwt.decode(
-            refresh_token, verifying_bytes, algorithms=[algorithm]
+            refresh_token, services.verifying_bytes, algorithms=[algorithm]
         )
         badge_number = payload.get("badge_number")
         validate(

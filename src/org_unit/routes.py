@@ -18,7 +18,7 @@ from src.org_unit.repository import (
     delete_org_unit as delete_org_unit_from_db,
     get_org_unit_by_id,
     get_org_unit_by_name,
-    get_org_units,
+    get_org_units as get_org_units_from_db,
     update_org_unit as update_org_unit_in_db,
 )
 from src.org_unit.schemas import OrgUnitBase, OrgUnitExtended
@@ -82,7 +82,7 @@ def get_org_units(
         list[OrgUnitExtended]: The retrieved org units.
 
     """
-    return get_org_units(db)
+    return get_org_units_from_db(db)
 
 
 @router.get(
@@ -139,7 +139,7 @@ def get_employees_by_org_unit(
         list[EmployeeExtended]: The retrieved employees for the given org unit.
 
     """
-    org_unit = get_org_unit(id, db)
+    org_unit = get_org_unit_by_id(id, db)
     validate(
         org_unit,
         EXC_MSG_ORG_NOT_FOUND,

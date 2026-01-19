@@ -9,10 +9,10 @@ from src.database import get_db
 from src.event_log.constants import BASE_URL, EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND
 from src.event_log.repository import (
     create_event_log as create_event_log_in_db,
-    delete_event_log_entry,
+    delete_event_log_entry as delete_event_log_entry_from_db,
     filter_logs_by_permissions,
-    get_event_log_by_id,
-    get_event_log_entries,
+    get_event_log_by_id as get_event_log_by_id_from_db,
+    get_event_log_entries as get_event_log_entries_from_db,
 )
 from src.event_log.schemas import EventLogBase, EventLogExtended
 from src.services import requires_permission, validate
@@ -52,7 +52,7 @@ def create_event_log(
     status_code=status.HTTP_200_OK,
     response_model=list[EventLogExtended],
 )
-def get_event_log_entries(
+def get_event_logs(
     start_timestamp: datetime,
     end_timestamp: datetime,
     badge_number: str = None,
@@ -88,7 +88,7 @@ def get_event_log_entries(
     caller_user = get_user_by_badge_number(caller_badge, db)
 
     # Get all event logs matching the criteria
-    all_logs = get_event_log_entries(
+    all_logs = get_event_log_entries_from_db(
         start_timestamp, end_timestamp, badge_number, log_filter, db
     )
 
@@ -103,7 +103,7 @@ def get_event_log_entries(
     status_code=status.HTTP_200_OK,
     response_model=EventLogExtended,
 )
-def get_event_log_by_id(
+def get_event_log(
     id: int,
     db: Session = Depends(get_db),
     caller_badge: str = Security(
@@ -120,7 +120,7 @@ def get_event_log_by_id(
         EventLogExtended: The retrieved event log entry.
 
     """
-    event_log = get_event_log_by_id(id, db)
+    event_log = get_event_log_by_id_from_db(id, db)
     validate(
         event_log,
         EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND,
@@ -134,7 +134,7 @@ def get_event_log_by_id(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_event_log_by_id(
+def delete_event_log(
     id: int,
     db: Session = Depends(get_db),
     caller_badge: str = Security(
@@ -148,11 +148,11 @@ def delete_event_log_by_id(
         db (Session): Database session for current request.
 
     """
-    event_log = get_event_log_by_id(id, db)
+    event_log = get_event_log_by_id_from_db(id, db)
     validate(
         event_log,
         EXC_MSG_EVENT_LOG_ENTRY_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
-    delete_event_log_entry(event_log, db)
+    delete_event_log_entry_from_db(event_log, db)

@@ -32,10 +32,14 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
   - **Result**: All references now consistently use "browser"
   - **Priority**: HIGH - Developer experience
 
-- [ ] **Standardize Import Organization**
-  - **Issue**: Mix of relative and absolute imports across codebase
-  - **Solution**: Use aliased absolute imports throughout (e.g., `import src.module.routes as module_routes`)
-  - **Files**: All route and service files
+- [x] **Standardize Import Organization** ✅ (Completed)
+  - ~~**Issue**: Mix of relative and absolute imports across codebase~~
+  - **Solution**: Changed all route files to use direct `from` imports with aliases for repository functions
+  - **Files Updated**: All route files (auth_role, user, employee, department, org_unit, holiday_group, timeclock, registered_browser, license, event_log)
+  - **Key Changes**:
+    - Removed route-to-route imports (which caused circular dependencies) and replaced with repository imports
+    - Fixed naming conflicts where route functions shadowed imported repository functions (caused infinite recursion)
+    - Pattern: Import repository functions with `_from_db` or `_in_db` suffix, keep route function names clean
   - **Priority**: MEDIUM - Code consistency
 
 ---

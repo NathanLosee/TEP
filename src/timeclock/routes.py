@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
-from src.employee.routes import get_employee_by_badge_number, search_for_employees
+from src.employee.constants import EXC_MSG_EMPLOYEE_NOT_FOUND
+from src.employee.repository import (
+    get_employee_by_badge_number as get_employee_by_badge_number_from_db,
+    search_for_employees as search_for_employees_from_db,
+)
 from src.registered_browser.repository import get_registered_browser_by_uuid
 from src.services import create_event_log, requires_permission, validate
 from src.timeclock.constants import (
@@ -20,11 +24,11 @@ from src.timeclock.constants import (
     IDENTIFIER,
 )
 from src.timeclock.repository import (
-    check_status,
+    check_status as check_status_from_db,
     delete_timeclock_entry,
-    get_timeclock_entries,
+    get_timeclock_entries as get_timeclock_entries_from_db,
     get_timeclock_entry_by_id,
-    timeclock,
+    timeclock as timeclock_in_db,
     update_timeclock_entry_by_id as update_timeclock_entry_by_id_in_db,
 )
 from src.timeclock.schemas import TimeclockEntryBase, TimeclockEntryWithName
@@ -52,7 +56,12 @@ def timeclock(
         dict: Clock in/out status.
 
     """
-    employee = get_employee_by_badge_number(badge_number, db)
+    employee = get_employee_by_badge_number_from_db(badge_number, db)
+    validate(
+        employee,
+        EXC_MSG_EMPLOYEE_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
     validate(
         employee.allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
@@ -86,7 +95,7 @@ def timeclock(
     if x_device_uuid:
         log_args["device_uuid"] = x_device_uuid
 
-    if timeclock(badge_number, db):
+    if timeclock_in_db(badge_number, db):
         create_event_log(IDENTIFIER, "CLOCK_IN", log_args, "0", db)
         return {"status": "success", "message": "Clocked in"}
     else:
@@ -112,14 +121,14 @@ def check_status(
         dict: Clock in/out status.
 
     """
-    employees = search_for_employees(badge_number=badge_number, db=db)
+    employees = search_for_employees_from_db(badge_number=badge_number, db=db)
     validate(
         len(employees) == 1 and employees[0].allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    if check_status(badge_number, db):
+    if check_status_from_db(badge_number, db):
         return {"status": "success", "message": "Clocked in"}
     else:
         return {"status": "success", "message": "Clocked out"}
@@ -149,14 +158,14 @@ def get_employee_history(
         list[TimeclockEntryWithName]: The retrieved timeclock entries.
 
     """
-    employees = search_for_employees(badge_number=badge_number, db=db)
+    employees = search_for_employees_from_db(badge_number=badge_number, db=db)
     validate(
         len(employees) == 1 and employees[0].allow_clocking,
         EXC_MSG_EMPLOYEE_NOT_ALLOWED,
         status.HTTP_403_FORBIDDEN,
     )
 
-    return get_timeclock_entries(
+    return get_timeclock_entries_from_db(
         start_timestamp, end_timestamp, badge_number, None, None, db
     )
 
@@ -196,7 +205,7 @@ def get_timeclock_entries(
         list[TimeclockEntryBase]: The retrieved timeclock entries.
 
     """
-    return get_timeclock_entries(
+    return get_timeclock_entries_from_db(
         start_timestamp, end_timestamp, badge_number, first_name, last_name, db
     )
 

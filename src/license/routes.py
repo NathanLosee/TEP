@@ -17,9 +17,9 @@ from src.license.key_generator import (
 )
 from src.license.models import License
 from src.license.repository import (
-    create_license,
+    create_license as create_license_in_db,
     deactivate_all_licenses,
-    deactivate_license,
+    deactivate_license as deactivate_license_in_db,
     get_active_license,
     get_license_by_key,
 )
@@ -113,7 +113,7 @@ def activate_license(
     deactivate_all_licenses(db)
 
     # Create new license
-    license_obj = create_license(request, db)
+    license_obj = create_license_in_db(request, db)
 
     # Log the activation
     log_args = {
@@ -128,7 +128,7 @@ def activate_license(
     "/deactivate",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def deactivate_license(
+def deactivate_current_license(
     db: Session = Depends(get_db),
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.delete"]  # Only admins can deactivate
@@ -152,7 +152,7 @@ def deactivate_license(
     )
 
     # Deactivate the license
-    deactivate_license(license_obj, db)
+    deactivate_license_in_db(license_obj, db)
 
     # Log the deactivation
     log_args = {

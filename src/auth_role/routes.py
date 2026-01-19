@@ -32,7 +32,8 @@ from src.services import (
     requires_permission,
     validate,
 )
-from src.user.routes import get_user_by_id
+from src.user.constants import EXC_MSG_USER_NOT_FOUND
+from src.user.repository import get_user_by_id as get_user_by_id_from_db
 from src.user.schemas import UserResponse
 
 router = APIRouter(prefix=BASE_URL, tags=["auth_role"])
@@ -106,7 +107,12 @@ def create_auth_role_membership(
         status.HTTP_404_NOT_FOUND,
     )
 
-    user = get_user_by_id(user_id, db)
+    user = get_user_by_id_from_db(user_id, db)
+    validate(
+        user,
+        EXC_MSG_USER_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
     validate(
         user not in auth_role.users,
         EXC_MSG_USER_IS_MEMBER,
@@ -247,9 +253,9 @@ def update_auth_role(
         status.HTTP_404_NOT_FOUND,
     )
 
-    dulicate_auth_role = get_auth_role_by_name(request.name, db)
+    duplicate_auth_role = get_auth_role_by_name(request.name, db)
     validate(
-        dulicate_auth_role is None or dulicate_auth_role.id == id,
+        duplicate_auth_role is None or duplicate_auth_role.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
     )
@@ -325,7 +331,12 @@ def delete_auth_role_membership(
         status.HTTP_404_NOT_FOUND,
     )
 
-    user = get_user_by_id(user_id, db)
+    user = get_user_by_id_from_db(user_id, db)
+    validate(
+        user,
+        EXC_MSG_USER_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
     validate(
         user in auth_role.users,
         EXC_MSG_USER_NOT_MEMBER,
