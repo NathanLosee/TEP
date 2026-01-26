@@ -1,40 +1,35 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthRoleService } from '../../services/auth-role.service';
 import {
   AuthRole,
   User,
-  UserBase,
-  UserPasswordChange,
   UserService,
 } from '../../services/user.service';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-import { UserFormDialogComponent } from './user-management-form-dialog/user-form-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 import { PasswordChangeDialogComponent } from '../password-change-dialog/password-change-dialog.component';
 import { PermissionService } from '../../services/permission.service';
+import {
+  GenericTableComponent,
+  TableCellDirective,
+} from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
+import { UserFormDialogComponent } from './user-management-form-dialog/user-form-dialog.component';
 
 interface Employee {
   badge_number: string;
@@ -47,23 +42,19 @@ interface Employee {
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatChipsModule,
     MatDialogModule,
     MatSnackBarModule,
     MatTabsModule,
-    MatProgressSpinnerModule,
     MatTooltipModule,
-    MatDividerModule,
-    MatSlideToggleModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
+    TableCellDirective,
   ],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss',
@@ -86,8 +77,41 @@ export class UserManagementComponent implements OnInit {
   isLoading = false;
   searchTerm = '';
 
-  // Table columns
-  displayedColumns = ['badge_number', 'roles', 'actions'];
+  // Table configuration
+  columns: TableColumn<User>[] = [
+    {
+      key: 'badge_number',
+      header: 'User / Employee',
+      type: 'template',
+    },
+    {
+      key: 'roles',
+      header: 'Auth Roles',
+      type: 'template',
+    },
+  ];
+
+  actions: TableAction<User>[] = [
+    {
+      icon: 'edit',
+      tooltip: 'Edit User',
+      action: 'edit',
+      permission: 'user.update',
+    },
+    {
+      icon: 'lock',
+      tooltip: 'Change Password',
+      action: 'changePassword',
+      permission: 'user.update',
+    },
+    {
+      icon: 'delete',
+      tooltip: 'Delete User',
+      action: 'delete',
+      color: 'warn',
+      permission: 'user.delete',
+    },
+  ];
 
   ngOnInit() {
     this.loadUsers();
@@ -136,7 +160,8 @@ export class UserManagementComponent implements OnInit {
   loadAuthRoles() {
     this.authRoleService.getAuthRoles().subscribe({
       next: (roles) => {
-        this.authRoles = roles;
+        // Filter out root role (id=0 or name='root')
+        this.authRoles = roles.filter(role => role.id !== 0 && role.name.toLowerCase() !== 'root');
       },
       error: (error) => {
         this.showSnackBar(
@@ -150,17 +175,18 @@ export class UserManagementComponent implements OnInit {
 
   loadEmployees() {
     // Mock employee data - in real app, this would come from employee service
+    // Badge numbers are 6-digit strings
     this.employees = [
-      { badge_number: 'ADMIN001', name: 'System Administrator' },
-      { badge_number: 'MGR001', name: 'Manager One' },
-      { badge_number: 'EMP001', name: 'Employee One' },
-      { badge_number: 'EMP002', name: 'Employee Two' },
-      { badge_number: 'SUP001', name: 'Supervisor One' },
-      { badge_number: 'HR001', name: 'HR Representative' },
-      { badge_number: 'IT001', name: 'IT Support' },
-      { badge_number: 'FIN001', name: 'Finance Manager' },
-      { badge_number: 'OP001', name: 'Operations Lead' },
-      { badge_number: 'QA001', name: 'Quality Assurance' },
+      { badge_number: '100001', name: 'John Doe' },
+      { badge_number: '100002', name: 'Jane Smith' },
+      { badge_number: '100003', name: 'Bob Johnson' },
+      { badge_number: '100004', name: 'Alice Williams' },
+      { badge_number: '100005', name: 'Charlie Brown' },
+      { badge_number: '100006', name: 'Diana Davis' },
+      { badge_number: '100007', name: 'Eve Miller' },
+      { badge_number: '100008', name: 'Frank Wilson' },
+      { badge_number: '100009', name: 'Grace Moore' },
+      { badge_number: '100010', name: 'Henry Taylor' },
     ];
   }
 
@@ -183,6 +209,20 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
+  onTableAction(event: TableActionEvent<User>) {
+    switch (event.action) {
+      case 'edit':
+        this.editUser(event.row);
+        break;
+      case 'changePassword':
+        this.changeUserPassword(event.row);
+        break;
+      case 'delete':
+        this.deleteUser(event.row);
+        break;
+    }
+  }
+
   createUser() {
     const dialogRef = this.dialog.open(UserFormDialogComponent, {
       width: '600px',
@@ -197,6 +237,24 @@ export class UserManagementComponent implements OnInit {
         this.users.push(result);
         this.filterUsers();
         this.showSnackBar('User account created successfully', 'success');
+      }
+    });
+  }
+
+  editUser(user: User) {
+    const dialogRef = this.dialog.open(UserFormDialogComponent, {
+      width: '600px',
+      data: {
+        editUser: user,
+        authRoles: this.authRoles,
+        employees: this.employees,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        this.loadUsers();
+        this.showSnackBar('User account updated successfully', 'success');
       }
     });
   }

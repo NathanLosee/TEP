@@ -1,0 +1,130 @@
+@use '../../../../styles/common' as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Table styling
+table {
+  width: 100%;
+
+  th {
+    background: var(--sys-surface-variant);
+    color: var(--sys-on-surface-variant);
+    font-weight: 600;
+    font-size: $font-size-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+// Cell content alignment
+.table-cell-content {
+  display: flex;
+  align-items: center;
+  gap: $gap-sm;
+
+  mat-icon {
+    color: var(--sys-primary);
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+// Chip list cell
+.chip-list-cell {
+  mat-chip {
+    font-size: $font-size-sm;
+  }
+
+  .more-chip {
+    background-color: rgba(0, 0, 0, 0.08);
+    cursor: help;
+  }
+}
+
+// Actions column
+.table-actions {
+  display: flex;
+  gap: $gap-xs;
+  justify-content: flex-start;
+
+  button {
+    min-width: auto;
+    width: 36px;
+    height: 36px;
+
+    &:not([color]) {
+      color: var(--sys-primary);
+
+      &:hover {
+        background: rgba(var(--sys-primary-rgb), 0.08);
+      }
+    }
+
+    &[color="warn"] {
+      color: var(--sys-error);
+
+      &:hover {
+        background: rgba(var(--sys-error-rgb), 0.08);
+      }
+    }
+  }
+}
+
+// Empty state
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $padding-xl;
+  text-align: center;
+  color: var(--sys-on-surface-variant);
+  min-height: 200px;
+
+  > mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $spacing-md;
+    opacity: 0.5;
+    color: var(--sys-on-surface-variant);
+  }
+
+  h3 {
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-lg;
+    color: var(--sys-on-surface);
+  }
+
+  p {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-base;
+  }
+
+  button {
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-bottom: 0;
+      opacity: 1;
+    }
+  }
+}
+
+// Loading state
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $padding-xl;
+  min-height: 200px;
+}

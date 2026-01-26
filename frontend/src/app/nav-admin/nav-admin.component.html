@@ -144,6 +144,9 @@
           <span matListItemTitle>Event Logs</span>
         </a>
       </ng-container>
+      <mat-divider></mat-divider>
+
+      <h3 mat-subheader>System</h3>
       <a
         *hasPermission="'auth_role.create'"
         mat-list-item
@@ -152,6 +155,15 @@
       >
         <mat-icon matListItemIcon>vpn_key</mat-icon>
         <span matListItemTitle>License</span>
+      </a>
+      <a
+        *hasPermission="'auth_role.update'"
+        mat-list-item
+        routerLink="/admin/settings"
+        routerLinkActive="active-link"
+      >
+        <mat-icon matListItemIcon>settings</mat-icon>
+        <span matListItemTitle>Settings</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>

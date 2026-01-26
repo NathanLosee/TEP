@@ -36,6 +36,7 @@ nodeenv==1.9.1
 packaging==24.2
 pbr==6.1.1
 platformdirs==4.3.7
+py-machineid==0.7.0
 pre_commit==4.2.0
 psutil==6.1.1
 pycparser==2.22

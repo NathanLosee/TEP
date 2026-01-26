@@ -8,20 +8,22 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PartialObserver } from 'rxjs';
 import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { GenericTableComponent } from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
 import { OrgUnitEmployeesDialogComponent } from './org-unit-employees-dialog/org-unit-employees-dialog.component';
 import { OrgUnitFormDialogComponent } from './org-unit-form-dialog/org-unit-form-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
@@ -33,20 +35,17 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatChipsModule,
     MatTooltipModule,
-    MatProgressSpinnerModule,
     MatTabsModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
   ],
   templateUrl: './org-unit-management.component.html',
   styleUrl: './org-unit-management.component.scss',
@@ -69,8 +68,39 @@ export class OrgUnitManagementComponent implements OnInit {
   // UI State
   isLoading = false;
 
-  // Table columns
-  displayedColumns: string[] = ['name', 'actions'];
+  // Table configuration
+  columns: TableColumn<OrgUnit>[] = [
+    {
+      key: 'name',
+      header: 'Unit Name',
+      type: 'icon-text',
+      icon: 'account_tree',
+    },
+  ];
+
+  actions: TableAction<OrgUnit>[] = [
+    {
+      icon: 'people',
+      tooltip: 'View Employees',
+      action: 'view',
+      permission: 'org_unit.read',
+    },
+    {
+      icon: 'edit',
+      tooltip: 'Edit Unit',
+      action: 'edit',
+      color: 'primary',
+      permission: 'org_unit.update',
+    },
+    {
+      icon: 'delete',
+      tooltip: 'Delete Unit',
+      action: 'delete',
+      color: 'warn',
+      permission: 'org_unit.delete',
+      disabled: (unit: OrgUnit) => (unit.employee_count || 0) > 0,
+    },
+  ];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
@@ -121,6 +151,20 @@ export class OrgUnitManagementComponent implements OnInit {
     });
   }
 
+  onTableAction(event: TableActionEvent<OrgUnit>) {
+    switch (event.action) {
+      case 'view':
+        this.viewEmployees(event.row);
+        break;
+      case 'edit':
+        this.openOrgUnitFormDialog(event.row);
+        break;
+      case 'delete':
+        this.deleteOrgUnit(event.row);
+        break;
+    }
+  }
+
   viewEmployees(unit: OrgUnit) {
     this.dialog.open(OrgUnitEmployeesDialogComponent, {
       width: '800px',
@@ -135,7 +179,7 @@ export class OrgUnitManagementComponent implements OnInit {
     const dialogRef = this.dialog.open(OrgUnitFormDialogComponent, {
       width: '700px',
       maxWidth: '90vw',
-      data: { editUnit },
+      data: { editOrgUnit: editUnit },
       disableClose: true,
       enterAnimationDuration: 250,
       exitAnimationDuration: 250,

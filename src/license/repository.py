@@ -5,8 +5,8 @@ from typing import Union
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from src.license.key_generator import normalize_license_key
 from src.license.models import License
-from src.license.schemas import LicenseActivate
 
 
 def get_active_license(db: Session) -> Union[License, None]:
@@ -30,23 +30,28 @@ def get_license_by_key(
     """Retrieve license by key.
 
     Args:
-        license_key (str): The license key.
+        license_key (str): The license key (word or hex format).
         db (Session): Database session for the current request.
 
     Returns:
         Union[License, None]: The retrieved license or None if not found.
 
     """
+    # Normalize the key to hex format for comparison
+    normalized_key = normalize_license_key(license_key)
     return db.scalars(
-        select(License).where(License.license_key == license_key)
+        select(License).where(License.license_key == normalized_key)
     ).first()
 
 
-def create_license(request: LicenseActivate, db: Session) -> License:
-    """Create a new license.
+def create_license(
+    license_key: str, activation_key: str, db: Session
+) -> License:
+    """Create a new license with activation key.
 
     Args:
-        request (LicenseActivate): Request data for activating license.
+        license_key (str): The license key (already normalized to hex).
+        activation_key (str): The activation key from license server.
         db (Session): Database session for the current request.
 
     Returns:
@@ -54,8 +59,8 @@ def create_license(request: LicenseActivate, db: Session) -> License:
 
     """
     license_obj = License(
-        license_key=request.license_key,
-        server_id=request.server_id,
+        license_key=license_key,
+        activation_key=activation_key,
         is_active=True,
     )
     db.add(license_obj)
@@ -75,6 +80,30 @@ def deactivate_license(license_obj: License, db: Session) -> None:
     license_obj.is_active = False
     db.add(license_obj)
     db.commit()
+
+
+def reactivate_license(
+    license_obj: License, activation_key: str, db: Session
+) -> License:
+    """Reactivate an existing license with a new activation key.
+
+    Used when reactivating a license that was previously deactivated.
+
+    Args:
+        license_obj (License): Existing license to reactivate.
+        activation_key (str): The new activation key from license server.
+        db (Session): Database session for the current request.
+
+    Returns:
+        License: The reactivated license.
+
+    """
+    license_obj.activation_key = activation_key
+    license_obj.is_active = True
+    db.add(license_obj)
+    db.commit()
+    db.refresh(license_obj)
+    return license_obj
 
 
 def deactivate_all_licenses(db: Session) -> None:

@@ -9,7 +9,6 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
   MAT_DIALOG_DATA,
   MatDialogActions,
@@ -49,7 +48,6 @@ export interface UserFormDialogData {
     MatDialogContent,
     MatDialogActions,
     MatSelectModule,
-    MatCheckboxModule,
   ],
   templateUrl: './user-form-dialog.component.html',
   styleUrl: './user-form-dialog.component.scss',
@@ -113,21 +111,40 @@ export class UserFormDialogComponent {
     if (this.userForm.valid) {
       this.isLoading = true;
 
-      const userData = {
+      const userData: any = {
         badge_number: this.userForm.value.badge_number,
-        password: this.userForm.value.password,
       };
 
-      this.userService.createUser(userData).subscribe({
-        next: (newUser: any) => {
-          this.dialogRef.close(newUser);
-          this.isLoading = false;
-        },
-        error: (error: any) => {
-          console.error('Error creating user:', error);
-          this.isLoading = false;
-        },
-      });
+      // Only include password if it's set (for edit mode, password is optional)
+      if (this.userForm.value.password) {
+        userData.password = this.userForm.value.password;
+      }
+
+      if (this.isEditMode && this.data.editUser) {
+        // Update existing user
+        this.userService.updateUser(this.data.editUser.id!, userData).subscribe({
+          next: (updatedUser: any) => {
+            this.dialogRef.close(updatedUser);
+            this.isLoading = false;
+          },
+          error: (error: any) => {
+            console.error('Error updating user:', error);
+            this.isLoading = false;
+          },
+        });
+      } else {
+        // Create new user - password is required
+        this.userService.createUser(userData).subscribe({
+          next: (newUser: any) => {
+            this.dialogRef.close(newUser);
+            this.isLoading = false;
+          },
+          error: (error: any) => {
+            console.error('Error creating user:', error);
+            this.isLoading = false;
+          },
+        });
+      }
     }
   }
 

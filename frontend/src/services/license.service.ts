@@ -6,20 +6,18 @@ export interface LicenseStatus {
   is_active: boolean;
   license_key: string | null;
   activated_at: string | null;
-  server_id: string | null;
 }
 
 export interface LicenseActivationRequest {
   license_key: string;
-  server_id?: string;
 }
 
 export interface LicenseActivationResponse {
   id: number;
   license_key: string;
+  activation_key: string;
   activated_at: string;
   is_active: boolean;
-  server_id: string | null;
 }
 
 @Injectable({
@@ -50,7 +48,7 @@ export class LicenseService {
       },
       error: (error) => {
         console.error('Failed to check license status:', error);
-        this.licenseStatus$.next({ is_active: false, license_key: null, activated_at: null, server_id: null });
+        this.licenseStatus$.next({ is_active: false, license_key: null, activated_at: null });
       }
     });
   }
@@ -58,10 +56,9 @@ export class LicenseService {
   /**
    * Activate a license
    */
-  activateLicense(licenseKey: string, serverId?: string): Observable<LicenseActivationResponse> {
+  activateLicense(licenseKey: string): Observable<LicenseActivationResponse> {
     return this.http.post<LicenseActivationResponse>(`${this.baseUrl}/activate`, {
       license_key: licenseKey,
-      server_id: serverId
     }).pipe(
       tap(() => {
         // Refresh license status after activation
@@ -81,7 +78,6 @@ export class LicenseService {
           is_active: false,
           license_key: null,
           activated_at: null,
-          server_id: null,
         });
       })
     );

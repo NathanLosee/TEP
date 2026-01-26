@@ -13,6 +13,7 @@ export interface AuthRole {
   id?: number;
   name: string;
   permissions: Permission[];
+  user_count?: number;
 }
 
 /**

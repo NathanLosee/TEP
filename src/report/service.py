@@ -49,12 +49,18 @@ def generate_report(
         ReportResponse: Complete report data.
 
     """
-    # Determine report type
+    # Determine report type and filter name
     report_type = REPORT_TYPE_EMPLOYEE
+    filter_name = None
+
     if department_id:
         report_type = REPORT_TYPE_DEPARTMENT
+        department = db.get(Department, department_id)
+        filter_name = department.name if department else None
     elif org_unit_id:
         report_type = REPORT_TYPE_ORG_UNIT
+        org_unit = db.get(OrgUnit, org_unit_id)
+        filter_name = org_unit.name if org_unit else None
 
     # Get list of employees to include in report
     employees = _get_employees_for_report(
@@ -74,6 +80,7 @@ def generate_report(
         start_date=start_date,
         end_date=end_date,
         report_type=report_type,
+        filter_name=filter_name,
         generated_at=datetime.now(),
         employees=employee_reports,
     )

@@ -1,0 +1,74 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+  {{ isEditMode ? 'Edit Auth Role' : 'Create Auth Role' }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="authRoleForm" class="auth-role-form">
+    <!-- Role Name -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Role Name</mat-label>
+      <input matInput formControlName="name" placeholder="Enter role name" />
+      <mat-icon matPrefix>security</mat-icon>
+      <mat-error *ngIf="authRoleForm.get('name')?.hasError('required')">
+        Role name is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Permissions Section -->
+    <div class="permissions-section">
+      <h3>
+        <mat-icon>verified_user</mat-icon>
+        Permissions ({{ selectedPermissions.size }} selected)
+      </h3>
+
+      <mat-accordion multi>
+        <mat-expansion-panel
+          *ngFor="let category of Object.keys(availablePermissions)"
+        >
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>{{ getCategoryIcon(category) }}</mat-icon>
+              {{ getCategoryName(category) }}
+            </mat-panel-title>
+            <mat-panel-description>
+              {{ getSelectedPermissionsCount(category) }} /
+              {{ availablePermissions[category].length }}
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="permission-list">
+            <mat-checkbox
+              *ngFor="let permission of availablePermissions[category]"
+              [checked]="isPermissionSelected(permission)"
+              (change)="togglePermission(permission)"
+              class="permission-checkbox"
+            >
+              <div class="permission-label">
+                <span class="permission-resource">{{ permission.resource }}</span>
+              </div>
+            </mat-checkbox>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelForm()" [disabled]="isLoading">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submitForm()"
+    [disabled]="authRoleForm.invalid || isLoading"
+  >
+    <mat-icon *ngIf="!isLoading">{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+    <mat-progress-spinner
+      *ngIf="isLoading"
+      diameter="20"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+    {{ isEditMode ? 'Save Changes' : 'Create Role' }}
+  </button>
+</mat-dialog-actions>

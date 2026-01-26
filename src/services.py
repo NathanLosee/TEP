@@ -38,6 +38,9 @@ rsa_public_key: rsa.RSAPublicKey
 signing_bytes: bytes = None
 verifying_bytes: bytes = None
 
+# Global license activation state - set on startup
+is_license_activated: bool = False
+
 algorithm = "RS256"
 access_exp_time = 15
 refresh_exp_time = 60 * 24  # 1 day
@@ -440,6 +443,9 @@ def create_event_log(
 def get_license_status(db: Session) -> dict:
     """Check current license status.
 
+    Returns the license status based on the global activation state.
+    Machine ID is NOT returned to the frontend for security reasons.
+
     Args:
         db (Session): Database session for the current request.
 
@@ -448,26 +454,24 @@ def get_license_status(db: Session) -> dict:
             - is_active (bool): Whether a license is currently active
             - license_key (str | None): The active license key if one exists
             - activated_at (datetime | None): When the license was activated
-            - server_id (str | None): Machine identifier if bound
 
     """
+    global is_license_activated
     import src.license.repository as license_repository
 
     license_obj = license_repository.get_active_license(db)
 
-    if license_obj:
+    if license_obj and is_license_activated:
         return {
             "is_active": True,
             "license_key": license_obj.license_key,
             "activated_at": license_obj.activated_at,
-            "server_id": license_obj.server_id,
         }
     else:
         return {
             "is_active": False,
             "license_key": None,
             "activated_at": None,
-            "server_id": None,
         }
 
 
@@ -484,15 +488,90 @@ def requires_license(db: Session = Depends(get_db)) -> None:
         HTTPException: 403 Forbidden if no valid license exists.
 
     """
+    global is_license_activated
     from src.license.constants import EXC_MSG_LICENSE_REQUIRED
 
-    license_status = get_license_status(db)
-
-    if not license_status["is_active"]:
+    if not is_license_activated:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=EXC_MSG_LICENSE_REQUIRED,
         )
+
+
+def validate_license_on_startup() -> bool:
+    """Validate license on application startup.
+
+    Checks if there's a stored license and activation key in the database,
+    and verifies the activation key is valid for this machine.
+
+    Updates the global is_license_activated variable.
+
+    Returns:
+        bool: True if a valid license is active, False otherwise.
+
+    """
+    global is_license_activated
+    import src.license.repository as license_repository
+    from src.license.key_generator import get_machine_id, verify_activation_key
+
+    db = SessionLocal()
+    try:
+        license_obj = license_repository.get_active_license(db)
+
+        if not license_obj:
+            print("License: No active license found in database")
+            is_license_activated = False
+            return False
+
+        # Check if activation key is present
+        if not license_obj.activation_key:
+            print(
+                "License: Found license but no activation key. "
+                "License needs to be re-activated with the new activation flow."
+            )
+            is_license_activated = False
+            return False
+
+        # Get machine ID and verify activation key
+        machine_id = get_machine_id()
+
+        is_valid = verify_activation_key(
+            license_obj.license_key,
+            license_obj.activation_key,
+            machine_id,
+        )
+
+        if is_valid:
+            print("License: Valid activation for this machine")
+            is_license_activated = True
+            return True
+        else:
+            print(
+                "License: Activation key invalid for this machine. "
+                "This license may have been activated on a different machine."
+            )
+            is_license_activated = False
+            return False
+
+    except Exception as e:
+        print(f"License: Error validating license - {e}")
+        is_license_activated = False
+        return False
+    finally:
+        db.close()
+
+
+def set_license_activated(activated: bool) -> None:
+    """Set the global license activation state.
+
+    Called after successful activation via API.
+
+    Args:
+        activated (bool): The new activation state.
+
+    """
+    global is_license_activated
+    is_license_activated = activated
 
 
 def clear_database():
@@ -739,109 +818,30 @@ def generate_dummy_data():
 
         employees_data = [
             # (badge, first, last, payroll_type, org_unit, mgr, hg_id)
-            ("EMP001", "John", "Doe", "salary", "Engineering", None, hg_us.id),
-            (
-                "EMP002",
-                "Jane",
-                "Smith",
-                "hourly",
-                "Engineering",
-                "EMP001",
-                hg_us.id,
-            ),
-            (
-                "EMP003",
-                "Bob",
-                "Johnson",
-                "hourly",
-                "Engineering",
-                "EMP001",
-                hg_us.id,
-            ),
-            (
-                "EMP004",
-                "Alice",
-                "Williams",
-                "salary",
-                "Engineering",
-                None,
-                hg_us.id,
-            ),
-            (
-                "EMP005",
-                "Charlie",
-                "Brown",
-                "hourly",
-                "Sales",
-                "EMP004",
-                hg_us.id,
-            ),
-            (
-                "EMP006",
-                "Diana",
-                "Davis",
-                "hourly",
-                "Sales",
-                "EMP004",
-                hg_us.id,
-            ),
-            ("EMP007", "Eve", "Miller", "salary", "Marketing", None, hg_us.id),
-            (
-                "EMP008",
-                "Frank",
-                "Wilson",
-                "hourly",
-                "Marketing",
-                "EMP007",
-                hg_us.id,
-            ),
-            (
-                "EMP009",
-                "Grace",
-                "Moore",
-                "hourly",
-                "Operations",
-                "EMP007",
-                hg_intl.id,
-            ),
-            (
-                "EMP010",
-                "Henry",
-                "Taylor",
-                "hourly",
-                "Operations",
-                "EMP007",
-                hg_intl.id,
-            ),
-            (
-                "EMP011",
-                "Ivy",
-                "Anderson",
-                "salary",
-                "Customer Support",
-                None,
-                hg_us.id,
-            ),
-            (
-                "EMP012",
-                "Jack",
-                "Thomas",
-                "hourly",
-                "Customer Support",
-                "EMP011",
-                hg_us.id,
-            ),
+            # Badge numbers are 6-digit strings
+            ("100001", "John", "Doe", "salary", "Engineering", None, hg_us.id),
+            ("100002", "Jane", "Smith", "hourly", "Engineering", "100001", hg_us.id),
+            ("100003", "Bob", "Johnson", "hourly", "Engineering", "100001", hg_us.id),
+            ("100004", "Alice", "Williams", "salary", "Engineering", None, hg_us.id),
+            ("100005", "Charlie", "Brown", "hourly", "Sales", "100004", hg_us.id),
+            ("100006", "Diana", "Davis", "hourly", "Sales", "100004", hg_us.id),
+            ("100007", "Eve", "Miller", "salary", "Marketing", None, hg_us.id),
+            ("100008", "Frank", "Wilson", "hourly", "Marketing", "100007", hg_us.id),
+            ("100009", "Grace", "Moore", "hourly", "Operations", "100007", hg_intl.id),
+            ("100010", "Henry", "Taylor", "hourly", "Operations", "100007", hg_intl.id),
+            ("100011", "Ivy", "Anderson", "salary", "Customer Support", None, hg_us.id),
+            ("100012", "Jack", "Thomas", "hourly", "Customer Support", "100011", hg_us.id),
         ]
 
         # Define which employees have external clock permissions
         # Managers and some specific employees who work remotely/flexibly
         external_clock_allowed_badges = {
-            "EMP001",  # Admin - works from home sometimes
-            "EMP004",  # Manager
-            "EMP007",  # Manager
-            "EMP011",  # Manager
-            "EMP005",  # Sales - travels for work
-            "EMP006",  # Sales - travels for work
+            "100001",  # Admin - works from home sometimes
+            "100004",  # Manager
+            "100007",  # Manager
+            "100011",  # Manager
+            "100005",  # Sales - travels for work
+            "100006",  # Sales - travels for work
         }
 
         employees = {}
@@ -963,10 +963,10 @@ def generate_dummy_data():
         # Only create user accounts for employees who need system access
         # Most employees only need to clock in/out and don't need accounts
         users_roles = [
-            ("EMP001", "Admin"),    # Alice Johnson - Full admin access
-            ("EMP004", "Manager"),  # David Lee - Engineering manager
-            ("EMP007", "Manager"),  # Eve Miller - Marketing manager
-            ("EMP011", "Manager"),  # Ivy Anderson - Customer Support manager
+            ("100001", "Admin"),    # John Doe - Full admin access
+            ("100004", "Manager"),  # Alice Williams - Engineering manager
+            ("100007", "Manager"),  # Eve Miller - Marketing manager
+            ("100011", "Manager"),  # Ivy Anderson - Customer Support manager
         ]
 
         for badge, role_name in users_roles:
@@ -999,12 +999,12 @@ def generate_dummy_data():
 
         print("\n[6/7] Assigning department memberships...")
         dept_memberships = [
-            ("Backend Development", ["EMP001", "EMP002", "EMP003"]),
-            ("Frontend Development", ["EMP004"]),
-            ("Sales Team", ["EMP005", "EMP006"]),
-            ("Marketing Team", ["EMP007"]),
-            ("Warehouse", ["EMP008", "EMP009", "EMP010"]),
-            ("Customer Service", ["EMP011", "EMP012"]),
+            ("Backend Development", ["100001", "100002", "100003"]),
+            ("Frontend Development", ["100004"]),
+            ("Sales Team", ["100005", "100006"]),
+            ("Marketing Team", ["100007"]),
+            ("Warehouse", ["100008", "100009", "100010"]),
+            ("Customer Service", ["100011", "100012"]),
         ]
 
         for dept_name, emp_badges in dept_memberships:
@@ -1071,7 +1071,7 @@ def generate_dummy_data():
         print(f"  - Timeclock entries: {entry_count}")
         print(f"  - Event logs: Auto-generated from API calls")
         print(f"\nLogin credentials: Any badge number / password123")
-        print(f"   Admin user: EMP001 / password123\n")
+        print(f"   Admin user: 100001 / password123\n")
 
     except Exception as e:
         print(f"\n[ERROR] Error generating dummy data: {e}")

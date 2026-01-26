@@ -129,6 +129,13 @@ export class UserService {
   }
 
   /**
+   * Update user by ID
+   */
+  updateUser(id: number, userData: Partial<UserBase>): Observable<User> {
+    return this.http.put<User>(`${this.baseUrl}/${id}`, userData);
+  }
+
+  /**
    * Delete user by ID
    */
   deleteUser(id: number): Observable<void> {

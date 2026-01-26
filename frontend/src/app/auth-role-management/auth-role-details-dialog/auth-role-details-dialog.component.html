@@ -1,0 +1,69 @@
+<h2 mat-dialog-title>
+  <mat-icon>security</mat-icon>
+  {{ data.authRole.name }}
+</h2>
+
+<mat-dialog-content>
+  <div class="details-content">
+    <!-- Permissions Section -->
+    <div class="permissions-section">
+      <h3>
+        <mat-icon>verified_user</mat-icon>
+        Permissions ({{ data.authRole.permissions.length }})
+      </h3>
+
+      <div class="permissions-by-category" *ngIf="data.authRole.permissions.length > 0">
+        <div *ngFor="let category of categoryKeys" class="category-group">
+          <div class="category-header">
+            <mat-icon>{{ getCategoryIcon(category) }}</mat-icon>
+            <span>{{ getCategoryName(category) }}</span>
+          </div>
+          <mat-chip-set>
+            <mat-chip *ngFor="let action of permissionsByCategory[category]">
+              {{ action }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <p *ngIf="data.authRole.permissions.length === 0" class="no-items">
+        No permissions assigned to this role
+      </p>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Assigned Users Section -->
+    <div class="users-section">
+      <h3>
+        <mat-icon>people</mat-icon>
+        Assigned Users ({{ assignedUsers.length }})
+      </h3>
+
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      </div>
+
+      <div *ngIf="!isLoading && assignedUsers.length > 0" class="users-list">
+        <mat-chip-set>
+          <mat-chip *ngFor="let user of assignedUsers">
+            <mat-icon matChipAvatar>person</mat-icon>
+            {{ user.badge_number }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <p *ngIf="!isLoading && assignedUsers.length === 0" class="no-items">
+        No users assigned to this role
+      </p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+  <button mat-raised-button color="primary" (click)="editRole()">
+    <mat-icon>edit</mat-icon>
+    Edit Role
+  </button>
+</mat-dialog-actions>

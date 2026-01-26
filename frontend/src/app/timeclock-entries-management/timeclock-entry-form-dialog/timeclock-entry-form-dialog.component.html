@@ -1,0 +1,129 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ isEditMode ? "edit" : "add_alarm" }}</mat-icon>
+  {{ isEditMode ? "Edit" : "Add Manual" }} Time Entry
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="entryForm" (ngSubmit)="submitForm()">
+    <div class="form-section">
+      <h3>Employee</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Employee (Badge Number)</mat-label>
+          <input
+            matInput
+            formControlName="badge_number"
+            [matAutocomplete]="auto"
+            placeholder="Search by badge number or name"
+          />
+          <mat-autocomplete
+            #auto="matAutocomplete"
+            [displayWith]="displayEmployee.bind(this)"
+            (optionSelected)="onEmployeeSelected($event.option.value)"
+          >
+            <mat-option
+              *ngFor="let employee of filteredEmployees$ | async"
+              [value]="employee.badge_number"
+            >
+              <span class="employee-option">
+                <span class="badge">{{ employee.badge_number }}</span>
+                <span class="name"
+                  >{{ employee.first_name }} {{ employee.last_name }}</span
+                >
+              </span>
+            </mat-option>
+          </mat-autocomplete>
+          <mat-error *ngIf="entryForm.get('badge_number')?.hasError('required')">
+            Employee is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Clock In</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="clockInPicker"
+            formControlName="clock_in_date"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="clockInPicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #clockInPicker></mat-datepicker>
+          <mat-error *ngIf="entryForm.get('clock_in_date')?.hasError('required')">
+            Clock in date is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Time</mat-label>
+          <input
+            matInput
+            type="time"
+            formControlName="clock_in_time"
+            placeholder="HH:MM"
+          />
+          <mat-error *ngIf="entryForm.get('clock_in_time')?.hasError('required')">
+            Clock in time is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Clock Out (Optional)</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="clockOutPicker"
+            formControlName="clock_out_date"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="clockOutPicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #clockOutPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Time</mat-label>
+          <input
+            matInput
+            type="time"
+            formControlName="clock_out_time"
+            placeholder="HH:MM"
+          />
+        </mat-form-field>
+      </div>
+      <p class="hint-text">
+        Leave clock out empty if the employee is still clocked in.
+      </p>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <div class="spacer"></div>
+  <button mat-button (click)="cancelForm()" type="button">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="submitForm()"
+    [disabled]="entryForm.invalid || isLoading"
+    type="button"
+  >
+    <mat-progress-spinner
+      *ngIf="isLoading"
+      diameter="20"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Entry' }}</span>
+  </button>
+</mat-dialog-actions>

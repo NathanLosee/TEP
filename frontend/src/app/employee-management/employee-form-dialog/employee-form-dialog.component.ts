@@ -13,6 +13,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
   MAT_DIALOG_DATA,
+  MatDialog,
   MatDialogActions,
   MatDialogContent,
   MatDialogRef,
@@ -24,10 +25,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Employee, EmployeeService } from '../../../services/employee.service';
 import { Department, DepartmentService } from '../../../services/department.service';
 import { OrgUnit, OrgUnitService } from '../../../services/org-unit.service';
 import { HolidayGroup, HolidayGroupService } from '../../../services/holiday-group.service';
+import { ManagerSearchDialogComponent } from '../manager-search-dialog/manager-search-dialog.component';
 
 export interface EmployeeFormDialogData {
   editEmployee?: Employee | null;
@@ -57,6 +60,7 @@ export interface EmployeeFormDialogData {
     MatDialogActions,
     MatSelectModule,
     MatCheckboxModule,
+    MatTooltipModule,
   ],
   templateUrl: './employee-form-dialog.component.html',
   styleUrl: './employee-form-dialog.component.scss',
@@ -68,6 +72,7 @@ export class EmployeeFormDialogComponent {
   private orgUnitService = inject(OrgUnitService);
   private holidayGroupService = inject(HolidayGroupService);
   private dialogRef = inject(MatDialogRef<EmployeeFormDialogComponent>);
+  private dialog = inject(MatDialog);
   public data = inject(MAT_DIALOG_DATA) as EmployeeFormDialogData;
 
   employeeForm!: FormGroup;
@@ -79,10 +84,20 @@ export class EmployeeFormDialogComponent {
   holidayGroups: HolidayGroup[] = [];
   managers: Employee[] = [];
 
+  // Selected manager for display
+  selectedManager: Employee | null = null;
+
   constructor() {
     this.isEditMode = !!this.data.editEmployee;
     this.initializeForm();
     this.loadFormData();
+    this.initializeSelectedManager();
+  }
+
+  private initializeSelectedManager() {
+    if (this.data.editEmployee?.manager) {
+      this.selectedManager = this.data.editEmployee.manager;
+    }
   }
 
   private initializeForm() {
@@ -100,12 +115,12 @@ export class EmployeeFormDialogComponent {
         [Validators.required],
       ],
       payroll_type: [
-        this.data.editEmployee?.payroll_type || 'Hourly',
+        this.data.editEmployee?.payroll_type || 'hourly',
         [Validators.required],
       ],
       payroll_sync: [this.data.editEmployee?.payroll_sync || null],
       workweek_type: [
-        this.data.editEmployee?.workweek_type || 'Standard',
+        this.data.editEmployee?.workweek_type || 'standard',
         [Validators.required],
       ],
       time_type: [this.data.editEmployee?.time_type || true],
@@ -173,5 +188,32 @@ export class EmployeeFormDialogComponent {
 
   cancelForm() {
     this.dialogRef.close();
+  }
+
+  openManagerSearch() {
+    const dialogRef = this.dialog.open(ManagerSearchDialogComponent, {
+      width: '500px',
+      data: {
+        managers: this.managers,
+        currentManagerId: this.employeeForm.get('manager_id')?.value,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: Employee | null | undefined) => {
+      if (result !== undefined) {
+        // result can be null (no manager) or an Employee
+        this.selectedManager = result;
+        this.employeeForm.patchValue({
+          manager_id: result?.id || null,
+        });
+      }
+    });
+  }
+
+  clearManager() {
+    this.selectedManager = null;
+    this.employeeForm.patchValue({
+      manager_id: null,
+    });
   }
 }

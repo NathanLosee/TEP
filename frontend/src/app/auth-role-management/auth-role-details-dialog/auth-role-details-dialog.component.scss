@@ -1,0 +1,119 @@
+@use '../../../styles/common' as *;
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--sys-on-surface);
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  mat-icon {
+    color: var(--sys-primary);
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+.details-content {
+  min-width: 400px;
+  max-width: 600px;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: $gap-sm;
+    margin: $spacing-md 0;
+    color: var(--sys-on-surface);
+    font-size: $font-size-lg;
+    font-weight: 600;
+
+    mat-icon {
+      color: var(--sys-primary);
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  .permissions-section {
+    margin-bottom: $spacing-md;
+
+    .permissions-by-category {
+      display: flex;
+      flex-direction: column;
+      gap: $gap-md;
+
+      .category-group {
+        .category-header {
+          display: flex;
+          align-items: center;
+          gap: $gap-xs;
+          margin-bottom: $spacing-xs;
+          font-size: $font-size-sm;
+          font-weight: 500;
+          color: var(--sys-on-surface-variant);
+
+          mat-icon {
+            font-size: 1rem;
+            width: 1rem;
+            height: 1rem;
+            color: var(--sys-primary);
+          }
+        }
+
+        mat-chip-set {
+          mat-chip {
+            font-size: $font-size-xs;
+          }
+        }
+      }
+    }
+  }
+
+  .users-section {
+    margin-top: $spacing-md;
+
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      padding: $padding-lg;
+    }
+
+    .users-list {
+      mat-chip {
+        mat-icon {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+        }
+      }
+    }
+  }
+
+  .no-items {
+    color: var(--sys-on-surface-variant);
+    font-style: italic;
+    margin: $spacing-sm 0;
+  }
+
+  mat-divider {
+    margin: $spacing-md 0;
+  }
+}
+
+mat-dialog-actions {
+  padding: $padding-md;
+  gap: $gap-sm;
+
+  button {
+    mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-right: $spacing-xs;
+    }
+  }
+}

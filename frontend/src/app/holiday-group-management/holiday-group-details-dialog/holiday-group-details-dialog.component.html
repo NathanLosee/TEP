@@ -5,23 +5,33 @@
 
 <mat-dialog-content>
   <div class="holiday-content">
-    <div
-      class="holidays-list"
+    <mat-accordion
       *ngIf="holidayGroup.holidays.length > 0; else noHolidays"
+      class="holidays-accordion"
+      multi
     >
-      <div
-        *ngFor="let holiday of holidayGroup.holidays; let i = index"
-        class="holiday-item"
+      <mat-expansion-panel
+        *ngFor="let holiday of sortedHolidays; let i = index"
+        [class.past-holiday]="isPastHoliday(holiday)"
+        [expanded]="false"
       >
-        <div class="holiday-header">
-          <span class="holiday-name">
-            {{ holiday.name }}
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="holiday-name">
+              {{ holiday.name }}
+            </span>
+          </mat-panel-title>
+          <mat-panel-description>
+            <mat-chip *ngIf="isPastHoliday(holiday)" class="past-badge">
+              <mat-icon>history</mat-icon>
+              Passed
+            </mat-chip>
             <mat-chip *ngIf="holiday.is_recurring" class="recurring-badge">
               <mat-icon>repeat</mat-icon>
               Recurring
             </mat-chip>
-          </span>
-        </div>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
 
         <div class="holiday-info">
           <div *ngIf="holiday.is_recurring" class="recurring-details">
@@ -42,19 +52,15 @@
               <span *ngIf="getStartDate(holiday).getTime() !== getEndDate(holiday).getTime()">
                 - {{ getEndDate(holiday) | date : "MMM d, y" }}
               </span>
-              <mat-chip class="duration-chip"
-                >{{
-                  getDurationDays(holiday)
-                }}
-                day{{
-                  getDurationDays(holiday) !== 1 ? "s" : ""
-                }}</mat-chip
-              >
+              <mat-chip class="duration-chip">
+                {{ getDurationDays(holiday) }}
+                day{{ getDurationDays(holiday) !== 1 ? "s" : "" }}
+              </mat-chip>
             </span>
           </div>
         </div>
-      </div>
-    </div>
+      </mat-expansion-panel>
+    </mat-accordion>
 
     <ng-template #noHolidays>
       <div class="no-holidays">

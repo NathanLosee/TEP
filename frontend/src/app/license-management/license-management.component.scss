@@ -2,12 +2,40 @@
 
 .license-container {
   max-width: 800px;
-  margin: $spacing-xxl auto;
-  padding: 0 $padding-md;
+  margin: 0 auto;
+  padding: $padding-lg;
+}
 
-  h1 {
-    margin-bottom: $spacing-xxl;
-    color: var(--sys-on-surface);
+// Page header styling
+.page-header {
+  margin-bottom: $spacing-xxl;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $gap-md;
+  }
+
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: $gap-md;
+
+    .page-icon {
+      font-size: 2.5rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      color: var(--sys-primary);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 500;
+      color: var(--sys-on-surface);
+    }
   }
 }
 
@@ -15,47 +43,204 @@
   @extend .loading-container;
 }
 
-.status-card,
-.activation-card,
-.help-card {
+// Status card with colored backgrounds
+.status-card {
   @extend .card-container;
   margin-bottom: $spacing-xxl;
+  overflow: hidden;
+
+  mat-card-header {
+    padding: $padding-md $padding-lg;
+    margin: (-$padding-lg) (-$padding-lg) $padding-md (-$padding-lg);
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: $gap-sm;
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 0;
+
+      mat-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+  }
+
+  &.status-card-active {
+    mat-card-header {
+      background: linear-gradient(135deg, var(--sys-primary-container), var(--sys-surface-variant));
+
+      mat-card-title {
+        color: var(--sys-on-primary-container);
+
+        mat-icon {
+          color: var(--sys-primary);
+        }
+      }
+    }
+  }
+
+  &.status-card-inactive {
+    mat-card-header {
+      background: linear-gradient(135deg, var(--sys-error-container), var(--sys-surface-variant));
+
+      mat-card-title {
+        color: var(--sys-on-error-container);
+
+        mat-icon {
+          color: var(--sys-error);
+        }
+      }
+    }
+  }
+}
+
+.activation-card,
+.help-card,
+.machine-id-card {
+  @extend .card-container;
+  margin-bottom: $spacing-xxl;
+
+  mat-card-header {
+    margin-bottom: $spacing-md;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: $gap-sm;
+      font-size: 1.1rem;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: var(--sys-primary);
+      }
+    }
+  }
+}
+
+// Status badge styling
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $gap-sm;
+  padding: $padding-sm $padding-md;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-lg;
+  font-weight: 500;
+  margin-bottom: $spacing-lg;
+
+  mat-icon {
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  &.active {
+    background: var(--sys-primary-container);
+    color: var(--sys-on-primary-container);
+
+    mat-icon {
+      color: var(--sys-primary);
+    }
+  }
+
+  &.inactive {
+    background: var(--sys-error-container);
+    color: var(--sys-on-error-container);
+
+    mat-icon {
+      color: var(--sys-error);
+    }
+  }
+}
+
+// License details styling
+.license-details {
+  display: flex;
+  flex-direction: column;
+  gap: $gap-md;
+  padding: $padding-md;
+  background: var(--sys-surface-variant);
+  border-radius: $border-radius-md;
+  margin-bottom: $spacing-lg;
+
+  .detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: $gap-md;
+
+    > mat-icon {
+      color: var(--sys-primary);
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+
+      label {
+        font-size: $font-size-sm;
+        color: var(--sys-on-surface-variant);
+        font-weight: 500;
+      }
+
+      span {
+        color: var(--sys-on-surface);
+        word-break: break-all;
+      }
+
+      .license-key {
+        font-family: 'Roboto Mono', monospace;
+        font-size: $font-size-sm;
+        background: var(--sys-surface);
+        padding: $padding-xs $padding-sm;
+        border-radius: $border-radius-sm;
+        border: 1px solid var(--sys-outline-variant);
+      }
+    }
+  }
 }
 
 .status-active,
 .status-inactive {
   display: flex;
-  align-items: flex-start;
-  gap: $gap-md;
-  margin-bottom: $spacing-lg;
-
-  mat-icon {
-    font-size: 3rem;
-    width: 3rem;
-    height: 3rem;
-    margin-top: $spacing-xs;
-  }
-
-  h3 {
-    margin: 0 0 $spacing-xs 0;
-    color: var(--sys-on-surface);
-  }
-
-  p {
-    margin: $spacing-xs 0;
-    color: var(--sys-on-surface-variant);
-  }
+  flex-direction: column;
 }
 
-.status-active {
-  mat-icon {
-    color: var(--sys-primary);
-  }
+.status-message {
+  color: var(--sys-on-surface-variant);
+  margin: 0;
+  font-size: $font-size-base;
 }
 
-.status-inactive {
-  mat-icon {
-    color: var(--sys-error);
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: $spacing-md;
+  border-top: 1px solid var(--sys-outline-variant);
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: $gap-xs;
+
+    mat-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
   }
 }
 
@@ -71,51 +256,124 @@
 
   button {
     min-width: 150px;
+    display: flex;
+    align-items: center;
+    gap: $gap-xs;
+
+    mat-spinner {
+      margin-right: $spacing-xs;
+    }
+
+    mat-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
   }
 }
 
+// Help card sections
 .help-card {
   mat-card-content {
-    h4 {
-      margin-top: $spacing-md;
-      margin-bottom: $spacing-xs;
-      color: var(--sys-on-surface);
+    .help-section {
+      margin-bottom: $spacing-lg;
 
-      &:first-child {
-        margin-top: 0;
+      &:last-child {
+        margin-bottom: 0;
       }
-    }
 
-    p {
-      margin: $spacing-xs 0;
-      color: var(--sys-on-surface-variant);
-    }
+      h4 {
+        display: flex;
+        align-items: center;
+        gap: $gap-sm;
+        margin: 0 0 $spacing-sm 0;
+        font-size: $font-size-base;
+        font-weight: 500;
+        color: var(--sys-on-surface);
 
-    ul {
-      margin: $spacing-xs 0;
-      padding-left: $spacing-lg;
+        mat-icon {
+          font-size: 1.25rem;
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--sys-primary);
+        }
+      }
 
-      li {
-        margin: $spacing-xs 0;
+      p {
+        margin: 0;
         color: var(--sys-on-surface-variant);
+        line-height: 1.6;
       }
+
+      ul {
+        margin: $spacing-xs 0 0 0;
+        padding-left: $spacing-xl;
+
+        li {
+          margin: $spacing-xs 0;
+          color: var(--sys-on-surface-variant);
+          line-height: 1.5;
+        }
+      }
+    }
+  }
+}
+
+// Machine ID card styling
+.machine-id-card {
+  .machine-id-description {
+    margin: 0 0 $spacing-md 0;
+    color: var(--sys-on-surface-variant);
+  }
+
+  .machine-id-box {
+    display: flex;
+    align-items: center;
+    gap: $gap-sm;
+    background: var(--sys-surface-variant);
+    border-radius: $border-radius-md;
+    padding: $padding-sm $padding-md;
+    border: 1px solid var(--sys-outline-variant);
+
+    .machine-id-value {
+      flex: 1;
+      font-family: 'Roboto Mono', monospace;
+      font-size: $font-size-sm;
+      color: var(--sys-on-surface);
+      word-break: break-all;
+      user-select: all;
+    }
+
+    button {
+      flex-shrink: 0;
+      color: var(--sys-primary);
     }
   }
 }
 
 @media (max-width: $breakpoint-sm) {
   .license-container {
-    padding: 0 $padding-xs;
+    padding: $padding-sm;
+  }
 
-    h1 {
-      font-size: 1.5rem;
+  .page-header {
+    .title-section {
+      .page-icon {
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
     }
   }
 
-  .status-active,
-  .status-inactive {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .license-details {
+    .detail-row {
+      flex-direction: column;
+      gap: $gap-xs;
+    }
   }
 }

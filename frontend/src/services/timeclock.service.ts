@@ -16,6 +16,12 @@ export interface TimeclockEntry {
   last_name: string;
 }
 
+export interface TimeclockEntryCreate {
+  badge_number: string;
+  clock_in: string;
+  clock_out?: string | null;
+}
+
 /**
  * Service for handling clocking in and out of employees
  * @class ClockerService
@@ -107,15 +113,26 @@ export class TimeclockService {
   }
 
   /**
+   * Create a new manual timeclock entry
+   * @param entry The timeclock entry data
+   * @returns The created timeclock entry
+   */
+  createTimeclockEntry(
+    entry: TimeclockEntryCreate
+  ): Observable<TimeclockEntry> {
+    return this.http.post<TimeclockEntry>(`${this.baseUrl}`, entry);
+  }
+
+  /**
    * Update a timeclock entry by ID
    * @param id The ID of the timeclock entry
    * @returns The updated timeclock entry
    */
   updateTimeclockEntry(
     id: number,
-    update: TimeclockEntry
+    update: Partial<TimeclockEntry>
   ): Observable<TimeclockEntry> {
-    return this.http.post<TimeclockEntry>(`${this.baseUrl}/${id}`, update);
+    return this.http.put<TimeclockEntry>(`${this.baseUrl}/${id}`, update);
   }
 
   /**

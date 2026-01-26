@@ -9,14 +9,17 @@ from pydantic import BaseModel, Field
 class LicenseActivate(BaseModel):
     """Schema for license activation request.
 
+    The user enters a license_key, and the backend contacts the license
+    server to get an activation_key for this machine.
+
     Attributes:
-        license_key (str): The Ed25519 signature that serves as the license key.
-        server_id (str): Optional machine identifier for binding.
+        license_key (str): The unique license key (word or hex format).
 
     """
 
-    license_key: str = Field(..., min_length=64, max_length=256, description="Ed25519 signature in hex format")
-    server_id: Optional[str] = None
+    license_key: str = Field(
+        ..., min_length=64, description="License key in word or hex format"
+    )
 
 
 class LicenseStatus(BaseModel):
@@ -26,14 +29,14 @@ class LicenseStatus(BaseModel):
         is_active (bool): Whether a license is currently active.
         license_key (str): The active license key if one exists.
         activated_at (datetime): When the license was activated.
-        server_id (str): Machine identifier if bound.
+        needs_reactivation (bool): True if a license exists but needs re-activation.
 
     """
 
     is_active: bool
     license_key: Optional[str] = None
     activated_at: Optional[datetime] = None
-    server_id: Optional[str] = None
+    needs_reactivation: bool = False
 
 
 class LicenseExtended(BaseModel):
@@ -42,16 +45,16 @@ class LicenseExtended(BaseModel):
     Attributes:
         id (int): License's unique identifier.
         license_key (str): The license key.
+        activation_key (str): The signed activation key.
         activated_at (datetime): When the license was activated.
         is_active (bool): Whether the license is currently active.
-        server_id (str): Optional machine identifier.
 
     """
 
     id: int
     license_key: str
+    activation_key: str
     activated_at: datetime
     is_active: bool
-    server_id: Optional[str] = None
 
     model_config = {"from_attributes": True}

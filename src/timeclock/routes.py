@@ -25,13 +25,18 @@ from src.timeclock.constants import (
 )
 from src.timeclock.repository import (
     check_status as check_status_from_db,
+    create_timeclock_entry as create_timeclock_entry_in_db,
     delete_timeclock_entry,
     get_timeclock_entries as get_timeclock_entries_from_db,
     get_timeclock_entry_by_id,
     timeclock as timeclock_in_db,
     update_timeclock_entry_by_id as update_timeclock_entry_by_id_in_db,
 )
-from src.timeclock.schemas import TimeclockEntryBase, TimeclockEntryWithName
+from src.timeclock.schemas import (
+    TimeclockEntryBase,
+    TimeclockEntryCreate,
+    TimeclockEntryWithName,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["timeclock"])
 
@@ -168,6 +173,42 @@ def get_employee_history(
     return get_timeclock_entries_from_db(
         start_timestamp, end_timestamp, badge_number, None, None, db
     )
+
+
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TimeclockEntryBase,
+)
+def create_manual_timeclock_entry(
+    request: TimeclockEntryCreate,
+    db: Session = Depends(get_db),
+    caller_badge: str = Security(
+        requires_permission, scopes=["timeclock.create"]
+    ),
+):
+    """Create a manual timeclock entry.
+
+    Args:
+        request (TimeclockEntryCreate): Request data to create timeclock entry.
+        db (Session): Database session for current request.
+
+    Returns:
+        TimeclockEntryBase: The created timeclock entry.
+
+    """
+    # Validate employee exists
+    employee = get_employee_by_badge_number_from_db(request.badge_number, db)
+    validate(
+        employee,
+        EXC_MSG_EMPLOYEE_NOT_FOUND,
+        status.HTTP_404_NOT_FOUND,
+    )
+
+    timeclock_entry = create_timeclock_entry_in_db(request, db)
+    log_args = {"timeclock_entry_id": timeclock_entry.id}
+    create_event_log(IDENTIFIER, "MANUAL_CREATE", log_args, caller_badge, db)
+    return timeclock_entry
 
 
 @router.get(

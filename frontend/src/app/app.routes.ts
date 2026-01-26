@@ -13,6 +13,7 @@ import { AuthRoleManagementComponent } from './auth-role-management/auth-role-ma
 import { EventLogManagementComponent } from './event-log-management/event-log-management.component';
 import { RegisteredBrowserManagementComponent } from './registered-browser-management/registered-browser-management.component';
 import { LicenseManagementComponent } from './license-management/license-management.component';
+import { SystemSettingsComponent } from './system-settings/system-settings.component';
 
 export const routes: Routes = [
   {
@@ -90,6 +91,11 @@ export const routes: Routes = [
         title: 'License Management',
         path: 'license',
         component: LicenseManagementComponent,
+      },
+      {
+        title: 'System Settings',
+        path: 'settings',
+        component: SystemSettingsComponent,
       },
     ],
   },

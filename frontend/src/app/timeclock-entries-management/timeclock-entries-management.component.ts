@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -11,24 +11,28 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatTableDataSource } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import {
-  TimeclockEntry,
-  TimeclockService,
-} from '../../services/timeclock.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TimeclockService } from '../../services/timeclock.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { TimeclockEntryFormDialogComponent } from './timeclock-entry-form-dialog/timeclock-entry-form-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import {
+  GenericTableComponent,
+  TableCellDirective,
+} from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
 
 interface TimeclockEntryListing {
   id?: number;
@@ -47,9 +51,6 @@ interface TimeclockEntryListing {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -58,34 +59,82 @@ interface TimeclockEntryListing {
     MatDatepickerModule,
     MatNativeDateModule,
     MatSelectModule,
-    MatDialogModule,
     MatSnackBarModule,
     MatTooltipModule,
-    MatProgressSpinnerModule,
     MatChipsModule,
     MatTabsModule,
+    MatDialogModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
+    TableCellDirective,
   ],
   templateUrl: './timeclock-entries-management.component.html',
   styleUrl: './timeclock-entries-management.component.scss',
 })
-export class TimeclockEntriesManagementComponent implements OnInit, AfterViewInit {
+export class TimeclockEntriesManagementComponent implements OnInit {
   private timeclockService = inject(TimeclockService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   readonly errorDialog = inject(ErrorDialogComponent);
 
-  @ViewChild(MatSort) sort!: MatSort;
-
   dataSource = new MatTableDataSource<TimeclockEntryListing>([]);
-  displayedColumns: string[] = [
-    'badge_number',
-    'employee_name',
-    'clock_in',
-    'clock_out',
-    'total_hours',
-    'status',
-    'actions',
+
+  // Table configuration
+  columns: TableColumn<TimeclockEntryListing>[] = [
+    {
+      key: 'badge_number',
+      header: 'Badge #',
+      type: 'template',
+      sortable: true,
+    },
+    {
+      key: 'employee_name',
+      header: 'Employee',
+      type: 'icon-text',
+      icon: 'person',
+      sortable: true,
+    },
+    {
+      key: 'clock_in',
+      header: 'Clock In',
+      type: 'template',
+      sortable: true,
+    },
+    {
+      key: 'clock_out',
+      header: 'Clock Out',
+      type: 'template',
+      sortable: true,
+    },
+    {
+      key: 'total_hours',
+      header: 'Total Hours',
+      type: 'template',
+      sortable: true,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      type: 'template',
+      sortable: false,
+    },
+  ];
+
+  actions: TableAction<TimeclockEntryListing>[] = [
+    {
+      icon: 'edit',
+      tooltip: 'Edit Entry',
+      action: 'edit',
+      permission: 'timeclock.update',
+    },
+    {
+      icon: 'delete',
+      tooltip: 'Delete Entry',
+      action: 'delete',
+      color: 'warn',
+      permission: 'timeclock.delete',
+    },
   ];
 
   filterForm: FormGroup;
@@ -112,10 +161,6 @@ export class TimeclockEntriesManagementComponent implements OnInit, AfterViewIni
     this.setDefaultDateRange();
     this.loadTimeEntries();
     this.setupFilterForm();
-  }
-
-  ngAfterViewInit() {
-    this.dataSource.sort = this.sort;
   }
 
   setDefaultDateRange() {
@@ -178,15 +223,72 @@ export class TimeclockEntriesManagementComponent implements OnInit, AfterViewIni
   }
 
   editEntry(entry: TimeclockEntryListing) {
-    this.showSnackBar(`Edit entry for ${entry.badge_number}`, 'info');
+    const dialogRef = this.dialog.open(TimeclockEntryFormDialogComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      data: {
+        editEntry: {
+          id: entry.id,
+          badge_number: entry.badge_number,
+          employee_name: entry.employee_name,
+          clock_in: entry.clock_in,
+          clock_out: entry.clock_out,
+        },
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.loadTimeEntries();
+        this.showSnackBar('Time entry updated successfully', 'success');
+      }
+    });
   }
 
   deleteEntry(entry: TimeclockEntryListing) {
-    this.showSnackBar(`Delete entry for ${entry.badge_number}`, 'info');
+    if (
+      confirm(
+        `Are you sure you want to delete the time entry for ${entry.employee_name} (${entry.badge_number})? This action cannot be undone.`
+      )
+    ) {
+      this.isLoading = true;
+      this.timeclockService.deleteTimeclockEntry(entry.id!).subscribe({
+        next: () => {
+          this.loadTimeEntries();
+          this.showSnackBar('Time entry deleted successfully', 'success');
+        },
+        error: (error) => {
+          this.errorDialog.openErrorDialog('Failed to delete time entry', error);
+          this.isLoading = false;
+        },
+      });
+    }
+  }
+
+  onTableAction(event: TableActionEvent<TimeclockEntryListing>) {
+    switch (event.action) {
+      case 'edit':
+        this.editEntry(event.row);
+        break;
+      case 'delete':
+        this.deleteEntry(event.row);
+        break;
+    }
   }
 
   addManualEntry() {
-    this.showSnackBar('Add manual entry feature coming soon', 'info');
+    const dialogRef = this.dialog.open(TimeclockEntryFormDialogComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      data: {},
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.loadTimeEntries();
+        this.showSnackBar('Time entry created successfully', 'success');
+      }
+    });
   }
 
   calculateTotalHours(clockIn: Date, clockOut?: Date): number {

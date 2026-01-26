@@ -6,6 +6,7 @@ import { Employee } from './employee.service';
 export interface OrgUnit {
   id?: number;
   name: string;
+  employee_count?: number;
 }
 
 /**

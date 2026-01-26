@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -9,24 +9,33 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { BrowserUuidService } from '../../services/browser-uuid.service';
 import {
   RegisteredBrowser,
   RegisteredBrowserService,
 } from '../../services/registered-browser.service';
-import { BrowserUuidService } from '../../services/browser-uuid.service';
-import { ErrorDialogComponent, AppError } from '../error-dialog/error-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import {
+  AppError,
+  ErrorDialogComponent,
+} from '../error-dialog/error-dialog.component';
+import {
+  GenericTableComponent,
+  TableCellDirective,
+} from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
 
 @Component({
   selector: 'app-registered-browser-management',
@@ -35,20 +44,19 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
     MatCardModule,
     MatButtonModule,
-    MatCheckboxModule,
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatDialogModule,
     MatSnackBarModule,
     MatChipsModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatTabsModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
+    TableCellDirective,
   ],
   templateUrl: './registered-browser-management.component.html',
   styleUrl: './registered-browser-management.component.scss',
@@ -58,16 +66,44 @@ export class RegisteredBrowserManagementComponent implements OnInit {
   private browserUuidService = inject(BrowserUuidService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
   readonly errorDialog = inject(ErrorDialogComponent);
 
   browsers: RegisteredBrowser[] = [];
-  displayedColumns: string[] = [
-    'browser_name',
-    'browser_uuid',
-    'last_seen',
-    'is_active',
-    'actions',
+
+  // Table configuration
+  columns: TableColumn<RegisteredBrowser>[] = [
+    {
+      key: 'browser_name',
+      header: 'Browser Name',
+      type: 'icon-text',
+      icon: 'computer',
+    },
+    {
+      key: 'browser_uuid',
+      header: 'Browser UUID',
+      type: 'template',
+    },
+    {
+      key: 'last_seen',
+      header: 'Last Seen',
+      type: 'date',
+      dateFormat: 'short',
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      type: 'template',
+    },
+  ];
+
+  actions: TableAction<RegisteredBrowser>[] = [
+    {
+      icon: 'delete',
+      tooltip: 'Revoke Browser',
+      action: 'delete',
+      color: 'warn',
+      permission: 'registered_browser.delete',
+    },
   ];
 
   registerForm: FormGroup;
@@ -165,6 +201,14 @@ export class RegisteredBrowserManagementComponent implements OnInit {
     }
   }
 
+  onTableAction(event: TableActionEvent<RegisteredBrowser>) {
+    switch (event.action) {
+      case 'delete':
+        this.deleteBrowser(event.row);
+        break;
+    }
+  }
+
   async registerBrowser() {
     if (this.registerForm.valid) {
       this.isRegistering = true;
@@ -229,44 +273,6 @@ export class RegisteredBrowserManagementComponent implements OnInit {
           this.errorDialog.openErrorDialog('Failed to revoke browser', error);
         },
       });
-    }
-  }
-
-  async useCurrentBrowserUuid() {
-    if (this.currentBrowserUuid && this.currentBrowserName) {
-      try {
-        const fingerprint =
-          await this.browserUuidService.generateFingerprint();
-        const browserData = {
-          browser_uuid: this.currentBrowserUuid,
-          browser_name: this.currentBrowserName,
-          fingerprint_hash: fingerprint,
-          user_agent: navigator.userAgent,
-        };
-
-        this.isRegistering = true;
-        this.browserService.registerBrowser(browserData).subscribe({
-          next: () => {
-            this.showSnackBar('Browser reregistered successfully', 'success');
-            this.loadBrowsers();
-            this.isRegistering = false;
-          },
-          error: (error) => {
-            this.errorDialog.openErrorDialog(
-              'Failed to reregister browser',
-              error
-            );
-            this.isRegistering = false;
-          },
-        });
-      } catch (error) {
-        this.errorDialog.openErrorDialog(
-          'Failed to generate browser fingerprint',
-          error as AppError
-        );
-      }
-    } else {
-      this.showSnackBar('No browser registration found', 'info');
     }
   }
 

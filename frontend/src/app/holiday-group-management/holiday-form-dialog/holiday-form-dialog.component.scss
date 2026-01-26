@@ -14,6 +14,103 @@
   gap: 1rem;
 }
 
+.holidays-accordion {
+  display: block;
+
+  mat-expansion-panel {
+    margin-bottom: 0.5rem;
+    background: var(--sys-surface-variant);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  mat-expansion-panel-header {
+    mat-panel-title {
+      .holiday-name {
+        font-weight: 500;
+        color: var(--sys-on-surface);
+      }
+    }
+
+    mat-panel-description {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: flex-end;
+
+      .recurring-badge {
+        font-size: 0.75rem;
+        padding: 0 0.5rem;
+        height: 24px;
+
+        mat-icon {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+          margin-right: 0.25rem;
+        }
+      }
+
+      button {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+}
+
+.holiday-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+
+  .basic-fields {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+
+  .recurring-checkbox {
+    padding: 0.5rem 0;
+
+    mat-checkbox {
+      font-size: 0.9rem;
+    }
+  }
+
+  .recurring-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--sys-surface);
+    border-radius: 4px;
+    border-left: 3px solid var(--sys-primary);
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .relative-fields {
+      display: flex;
+      gap: 0.75rem;
+
+      mat-form-field {
+        flex: 1;
+      }
+    }
+  }
+}
+
+// Legacy styles for backwards compatibility
 .holiday-item {
   display: flex;
   flex-direction: column;
@@ -111,6 +208,7 @@ mat-dialog-actions {
     min-width: 90vw;
   }
 
+  .holiday-form-content .basic-fields,
   .holiday-item .basic-fields {
     flex-direction: column;
     align-items: stretch;

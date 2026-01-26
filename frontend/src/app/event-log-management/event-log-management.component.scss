@@ -119,7 +119,15 @@
       }
 
       .mat-column-log {
-        min-width: 300px;
+        max-width: 400px;
+      }
+
+      .log-message-truncated {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 350px;
       }
 
       .mat-column-type {

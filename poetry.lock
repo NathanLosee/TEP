@@ -1335,6 +1335,21 @@ dev = ["abi3audit", "black", "check-manifest", "coverage", "packaging", "pylint"
 test = ["pytest", "pytest-xdist", "setuptools"]
 
 [[package]]
+name = "py-machineid"
+version = "1.0.0"
+description = "Get the unique machine ID of any host (without admin privileges)"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "py_machineid-1.0.0-py3-none-any.whl", hash = "sha256:910df0d5f2663bcf6739d835c4949f4e9cc6bb090a58b3dd766e12e5f768e3b9"},
+    {file = "py_machineid-1.0.0.tar.gz", hash = "sha256:8a902a00fae8c6d6433f463697c21dc4ce98c6e55a2e0535c0273319acb0047a"},
+]
+
+[package.dependencies]
+winregistry = {version = ">=2.0.1,<3.0.0", markers = "sys_platform == \"win32\""}
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
@@ -2555,7 +2570,20 @@ files = [
     {file = "websockets-15.0.1.tar.gz", hash = "sha256:82544de02076bafba038ce055ee6412d68da13ab47f0c60cab827346de828dee"},
 ]
 
+[[package]]
+name = "winregistry"
+version = "2.1.2"
+description = "A Python library for interacting with the Windows registry"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "sys_platform == \"win32\""
+files = [
+    {file = "winregistry-2.1.2-py3-none-any.whl", hash = "sha256:e142548f56fc1fc6b83ddf88baca2e9e18cd6a266d9e00f111e54977dee768cf"},
+    {file = "winregistry-2.1.2.tar.gz", hash = "sha256:50260e1aaba4116f707f86a4e287ffcb1eeae7dc0a0883c6d1776017e693fc69"},
+]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4"
-content-hash = "163222a427d70d17d22ad707039877a92321033ba7baf9d80a4a430f18006016"
+content-hash = "2c9f237dabb96dac383b0168965c65dbbe5f13a76be2643b44ed1459d248ba53"

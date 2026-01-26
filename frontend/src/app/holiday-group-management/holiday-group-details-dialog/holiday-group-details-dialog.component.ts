@@ -9,6 +9,7 @@ import {
   MatDialogContent,
   MatDialogTitle,
 } from '@angular/material/dialog';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { Holiday, HolidayGroup } from '../../../services/holiday-group.service';
 
@@ -23,6 +24,7 @@ import { Holiday, HolidayGroup } from '../../../services/holiday-group.service';
     MatDialogContent,
     MatDialogActions,
     MatDialogClose,
+    MatExpansionModule,
     MatIconModule,
   ],
   templateUrl: './holiday-group-details-dialog.component.html',
@@ -119,5 +121,42 @@ export class HolidayGroupDetailsDialogComponent {
     }
 
     return new Date(year, month, 1);
+  }
+
+  /**
+   * Determines if a holiday has already passed this year
+   */
+  isPastHoliday(holiday: Holiday): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (holiday.is_recurring) {
+      const currentYearDate = this.getCurrentYearDate(holiday);
+      return currentYearDate !== null && currentYearDate < today;
+    } else {
+      const endDate = this.getEndDate(holiday);
+      return endDate < today;
+    }
+  }
+
+  /**
+   * Gets the effective date for sorting (recurring holidays use current year date)
+   */
+  getEffectiveDate(holiday: Holiday): Date {
+    if (holiday.is_recurring) {
+      return this.getCurrentYearDate(holiday) || new Date(this.currentYear, 0, 1);
+    }
+    return this.getStartDate(holiday);
+  }
+
+  /**
+   * Returns holidays sorted earliest to latest
+   */
+  get sortedHolidays(): Holiday[] {
+    return [...this.holidayGroup.holidays].sort((a, b) => {
+      const dateA = this.getEffectiveDate(a);
+      const dateB = this.getEffectiveDate(b);
+      return dateA.getTime() - dateB.getTime();
+    });
   }
 }

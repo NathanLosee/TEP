@@ -117,176 +117,79 @@
             </mat-card-header>
 
             <mat-card-content>
-              <div class="table-container">
-        <table
-          mat-table
-          [dataSource]="dataSource"
-          class="entries-table"
-          matSort
-        >
-          <!-- Badge Number Column -->
-          <ng-container matColumnDef="badge_number">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Badge #</th>
-            <td mat-cell *matCellDef="let entry">
-              <div class="badge-cell">
-                <mat-icon class="badge-icon">badge</mat-icon>
-                <span class="badge-number">{{ entry.badge_number }}</span>
-              </div>
-            </td>
-          </ng-container>
+              <app-generic-table
+                [data]="dataSource"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="isLoading"
+                [enableSort]="true"
+                emptyIcon="schedule"
+                emptyTitle="No time entries found"
+                emptyMessage="Try adjusting your date range or search criteria."
+                [showCreateOnEmpty]="true"
+                createButtonText="Add Manual Entry"
+                createPermission="timeclock.create"
+                (actionClick)="onTableAction($event)"
+                (createClick)="addManualEntry()"
+              >
+                <!-- Badge Number Template -->
+                <ng-template appTableCell="badge_number" let-row>
+                  <div class="badge-cell">
+                    <mat-icon class="badge-icon">badge</mat-icon>
+                    <span class="badge-number">{{ row.badge_number }}</span>
+                  </div>
+                </ng-template>
 
-          <!-- Employee Name Column -->
-          <ng-container matColumnDef="employee_name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
-            <td mat-cell *matCellDef="let entry">
-              <div class="employee-cell">
-                <mat-icon class="employee-icon">person</mat-icon>
-                <span>{{ entry.employee_name }}</span>
-              </div>
-            </td>
-          </ng-container>
+                <!-- Clock In Template -->
+                <ng-template appTableCell="clock_in" let-row>
+                  <div class="time-cell">
+                    <div class="time-date">
+                      {{ row.clock_in | date : "MMM d, y" : userTimezone }}
+                    </div>
+                    <div class="time-value">
+                      {{ row.clock_in | date : "HH:mm" : userTimezone }}
+                    </div>
+                  </div>
+                </ng-template>
 
-          <!-- Clock In Column -->
-          <ng-container matColumnDef="clock_in">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Clock In</th>
-            <td mat-cell *matCellDef="let entry">
-              <div class="time-cell">
-                <div class="time-date">
-                  {{ entry.clock_in | date : "MMM d, y" : userTimezone }}
-                </div>
-                <div class="time-value">
-                  {{ entry.clock_in | date : "HH:mm" : userTimezone }}
-                </div>
-              </div>
-            </td>
-          </ng-container>
+                <!-- Clock Out Template -->
+                <ng-template appTableCell="clock_out" let-row>
+                  <div class="time-cell" *ngIf="row.clock_out; else noClockOut">
+                    <div class="time-date">
+                      {{ row.clock_out | date : "MMM d, y" : userTimezone }}
+                    </div>
+                    <div class="time-value">
+                      {{ row.clock_out | date : "HH:mm" : userTimezone }}
+                    </div>
+                  </div>
+                  <ng-template #noClockOut>
+                    <div class="no-clock-out">
+                      <mat-icon>schedule</mat-icon>
+                      <span>Active</span>
+                    </div>
+                  </ng-template>
+                </ng-template>
 
-          <!-- Clock Out Column -->
-          <ng-container matColumnDef="clock_out">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Clock Out</th>
-            <td mat-cell *matCellDef="let entry">
-              <div class="time-cell" *ngIf="entry.clock_out; else noClockOut">
-                <div class="time-date">
-                  {{ entry.clock_out | date : "MMM d, y" : userTimezone }}
-                </div>
-                <div class="time-value">
-                  {{ entry.clock_out | date : "HH:mm" : userTimezone }}
-                </div>
-              </div>
-              <ng-template #noClockOut>
-                <div class="no-clock-out">
-                  <mat-icon>schedule</mat-icon>
-                  <span>Active</span>
-                </div>
-              </ng-template>
-            </td>
-          </ng-container>
+                <!-- Total Hours Template -->
+                <ng-template appTableCell="total_hours" let-row>
+                  <div class="hours-cell">
+                    <mat-icon class="hours-icon">timer</mat-icon>
+                    <span class="hours-value">{{ row.total_hours || 0 | number : "1.2-2" }}h</span>
+                  </div>
+                </ng-template>
 
-          <!-- Total Hours Column -->
-          <ng-container matColumnDef="total_hours">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>
-              Total Hours
-            </th>
-            <td mat-cell *matCellDef="let entry">
-              <div class="hours-cell">
-                <mat-icon class="hours-icon">timer</mat-icon>
-                <span class="hours-value"
-                  >{{ entry.total_hours || 0 | number : "1.2-2" }}h</span
-                >
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let entry">
-              <mat-chip-listbox>
-                <mat-chip [class]="getStatusClass(entry.status)">
-                  <mat-icon matChipAvatar>
-                    {{
-                      entry.status === "clocked_in"
-                        ? "play_circle"
-                        : entry.status === "clocked_out"
-                        ? "check_circle"
-                        : "warning"
-                    }}
-                  </mat-icon>
-                  {{
-                    entry.status === "clocked_in"
-                      ? "Active"
-                      : entry.status === "clocked_out"
-                      ? "Complete"
-                      : "Incomplete"
-                  }}
-                </mat-chip>
-              </mat-chip-listbox>
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let entry">
-              <div class="action-buttons">
-                <button
-                  mat-icon-button
-                  matTooltip="Edit Entry"
-                  (click)="editEntry(entry)"
-                  [disableIfNoPermission]="'timeclock.update'"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="Delete Entry"
-                  (click)="deleteEntry(entry)"
-                  class="delete-btn"
-                  [disableIfNoPermission]="'timeclock.delete'"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumns"
-            [class]="getStatusClass(row.status)"
-          ></tr>
-        </table>
-      </div>
-
-      <!-- Loading State -->
-      <div *ngIf="isLoading" class="loading-container">
-        <mat-progress-spinner
-          mode="indeterminate"
-          diameter="60"
-        ></mat-progress-spinner>
-        <p>Loading time entries...</p>
-      </div>
-
-      <!-- Empty State -->
-      <div *ngIf="!isLoading && dataSource.data.length === 0" class="empty-state">
-        <mat-icon class="empty-icon">schedule</mat-icon>
-        <h3>No time entries found</h3>
-        <p>Try adjusting your date range or search criteria.</p>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="addManualEntry()"
-          [disableIfNoPermission]="'timeclock.create'"
-          matTooltip="Requires timeclock.create permission"
-          [matTooltipDisabled]="true"
-        >
-          <mat-icon>add</mat-icon>
-          Add Manual Entry
-        </button>
-      </div>
-    </mat-card-content>
-  </mat-card>
+                <!-- Status Template -->
+                <ng-template appTableCell="status" let-row>
+                  <mat-chip [class]="getStatusClass(row.status)">
+                    <mat-icon matChipAvatar>
+                      {{ row.status === "clocked_in" ? "play_circle" : row.status === "clocked_out" ? "check_circle" : "warning" }}
+                    </mat-icon>
+                    {{ row.status === "clocked_in" ? "Active" : row.status === "clocked_out" ? "Complete" : "Incomplete" }}
+                  </mat-chip>
+                </ng-template>
+              </app-generic-table>
+            </mat-card-content>
+          </mat-card>
         </div>
       </mat-tab>
     </mat-tab-group>

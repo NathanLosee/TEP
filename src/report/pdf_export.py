@@ -1,12 +1,15 @@
 """Module for generating PDF reports from report data."""
 
 from io import BytesIO
+from typing import Optional, Tuple
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import (
+    KeepTogether,
     PageBreak,
     Paragraph,
     SimpleDocTemplate,
@@ -19,24 +22,41 @@ from src.report.constants import (
     DETAIL_LEVEL_DETAILED,
     DETAIL_LEVEL_EMPLOYEE_SUMMARY,
     DETAIL_LEVEL_SUMMARY,
+    REPORT_TYPE_DEPARTMENT,
+    REPORT_TYPE_ORG_UNIT,
 )
 from src.report.schemas import EmployeeReportData, ReportResponse
 
 
 def generate_pdf_report(
-    report: ReportResponse, detail_level: str = DETAIL_LEVEL_SUMMARY
+    report: ReportResponse,
+    detail_level: str = DETAIL_LEVEL_SUMMARY,
+    logo_data: Optional[Tuple[bytes, str, str]] = None,
+    company_name: str = "TEP Timeclock",
 ) -> BytesIO:
     """Generate a PDF report from report data.
 
     Args:
         report (ReportResponse): The report data.
         detail_level (str): Level of detail to include.
+        logo_data (tuple): Optional tuple of (logo_bytes, mime_type, filename).
+        company_name (str): Company name for the header.
 
     Returns:
         BytesIO: PDF file buffer.
 
     """
     buffer = BytesIO()
+
+    # Create logo image reader if logo data provided
+    logo_image = None
+    if logo_data and logo_data[0]:
+        try:
+            logo_bytes, mime_type, _ = logo_data
+            logo_image = ImageReader(BytesIO(logo_bytes))
+        except Exception:
+            logo_image = None
+
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
@@ -61,8 +81,27 @@ def generate_pdf_report(
     )
 
     elements.append(
-        Paragraph("Timeclock Report", title_style)
+        Paragraph(f"{company_name} - Timeclock Report", title_style)
     )
+
+    # Add department/org unit subtitle if applicable
+    subtitle_style = ParagraphStyle(
+        "Subtitle",
+        parent=styles["Heading2"],
+        fontSize=16,
+        textColor=colors.HexColor("#424242"),
+        spaceAfter=8,
+        alignment=1,
+    )
+
+    if report.report_type == REPORT_TYPE_DEPARTMENT and report.filter_name:
+        elements.append(
+            Paragraph(f"Department: {report.filter_name}", subtitle_style)
+        )
+    elif report.report_type == REPORT_TYPE_ORG_UNIT and report.filter_name:
+        elements.append(
+            Paragraph(f"Organizational Unit: {report.filter_name}", subtitle_style)
+        )
 
     # Report metadata
     meta_style = ParagraphStyle(
@@ -82,27 +121,74 @@ def generate_pdf_report(
     )
     elements.append(Spacer(1, 0.5 * inch))
 
-    # Summary section (always included)
-    _add_summary_section(elements, report, styles)
+    # Determine if this is a single employee report
+    is_single_employee = len(report.employees) == 1
 
-    # Employee summary section (if detail level >= employee_summary)
+    # Summary section - skip for single employee reports
+    if not is_single_employee:
+        _add_summary_section(elements, report, styles)
+
+    # Employee sections (if detail level >= employee_summary)
     if detail_level in [DETAIL_LEVEL_EMPLOYEE_SUMMARY, DETAIL_LEVEL_DETAILED]:
-        for employee_data in report.employees:
-            elements.append(PageBreak())
+        for idx, employee_data in enumerate(report.employees):
+            # Create a list of elements to keep together for each employee
+            employee_elements = []
+
+            # Add employee summary
             _add_employee_summary_section(
-                elements, employee_data, styles
+                employee_elements, employee_data, styles
             )
 
-    # Detailed section (if detail level == detailed)
-    if detail_level == DETAIL_LEVEL_DETAILED:
-        for employee_data in report.employees:
-            elements.append(PageBreak())
-            _add_employee_detailed_section(
-                elements, employee_data, report, styles
-            )
+            # If detailed, add time entries on same page after summary
+            if detail_level == DETAIL_LEVEL_DETAILED:
+                employee_elements.append(Spacer(1, 0.3 * inch))
+                _add_employee_detailed_section(
+                    employee_elements, employee_data, report, styles
+                )
 
-    # Build PDF
-    doc.build(elements)
+            # For single employee, no page break needed before content
+            # For multiple employees, add page break before each employee section
+            if not is_single_employee:
+                elements.append(PageBreak())
+
+            # Use KeepTogether to try to keep summary and details on same page
+            elements.append(KeepTogether(employee_elements))
+
+    # Build PDF with custom page drawing for watermark
+    def add_watermark(canvas, doc):
+        """Add watermark logo to each page."""
+        if logo_image:
+            canvas.saveState()
+            # Get page dimensions
+            page_width, page_height = letter
+
+            # Calculate watermark size (larger - 6 inches)
+            watermark_size = 6 * inch
+
+            # Center position
+            x = (page_width - watermark_size) / 2
+            y = (page_height - watermark_size) / 2
+
+            # Set transparency (very light)
+            canvas.setFillAlpha(0.08)
+
+            # Draw the image
+            try:
+                canvas.drawImage(
+                    logo_image,
+                    x,
+                    y,
+                    width=watermark_size,
+                    height=watermark_size,
+                    preserveAspectRatio=True,
+                    mask='auto',
+                )
+            except Exception:
+                pass  # Skip watermark if image fails
+
+            canvas.restoreState()
+
+    doc.build(elements, onFirstPage=add_watermark, onLaterPages=add_watermark)
 
     # Reset buffer position to beginning and return
     buffer.seek(0)
@@ -205,7 +291,7 @@ def _add_employee_summary_section(
     )
     elements.append(
         Paragraph(
-            f"Employee Summary: {employee_data.first_name} {employee_data.last_name} ({employee_data.badge_number})",
+            f"Employee: {employee_data.first_name} {employee_data.last_name} ({employee_data.badge_number})",
             section_title,
         )
     )
@@ -255,26 +341,32 @@ def _add_employee_detailed_section(
 
     """
     section_title = ParagraphStyle(
-        "DetailedSection", parent=styles["Heading2"], textColor=colors.HexColor("#1976d2")
+        "DetailedSection", parent=styles["Heading3"], textColor=colors.HexColor("#424242")
     )
     elements.append(
         Paragraph(
-            f"Detailed Time Entries: {employee_data.first_name} {employee_data.last_name}",
+            "Time Entries",
             section_title,
         )
     )
-    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Spacer(1, 0.15 * inch))
 
     # Process each month
     for month in employee_data.months:
-        month_title = ParagraphStyle("MonthTitle", parent=styles["Heading3"])
+        month_title = ParagraphStyle(
+            "MonthTitle",
+            parent=styles["Normal"],
+            fontSize=11,
+            textColor=colors.HexColor("#1976d2"),
+            fontName="Helvetica-Bold",
+        )
         elements.append(
             Paragraph(
                 f"{month.year}-{month.month:02d} (Total: {month.total_hours:.2f} hours)",
                 month_title,
             )
         )
-        elements.append(Spacer(1, 0.1 * inch))
+        elements.append(Spacer(1, 0.08 * inch))
 
         # Table for this month
         month_data = [["Date", "Clock In", "Clock Out", "Hours"]]
@@ -314,4 +406,4 @@ def _add_employee_detailed_section(
         )
 
         elements.append(month_table)
-        elements.append(Spacer(1, 0.2 * inch))
+        elements.append(Spacer(1, 0.15 * inch))

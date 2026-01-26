@@ -1,5 +1,13 @@
 <div class="license-container">
-  <h1>License Management</h1>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">verified_user</mat-icon>
+        <h1>License Management</h1>
+      </div>
+    </div>
+  </div>
 
   @if (isLoading) {
     <div class="loading-container">
@@ -8,38 +16,55 @@
     </div>
   } @else {
     <!-- Current License Status -->
-    <mat-card class="status-card">
+    <mat-card class="status-card" [ngClass]="licenseStatus?.is_active ? 'status-card-active' : 'status-card-inactive'">
       <mat-card-header>
-        <mat-card-title>Current License Status</mat-card-title>
+        <mat-card-title>
+          <mat-icon>{{ licenseStatus?.is_active ? 'verified' : 'gpp_bad' }}</mat-icon>
+          Current License Status
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         @if (licenseStatus?.is_active) {
           <div class="status-active">
-            <mat-icon>check_circle</mat-icon>
-            <div>
-              <h3>License Active</h3>
-              <p><strong>License Key:</strong> {{ licenseStatus?.license_key }}</p>
-              <p><strong>Activated:</strong> {{ licenseStatus?.activated_at | date:'medium' }}</p>
-              @if (licenseStatus?.server_id) {
-                <p><strong>Server ID:</strong> {{ licenseStatus?.server_id }}</p>
-              }
+            <div class="status-badge active">
+              <mat-icon>check_circle</mat-icon>
+              <span>Active</span>
+            </div>
+            <div class="license-details">
+              <div class="detail-row">
+                <mat-icon>vpn_key</mat-icon>
+                <div>
+                  <label>License Key</label>
+                  <span class="license-key">{{ licenseStatus?.license_key }}</span>
+                </div>
+              </div>
+              <div class="detail-row">
+                <mat-icon>event</mat-icon>
+                <div>
+                  <label>Activated</label>
+                  <span>{{ licenseStatus?.activated_at | date:'medium' }}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <button
-            mat-raised-button
-            color="warn"
-            (click)="deactivateLicense()"
-            [disabled]="isActivating"
-          >
-            Deactivate License
-          </button>
+          <div class="card-actions">
+            <button
+              mat-raised-button
+              color="warn"
+              (click)="deactivateLicense()"
+              [disabled]="isActivating"
+            >
+              <mat-icon>remove_circle</mat-icon>
+              Deactivate License
+            </button>
+          </div>
         } @else {
           <div class="status-inactive">
-            <mat-icon>warning</mat-icon>
-            <div>
-              <h3>No Active License</h3>
-              <p>Admin features are currently locked. Please activate a license below.</p>
+            <div class="status-badge inactive">
+              <mat-icon>warning</mat-icon>
+              <span>Not Licensed</span>
             </div>
+            <p class="status-message">Admin features are currently locked. Please activate a license below.</p>
           </div>
         }
       </mat-card-content>
@@ -49,7 +74,10 @@
     @if (!licenseStatus?.is_active) {
       <mat-card class="activation-card">
         <mat-card-header>
-          <mat-card-title>Activate License</mat-card-title>
+          <mat-card-title>
+            <mat-icon>vpn_key</mat-icon>
+            Activate License
+          </mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="licenseForm" (ngSubmit)="activateLicense()">
@@ -58,16 +86,13 @@
               <textarea
                 matInput
                 formControlName="license_key"
-                rows="3"
-                placeholder="Paste your 128-character license key here"
+                rows="4"
+                placeholder="ABLE-ACID-AGED-ALSO AREA-ARMY-AWAY-BABY ..."
                 required
               ></textarea>
-              <mat-hint>128-character hexadecimal string (Ed25519 signature)</mat-hint>
-              @if (licenseForm.get('license_key')?.hasError('pattern')) {
-                <mat-error>License key must be a 128-character hexadecimal string</mat-error>
-              }
-              @if (licenseForm.get('license_key')?.hasError('minlength') || licenseForm.get('license_key')?.hasError('maxlength')) {
-                <mat-error>License key must be exactly 128 characters</mat-error>
+              <mat-hint>Word format (64 words) or hex format (128 characters)</mat-hint>
+              @if (licenseForm.get('license_key')?.hasError('invalidFormat')) {
+                <mat-error>{{ licenseForm.get('license_key')?.getError('invalidFormat')?.message || 'Invalid license key format' }}</mat-error>
               }
               @if (licenseForm.get('license_key')?.hasError('required')) {
                 <mat-error>License key is required</mat-error>
@@ -81,12 +106,9 @@
                 type="submit"
                 [disabled]="!licenseForm.valid || isActivating"
               >
-                @if (isActivating) {
-                  <mat-spinner diameter="20"></mat-spinner>
-                  Activating...
-                } @else {
-                  Activate License
-                }
+                <mat-spinner *ngIf="isActivating" diameter="20"></mat-spinner>
+                <mat-icon *ngIf="!isActivating">key</mat-icon>
+                {{ isActivating ? 'Activating...' : 'Activate License' }}
               </button>
             </div>
           </form>
@@ -97,26 +119,55 @@
     <!-- Help Information -->
     <mat-card class="help-card">
       <mat-card-header>
-        <mat-card-title>License Information</mat-card-title>
+        <mat-card-title>
+          <mat-icon>help_outline</mat-icon>
+          License Information
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <h4>About Licensing</h4>
-        <p>
-          This application requires a valid license to access administrative features.
-          Core timeclock functionality remains available without a license.
-        </p>
-        <h4>License Features</h4>
-        <ul>
-          <li>Lifetime license (no expiration)</li>
-          <li>One license per server</li>
-          <li>Offline activation (no internet required)</li>
-          <li>Unlocks all administrative features</li>
-        </ul>
-        <h4>Need Help?</h4>
-        <p>
-          Contact your system administrator or MonteVista support for assistance
-          with license activation.
-        </p>
+        <div class="help-section">
+          <h4>
+            <mat-icon>info</mat-icon>
+            About Licensing
+          </h4>
+          <p>
+            This application requires a valid license to access administrative features.
+            Core timeclock functionality remains available without a license.
+          </p>
+        </div>
+        <div class="help-section">
+          <h4>
+            <mat-icon>star</mat-icon>
+            License Features
+          </h4>
+          <ul>
+            <li>Lifetime license (no expiration)</li>
+            <li>One license per server installation</li>
+            <li>License is bound to this specific machine</li>
+            <li>Unlocks all administrative features</li>
+          </ul>
+        </div>
+        <div class="help-section">
+          <h4>
+            <mat-icon>wifi</mat-icon>
+            Activation Requirements
+          </h4>
+          <p>
+            License activation requires a one-time internet connection to the MonteVista
+            license server. After activation, the license is stored locally and no further
+            internet connection is required.
+          </p>
+        </div>
+        <div class="help-section">
+          <h4>
+            <mat-icon>support_agent</mat-icon>
+            Need Help?
+          </h4>
+          <p>
+            Contact your system administrator or MonteVista support for assistance
+            with obtaining or activating a license.
+          </p>
+        </div>
       </mat-card-content>
     </mat-card>
   }

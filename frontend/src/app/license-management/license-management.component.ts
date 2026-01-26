@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { LicenseService, LicenseStatus } from '../../services/license.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
@@ -24,6 +25,7 @@ import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatTooltipModule,
   ],
   templateUrl: './license-management.component.html',
   styleUrl: './license-management.component.scss'
@@ -40,9 +42,46 @@ export class LicenseManagementComponent implements OnInit {
   isActivating = false;
 
   constructor() {
+    // Accept both word format and hex format
+    // Word format: 64 words separated by dashes/spaces (about 400-600 chars)
+    // Hex format: 128 hex characters
     this.licenseForm = this.fb.group({
-      license_key: ['', [Validators.required, Validators.minLength(128), Validators.maxLength(128), Validators.pattern(/^[0-9a-fA-F]{128}$/)]],
+      license_key: ['', [Validators.required, this.licenseKeyValidator()]],
     });
+  }
+
+  /**
+   * Custom validator for license key format.
+   * Accepts both word-based format and hex format.
+   */
+  private licenseKeyValidator() {
+    return (control: { value: string }) => {
+      const value = control.value?.trim() || '';
+
+      if (!value) {
+        return null; // Let required validator handle empty
+      }
+
+      // Check if it's hex format (128 chars, all hex)
+      if (value.length === 128 && /^[0-9a-fA-F]{128}$/.test(value)) {
+        return null; // Valid hex format
+      }
+
+      // Check if it's word format (contains dashes or spaces)
+      if (value.includes('-') || value.includes(' ')) {
+        // Count words (split by spaces and dashes)
+        const words = value.toUpperCase().split(/[\s-]+/).filter((w: string) => w);
+        if (words.length === 64) {
+          // Check if all words are alphabetic
+          if (words.every((w: string) => /^[A-Z]+$/.test(w))) {
+            return null; // Valid word format
+          }
+        }
+        return { invalidFormat: true, message: 'Word format requires 64 alphabetic words' };
+      }
+
+      return { invalidFormat: true, message: 'Invalid license key format' };
+    };
   }
 
   ngOnInit() {
@@ -68,8 +107,9 @@ export class LicenseManagementComponent implements OnInit {
       this.isActivating = true;
       const formValue = this.licenseForm.value;
 
+      // Send the key as-is - backend will normalize (word or hex format)
       this.licenseService.activateLicense(
-        formValue.license_key.toLowerCase()
+        formValue.license_key.trim()
       ).subscribe({
         next: () => {
           this.showSnackBar('License activated successfully', 'success');

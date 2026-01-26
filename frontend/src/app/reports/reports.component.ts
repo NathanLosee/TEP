@@ -94,11 +94,21 @@ export class ReportsComponent implements OnInit {
     { value: "org_unit", label: "Organizational Unit" },
   ];
 
-  detailLevels = [
+  allDetailLevels = [
     { value: "summary", label: "Summary Only" },
     { value: "employee_summary", label: "Summary + Employee Details" },
     { value: "detailed", label: "Full Detailed Report" },
   ];
+
+  // Filtered detail levels (excludes "summary" for single employee reports)
+  get detailLevels() {
+    const reportType = this.reportForm?.get('reportType')?.value;
+    if (reportType === 'employee') {
+      // For individual employee, summary only produces empty content
+      return this.allDetailLevels.filter(level => level.value !== 'summary');
+    }
+    return this.allDetailLevels;
+  }
 
   // Track expansion state for employees (show/hide calendar)
   expandedEmployees: Set<number> = new Set();
@@ -124,12 +134,16 @@ export class ReportsComponent implements OnInit {
     });
 
     // Subscribe to report type changes to reset filters
-    this.reportForm.get("reportType")?.valueChanges.subscribe(() => {
+    this.reportForm.get("reportType")?.valueChanges.subscribe((reportType) => {
       this.reportForm.patchValue({
         employee: null,
         department: null,
         orgUnit: null,
       });
+      // For individual employee reports, "summary" is not valid - reset to "employee_summary"
+      if (reportType === 'employee' && this.reportForm.get('detailLevel')?.value === 'summary') {
+        this.reportForm.patchValue({ detailLevel: 'employee_summary' });
+      }
     });
   }
 

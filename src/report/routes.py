@@ -14,6 +14,7 @@ from src.report.pdf_export import generate_pdf_report
 from src.report.schemas import ReportRequest, ReportResponse
 from src.report.service import generate_report
 from src.services import requires_permission
+from src.system_settings.repository import get_logo, get_settings
 
 router = APIRouter(prefix=BASE_URL, tags=["Reports"])
 
@@ -96,9 +97,19 @@ def export_report_pdf(
         org_unit_id=org_unit_id,
     )
 
+    # Get logo and company name for PDF
+    logo_data = get_logo(db)
+    settings = get_settings(db)
+    company_name = settings.company_name if settings else "TEP Timeclock"
+
     # Generate PDF
     try:
-        pdf_buffer = generate_pdf_report(report, detail_level)
+        pdf_buffer = generate_pdf_report(
+            report,
+            detail_level,
+            logo_data=logo_data,
+            company_name=company_name,
+        )
         pdf_bytes = pdf_buffer.read()
 
         # Return as Response with proper headers

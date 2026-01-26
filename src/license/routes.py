@@ -1,33 +1,38 @@
 """Module defining API for license operations."""
 
-from fastapi import APIRouter, Depends, Security, status
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.license.constants import (
     BASE_URL,
     EXC_MSG_INVALID_LICENSE_KEY,
-    EXC_MSG_LICENSE_ALREADY_ACTIVATED,
+    EXC_MSG_LICENSE_ACTIVATION_FAILED,
     EXC_MSG_LICENSE_NOT_FOUND,
+    EXC_MSG_LICENSE_SERVER_ERROR,
     IDENTIFIER,
+    LICENSE_SERVER_URL,
 )
 from src.license.key_generator import (
+    get_machine_id,
+    normalize_license_key,
     validate_license_key_format,
-    verify_license_key,
 )
-from src.license.models import License
 from src.license.repository import (
     create_license as create_license_in_db,
     deactivate_all_licenses,
     deactivate_license as deactivate_license_in_db,
     get_active_license,
     get_license_by_key,
+    reactivate_license as reactivate_license_in_db,
 )
 from src.license.schemas import LicenseActivate, LicenseExtended, LicenseStatus
 from src.services import (
     create_event_log,
     get_license_status,
     requires_permission,
+    set_license_activated,
     validate,
 )
 
@@ -71,8 +76,9 @@ def activate_license(
 ):
     """Activate a new license.
 
-    Validates the license key format and cryptographic signature,
-    deactivates any existing licenses, and activates the new one.
+    Contacts the license server to activate the license for this machine.
+    The license server signs the license_key + machine_id to create an
+    activation_key that is stored locally.
 
     Args:
         request (LicenseActivate): License activation data.
@@ -83,8 +89,9 @@ def activate_license(
         LicenseExtended: The activated license.
 
     Raises:
-        400: If license key format is invalid or signature verification fails
-        409: If license key is already activated
+        400: If license key format is invalid
+        502: If license server is unreachable
+        Various: Pass-through errors from license server
 
     """
     # Validate license key format
@@ -94,26 +101,70 @@ def activate_license(
         status.HTTP_400_BAD_REQUEST,
     )
 
-    # Verify cryptographic signature
-    validate(
-        verify_license_key(request.license_key),
-        EXC_MSG_INVALID_LICENSE_KEY,
-        status.HTTP_400_BAD_REQUEST,
-    )
+    # Normalize the license key
+    normalized_key = normalize_license_key(request.license_key)
 
-    # Check if this license key already exists
+    # Check if this license key already exists locally
     existing_license = get_license_by_key(request.license_key, db)
-    validate(
-        not existing_license,
-        EXC_MSG_LICENSE_ALREADY_ACTIVATED,
-        status.HTTP_409_CONFLICT,
-    )
+    if existing_license and existing_license.is_active:
+        # Already activated, just return it
+        return existing_license
+
+    # Get machine ID for activation
+    machine_id = get_machine_id()
+
+    # Track if we're reactivating an existing license
+    is_reactivation = existing_license is not None
+
+    # Contact the license server to activate
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(
+                f"{LICENSE_SERVER_URL}/api/activate",
+                json={
+                    "license_key": normalized_key,
+                    "machine_id": machine_id,
+                },
+            )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=EXC_MSG_LICENSE_SERVER_ERROR,
+        )
+
+    # Handle license server errors
+    if response.status_code != 200:
+        error_detail = EXC_MSG_LICENSE_ACTIVATION_FAILED
+        try:
+            error_data = response.json()
+            if "detail" in error_data:
+                error_detail = error_data["detail"]
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=error_detail,
+        )
+
+    # Parse response from license server
+    activation_data = response.json()
+    activation_key = activation_data["activation_key"]
 
     # Deactivate any existing licenses (only one license can be active)
     deactivate_all_licenses(db)
 
-    # Create new license
-    license_obj = create_license_in_db(request, db)
+    # Create or reactivate license locally with the activation key
+    if is_reactivation:
+        # Reactivate existing license record
+        license_obj = reactivate_license_in_db(
+            existing_license, activation_key, db
+        )
+    else:
+        # Create new license record
+        license_obj = create_license_in_db(normalized_key, activation_key, db)
+
+    # Update global activation state
+    set_license_activated(True)
 
     # Log the activation
     log_args = {
@@ -136,6 +187,9 @@ def deactivate_current_license(
 ):
     """Deactivate the current license.
 
+    Deactivates the local license. Optionally contacts the license server
+    to release the activation for potential transfer to another machine.
+
     Args:
         db (Session): Database session for current request.
         caller_badge (str): Badge number of the caller.
@@ -151,8 +205,26 @@ def deactivate_current_license(
         status.HTTP_404_NOT_FOUND,
     )
 
-    # Deactivate the license
+    # Try to deactivate on license server (best effort)
+    machine_id = get_machine_id()
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            client.post(
+                f"{LICENSE_SERVER_URL}/api/deactivate",
+                json={
+                    "license_key": license_obj.license_key,
+                    "machine_id": machine_id,
+                },
+            )
+    except httpx.RequestError:
+        # License server unreachable, continue with local deactivation
+        pass
+
+    # Deactivate the license locally
     deactivate_license_in_db(license_obj, db)
+
+    # Update global activation state
+    set_license_activated(False)
 
     # Log the deactivation
     log_args = {

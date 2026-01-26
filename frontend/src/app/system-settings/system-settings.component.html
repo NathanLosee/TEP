@@ -1,0 +1,225 @@
+<div class="settings-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">settings</mat-icon>
+        <h1>System Settings</h1>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading settings...</p>
+    </div>
+  } @else {
+    <!-- Logo Upload Card -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>image</mat-icon>
+          Logo
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="logo-section">
+          <div class="logo-preview-area">
+            @if (logoPreviewUrl) {
+              <img [src]="logoPreviewUrl" alt="New logo preview" class="logo-preview" />
+              <span class="preview-label">New logo preview</span>
+            } @else if (settings?.has_logo) {
+              <img [src]="getLogoUrl()" alt="Current logo" class="logo-preview" />
+              <span class="preview-label">Current logo: {{ settings?.logo_filename }}</span>
+            } @else {
+              <div class="no-logo">
+                <mat-icon>image_not_supported</mat-icon>
+                <span>No logo uploaded</span>
+              </div>
+            }
+          </div>
+
+          <div class="logo-actions">
+            @if (selectedLogoFile) {
+              <div class="selected-file">
+                <mat-icon>attach_file</mat-icon>
+                <span>{{ selectedLogoFile.name }}</span>
+              </div>
+              <div class="button-group">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="uploadLogo()"
+                  [disabled]="isUploadingLogo"
+                >
+                  <mat-spinner *ngIf="isUploadingLogo" diameter="20"></mat-spinner>
+                  <mat-icon *ngIf="!isUploadingLogo">upload</mat-icon>
+                  {{ isUploadingLogo ? 'Uploading...' : 'Upload' }}
+                </button>
+                <button mat-button (click)="cancelLogoUpload()">Cancel</button>
+              </div>
+            } @else {
+              <input
+                type="file"
+                #logoInput
+                (change)="onLogoFileSelected($event)"
+                accept="image/png,image/jpeg,image/svg+xml"
+                hidden
+              />
+              <div class="button-group">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="logoInput.click()"
+                >
+                  <mat-icon>add_photo_alternate</mat-icon>
+                  Select Logo
+                </button>
+                @if (settings?.has_logo) {
+                  <button
+                    mat-button
+                    color="warn"
+                    (click)="deleteLogo()"
+                  >
+                    <mat-icon>delete</mat-icon>
+                    Remove Logo
+                  </button>
+                }
+              </div>
+            }
+            <p class="file-hint">Allowed formats: PNG, JPG, SVG. Maximum size: 2MB</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Theme Colors Card -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>palette</mat-icon>
+          Theme Colors
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="settingsForm">
+          <div class="color-grid">
+            <div class="color-field">
+              <mat-form-field appearance="outline">
+                <mat-label>Primary Color</mat-label>
+                <input
+                  matInput
+                  formControlName="primary_color"
+                  placeholder="#4CAF50"
+                />
+                @if (settingsForm.get('primary_color')?.hasError('pattern')) {
+                  <mat-error>Invalid hex color (e.g., #4CAF50)</mat-error>
+                }
+              </mat-form-field>
+              <input
+                type="color"
+                class="color-picker"
+                [value]="settingsForm.get('primary_color')?.value"
+                (input)="settingsForm.get('primary_color')?.setValue($any($event.target).value.toUpperCase())"
+              />
+              <div
+                class="color-swatch"
+                [style.background-color]="settingsForm.get('primary_color')?.value"
+              ></div>
+            </div>
+
+            <div class="color-field">
+              <mat-form-field appearance="outline">
+                <mat-label>Secondary Color</mat-label>
+                <input
+                  matInput
+                  formControlName="secondary_color"
+                  placeholder="#81C784"
+                />
+                @if (settingsForm.get('secondary_color')?.hasError('pattern')) {
+                  <mat-error>Invalid hex color (e.g., #81C784)</mat-error>
+                }
+              </mat-form-field>
+              <input
+                type="color"
+                class="color-picker"
+                [value]="settingsForm.get('secondary_color')?.value"
+                (input)="settingsForm.get('secondary_color')?.setValue($any($event.target).value.toUpperCase())"
+              />
+              <div
+                class="color-swatch"
+                [style.background-color]="settingsForm.get('secondary_color')?.value"
+              ></div>
+            </div>
+
+            <div class="color-field">
+              <mat-form-field appearance="outline">
+                <mat-label>Accent Color</mat-label>
+                <input
+                  matInput
+                  formControlName="accent_color"
+                  placeholder="#FFEB3B"
+                />
+                @if (settingsForm.get('accent_color')?.hasError('pattern')) {
+                  <mat-error>Invalid hex color (e.g., #FFEB3B)</mat-error>
+                }
+              </mat-form-field>
+              <input
+                type="color"
+                class="color-picker"
+                [value]="settingsForm.get('accent_color')?.value"
+                (input)="settingsForm.get('accent_color')?.setValue($any($event.target).value.toUpperCase())"
+              />
+              <div
+                class="color-swatch"
+                [style.background-color]="settingsForm.get('accent_color')?.value"
+              ></div>
+            </div>
+          </div>
+
+          <div class="color-preview">
+            <span class="preview-label">Preview:</span>
+            <div class="preview-swatches">
+              <div
+                class="preview-swatch primary"
+                [style.background-color]="settingsForm.get('primary_color')?.value"
+                matTooltip="Primary"
+              ></div>
+              <div
+                class="preview-swatch secondary"
+                [style.background-color]="settingsForm.get('secondary_color')?.value"
+                matTooltip="Secondary"
+              ></div>
+              <div
+                class="preview-swatch accent"
+                [style.background-color]="settingsForm.get('accent_color')?.value"
+                matTooltip="Accent"
+              ></div>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button (click)="resetToDefaults()">
+          <mat-icon>restore</mat-icon>
+          Reset to Defaults
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Save Actions -->
+    <div class="save-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="saveSettings()"
+        [disabled]="!settingsForm.valid || isSaving"
+      >
+        <mat-spinner *ngIf="isSaving" diameter="20"></mat-spinner>
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+        {{ isSaving ? 'Saving...' : 'Save Settings' }}
+      </button>
+    </div>
+  }
+</div>

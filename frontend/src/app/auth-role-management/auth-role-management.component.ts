@@ -8,86 +8,112 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PartialObserver } from 'rxjs';
 import { AuthRole, AuthRoleService } from '../../services/auth-role.service';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-import { AuthRoleFormComponent } from './auth-role-form/auth-role-form.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import {
+  GenericTableComponent,
+  TableCellDirective,
+} from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
+import { AuthRoleFormDialogComponent } from './auth-role-form-dialog/auth-role-form-dialog.component';
+import { AuthRoleDetailsDialogComponent } from './auth-role-details-dialog/auth-role-details-dialog.component';
 
 @Component({
   selector: 'app-auth-role-management',
   standalone: true,
   imports: [
-    AuthRoleFormComponent,
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
-    MatCheckboxModule,
     MatChipsModule,
     MatDialogModule,
-    MatDividerModule,
-    MatExpansionModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
     MatSnackBarModule,
-    MatTableModule,
     MatTabsModule,
     MatTooltipModule,
-    ReactiveFormsModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
+    TableCellDirective,
   ],
   templateUrl: './auth-role-management.component.html',
   styleUrl: './auth-role-management.component.scss',
 })
 export class AuthRoleManagementComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
-  private errorDialog = inject(ErrorDialogComponent);
+  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
-
   private authRoleService = inject(AuthRoleService);
-  private authRoleFormComponent = new AuthRoleFormComponent();
 
   // Data
   authRoles: AuthRole[] = [];
   filteredRoles: AuthRole[] = [];
-  selectedRole: AuthRole | null = null;
-  selectedRoleUsers: any[] = [];
 
   // Forms
   searchForm: FormGroup;
-  roleForm: FormGroup;
 
   // UI State
   isLoading = false;
-  showForm = false;
-  showUsersList = false;
 
-  // Table columns
-  displayedColumns = ['name', 'permissions', 'actions'];
+  // Table configuration
+  columns: TableColumn<AuthRole>[] = [
+    {
+      key: 'name',
+      header: 'Role Name',
+      type: 'icon-text',
+      icon: 'security',
+    },
+    {
+      key: 'permissions',
+      header: 'Permissions',
+      type: 'template',
+    },
+  ];
+
+  actions: TableAction<AuthRole>[] = [
+    {
+      icon: 'info',
+      tooltip: 'View Details',
+      action: 'view',
+      permission: 'auth_role.read',
+    },
+    {
+      icon: 'edit',
+      tooltip: 'Edit Role',
+      action: 'edit',
+      color: 'primary',
+      permission: 'auth_role.update',
+    },
+    {
+      icon: 'delete',
+      tooltip: 'Delete Role',
+      action: 'delete',
+      color: 'warn',
+      permission: 'auth_role.delete',
+      disabled: (role: AuthRole) => (role.user_count || 0) > 0,
+    },
+  ];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
       name: [''],
     });
-    this.roleForm = this.authRoleFormComponent.authRoleForm;
   }
 
   ngOnInit() {
@@ -100,12 +126,12 @@ export class AuthRoleManagementComponent implements OnInit {
     this.authRoleService.getAuthRoles().subscribe({
       next: (roles) => {
         // Filter out root role (id=0)
-        this.authRoles = roles.filter(role => role.id !== 0);
+        this.authRoles = roles.filter((role) => role.id !== 0);
         this.filterRoles();
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorDialog.openErrorDialog('Failed to load auth roles: ', error);
+        this.handleError('Failed to load auth roles', error);
         this.isLoading = false;
       },
     });
@@ -114,28 +140,6 @@ export class AuthRoleManagementComponent implements OnInit {
   setupSearchForm() {
     this.searchForm.valueChanges.subscribe(() => {
       this.filterRoles();
-    });
-  }
-
-  viewDetails(role: AuthRole) {
-    this.selectedRole = role;
-    this.showUsersList = false;
-    this.showForm = false;
-
-    // Load users with this role
-    this.authRoleService.getUsersByAuthRole(role.id!).subscribe({
-      next: (users) => {
-        // Filter out root user (id=0)
-        this.selectedRoleUsers = users.filter(user => user.id !== 0);
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorDialog.openErrorDialog(
-          'Failed to load users for auth role',
-          error
-        );
-        this.isLoading = false;
-      },
     });
   }
 
@@ -152,63 +156,69 @@ export class AuthRoleManagementComponent implements OnInit {
     );
   }
 
-  toggleForm() {
-    this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.authRoleFormComponent.resetForm();
+  onTableAction(event: TableActionEvent<AuthRole>) {
+    switch (event.action) {
+      case 'view':
+        this.viewDetails(event.row);
+        break;
+      case 'edit':
+        this.editRole(event.row);
+        break;
+      case 'delete':
+        this.deleteRole(event.row);
+        break;
     }
+  }
+
+  addAuthRole() {
+    const dialogRef = this.dialog.open(AuthRoleFormDialogComponent, {
+      width: '700px',
+      maxHeight: '90vh',
+      data: {},
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.authRoles.push(result);
+        this.filterRoles();
+        this.showSnackBar(
+          `Auth role "${result.name}" created successfully`,
+          'success'
+        );
+      }
+    });
+  }
+
+  viewDetails(role: AuthRole) {
+    const dialogRef = this.dialog.open(AuthRoleDetailsDialogComponent, {
+      width: '600px',
+      data: { authRole: role },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'edit') {
+        this.editRole(result.authRole);
+      }
+    });
   }
 
   editRole(role: AuthRole) {
-    this.selectedRole = role;
-    this.showForm = true;
-    this.showUsersList = false;
-    this.roleForm.patchValue(role);
-  }
+    const dialogRef = this.dialog.open(AuthRoleFormDialogComponent, {
+      width: '700px',
+      maxHeight: '90vh',
+      data: { editAuthRole: role },
+    });
 
-  cancelAction() {
-    this.showForm = false;
-    this.showUsersList = false;
-    this.selectedRole = null;
-  }
-
-  saveAuthRole(authRole: AuthRole) {
-    this.authRoleFormComponent.isLoading = true;
-    const observer: PartialObserver<AuthRole> = {
-      next: (updatedRole) => {
-        if (this.selectedRole) {
-          // Replace existing role
-          const index = this.authRoles.findIndex(
-            (r) => r.id === this.selectedRole!.id
-          );
-          if (index > -1) {
-            this.authRoles[index] = updatedRole;
-          }
-        } else {
-          // Add new role
-          this.authRoles.push(updatedRole);
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        const index = this.authRoles.findIndex((r) => r.id === role.id);
+        if (index > -1) {
+          this.authRoles[index] = result;
+          this.filterRoles();
+          this.showSnackBar('Auth role updated successfully', 'success');
         }
-        this.filterRoles();
-        this.showSnackBar('Auth role saved successfully', 'success');
-        this.authRoleFormComponent.resetForm();
-        this.cancelAction();
-        this.authRoleFormComponent.isLoading = false;
-      },
-      error: (error) => {
-        this.errorDialog.openErrorDialog('Failed to update auth role', error);
-        this.authRoleFormComponent.isLoading = false;
-      },
-    };
-
-    if (this.selectedRole) {
-      // Update existing role
-      this.authRoleService
-        .updateAuthRole(this.selectedRole.id!, authRole)
-        .subscribe(observer);
-    } else {
-      // Create new role
-      this.authRoleService.createAuthRole(authRole).subscribe(observer);
-    }
+      }
+    });
   }
 
   deleteRole(role: AuthRole) {
@@ -232,48 +242,11 @@ export class AuthRoleManagementComponent implements OnInit {
           this.isLoading = false;
         },
         error: (error) => {
-          this.errorDialog.openErrorDialog('Failed to delete auth role', error);
+          this.handleError('Failed to delete auth role', error);
           this.isLoading = false;
         },
       });
     }
-  }
-
-  getCategoryName(category: string): string {
-    const names: { [key: string]: string } = {
-      auth_role: 'Auth Roles',
-      department: 'Departments',
-      employee: 'Employees',
-      event_log: 'Event Logs',
-      holiday_group: 'Holiday Groups',
-      org_unit: 'Organizational Units',
-      timeclock: 'Timeclock',
-      user: 'Users',
-    };
-    return (
-      names[category] || category.charAt(0).toUpperCase() + category.slice(1)
-    );
-  }
-
-  getCategoryIcon(category: string): string {
-    const icons: { [key: string]: string } = {
-      auth_role: 'security',
-      department: 'business',
-      employee: 'people',
-      event_log: 'history',
-      holiday_group: 'event',
-      org_unit: 'account_tree',
-      timeclock: 'schedule',
-      user: 'person',
-    };
-    return icons[category] || 'settings';
-  }
-
-  getPermissionCount(): number {
-    return this.authRoles.reduce(
-      (total, role) => total + role.permissions.length,
-      0
-    );
   }
 
   private showSnackBar(
@@ -283,6 +256,17 @@ export class AuthRoleManagementComponent implements OnInit {
     this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
+    });
+  }
+
+  private handleError(message: string, error: any) {
+    console.error(message, error);
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Error',
+        message: `${message}. Please try again.`,
+        error: error?.error?.detail || error?.message || 'Unknown error',
+      },
     });
   }
 }

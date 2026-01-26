@@ -1,0 +1,183 @@
+@use '../../../styles/common' as *;
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--sys-on-surface);
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  mat-icon {
+    color: var(--sys-primary);
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+.search-container {
+  min-width: 400px;
+  max-width: 500px;
+
+  .search-field {
+    width: 100%;
+    margin-bottom: $spacing-md;
+  }
+
+  .current-selection {
+    display: flex;
+    align-items: center;
+    gap: $gap-sm;
+    padding: $padding-sm $padding-md;
+    background: var(--sys-primary-container);
+    border-radius: $border-radius-md;
+    margin-bottom: $spacing-md;
+
+    .selection-label {
+      font-size: $font-size-sm;
+      color: var(--sys-on-primary-container);
+      font-weight: 500;
+    }
+
+    .selected-manager {
+      display: flex;
+      align-items: center;
+      gap: $gap-xs;
+      flex: 1;
+
+      mat-icon {
+        font-size: 1.2rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        color: var(--sys-on-primary-container);
+      }
+
+      .manager-name {
+        font-weight: 500;
+        color: var(--sys-on-primary-container);
+      }
+
+      .manager-badge {
+        font-size: $font-size-sm;
+        color: var(--sys-on-primary-container);
+        opacity: 0.8;
+        font-family: 'Roboto Mono', monospace;
+      }
+
+      button {
+        margin-left: auto;
+
+        mat-icon {
+          font-size: 1.1rem;
+          width: 1.1rem;
+          height: 1.1rem;
+        }
+      }
+    }
+  }
+
+  .manager-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--sys-outline-variant);
+    border-radius: $border-radius-md;
+
+    .manager-list {
+      padding: 0;
+
+      mat-list-option {
+        border-bottom: 1px solid var(--sys-outline-variant);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background: var(--sys-surface-variant);
+        }
+
+        &[aria-selected="true"] {
+          background: rgba(var(--sys-primary-rgb), 0.08);
+        }
+      }
+    }
+
+    .manager-item {
+      display: flex;
+      align-items: center;
+      gap: $gap-sm;
+      width: 100%;
+      padding: $padding-xs 0;
+
+      mat-icon {
+        color: var(--sys-primary);
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      .manager-info {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+
+        .manager-name {
+          font-weight: 500;
+          color: var(--sys-on-surface);
+        }
+
+        .manager-badge {
+          font-size: $font-size-sm;
+          color: var(--sys-on-surface-variant);
+          font-family: 'Roboto Mono', monospace;
+        }
+      }
+
+      .manager-org {
+        font-size: $font-size-sm;
+        color: var(--sys-on-surface-variant);
+        background: var(--sys-surface-variant);
+        padding: 2px 8px;
+        border-radius: $border-radius-sm;
+      }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: $padding-xl;
+      color: var(--sys-on-surface-variant);
+
+      mat-icon {
+        font-size: 3rem;
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: $spacing-md;
+        opacity: 0.5;
+      }
+
+      p {
+        margin: 0;
+        text-align: center;
+      }
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: $padding-md;
+  gap: $gap-sm;
+
+  button {
+    mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-right: $spacing-xs;
+    }
+  }
+}

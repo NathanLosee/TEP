@@ -19,6 +19,7 @@ from src.services import (
     create_root_user_if_not_exists,
     generate_dummy_data,
     load_keys,
+    validate_license_on_startup,
 )
 
 app = FastAPI()
@@ -173,3 +174,4 @@ if settings.ENVIRONMENT == "development":
 create_root_user_if_not_exists()
 if settings.ENVIRONMENT == "development":
     generate_dummy_data()
+validate_license_on_startup()

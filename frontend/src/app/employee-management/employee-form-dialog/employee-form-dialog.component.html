@@ -52,8 +52,8 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Payroll Type</mat-label>
           <mat-select formControlName="payroll_type">
-            <mat-option value="Hourly">Hourly</mat-option>
-            <mat-option value="Salary">Salary</mat-option>
+            <mat-option value="hourly">Hourly</mat-option>
+            <mat-option value="salary">Salary</mat-option>
           </mat-select>
           <mat-error *ngIf="employeeForm.get('payroll_type')?.hasError('required')">
             Payroll type is required
@@ -63,8 +63,8 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Workweek Type</mat-label>
           <mat-select formControlName="workweek_type">
-            <mat-option value="Standard">Standard</mat-option>
-            <mat-option value="Flexible">Flexible</mat-option>
+            <mat-option value="standard">Standard</mat-option>
+            <mat-option value="flexible">Flexible</mat-option>
           </mat-select>
           <mat-error *ngIf="employeeForm.get('workweek_type')?.hasError('required')">
             Workweek type is required
@@ -109,15 +109,31 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Manager</mat-label>
-          <mat-select formControlName="manager_id">
-            <mat-option value="">None</mat-option>
-            <mat-option *ngFor="let manager of managers" [value]="manager.id">
-              {{ manager.first_name }} {{ manager.last_name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="form-field manager-field">
+          <label class="manager-label">Manager</label>
+          <div class="manager-selector" (click)="openManagerSearch()">
+            <div *ngIf="selectedManager" class="selected-manager">
+              <mat-icon>person</mat-icon>
+              <span class="manager-name">
+                {{ selectedManager.first_name }} {{ selectedManager.last_name }}
+              </span>
+              <span class="manager-badge">#{{ selectedManager.badge_number }}</span>
+              <button
+                mat-icon-button
+                (click)="clearManager(); $event.stopPropagation()"
+                matTooltip="Clear manager"
+                class="clear-btn"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div *ngIf="!selectedManager" class="no-manager">
+              <mat-icon>person_search</mat-icon>
+              <span>Click to select a manager</span>
+            </div>
+            <mat-icon class="search-icon">search</mat-icon>
+          </div>
+        </div>
       </div>
     </div>
 

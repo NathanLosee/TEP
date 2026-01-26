@@ -54,107 +54,24 @@
             </mat-card-header>
 
             <mat-card-content>
-              <div class="table-container">
-                <table
-                  mat-table
-                  [dataSource]="filteredDepartments"
-                  class="departments-table"
-                >
-                  <!-- Name Column -->
-                  <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef>Department Name</th>
-                    <td mat-cell *matCellDef="let department">
-                      <div class="department-name">
-                        <mat-icon class="department-icon">business</mat-icon>
-                        <div class="department-info">
-                          <div class="department-name">
-                            {{ department.name }}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <!-- Actions Column -->
-                  <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef>Actions</th>
-                    <td mat-cell *matCellDef="let department">
-                      <div class="action-buttons">
-                        <button
-                          mat-icon-button
-                          matTooltip="View Employees"
-                          (click)="viewEmployees(department)"
-                          class="view-btn"
-                          [disableIfNoPermission]="'department.read'"
-                        >
-                          <mat-icon>people</mat-icon>
-                        </button>
-                        <button
-                          mat-icon-button
-                          matTooltip="Edit Department"
-                          color="primary"
-                          (click)="openDepartmentFormDialog(department)"
-                          [disableIfNoPermission]="'department.update'"
-                        >
-                          <mat-icon>edit</mat-icon>
-                        </button>
-                        <button
-                          mat-icon-button
-                          matTooltip="Delete Department"
-                          color="warn"
-                          (click)="deleteDepartment(department)"
-                          class="delete-btn"
-                          [disableIfNoPermission]="'department.delete'"
-                        >
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                  <tr
-                    mat-row
-                    *matRowDef="let row; columns: displayedColumns"
-                  ></tr>
-                </table>
-
-                <!-- Empty State -->
-                <div
-                  class="empty-state"
-                  *ngIf="filteredDepartments.length === 0 && !isLoading"
-                >
-                  <mat-icon class="empty-icon">business</mat-icon>
-                  <h3>No departments found</h3>
-                  <p *ngIf="searchForm.get('name')?.value">
-                    Try adjusting your search criteria
-                  </p>
-                  <p *ngIf="!searchForm.get('name')?.value">
-                    Create your first department to get started
-                  </p>
-                  <button
-                    mat-raised-button
-                    color="primary"
-                    (click)="openDepartmentFormDialog()"
-                    *ngIf="!searchForm.get('name')?.value"
-                    [disableIfNoPermission]="'department.create'"
-                    matTooltip="Requires department.create permission"
-                    [matTooltipDisabled]="true"
-                  >
-                    <mat-icon>add</mat-icon>
-                    Create Department
-                  </button>
-                </div>
-
-                <!-- Loading State -->
-                <div *ngIf="isLoading" class="loading-container">
-                  <mat-progress-spinner
-                    mode="indeterminate"
-                    diameter="60"
-                  ></mat-progress-spinner>
-                  <p>Loading departments...</p>
-                </div>
-              </div>
+              <app-generic-table
+                [data]="filteredDepartments"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="isLoading"
+                emptyIcon="business"
+                emptyTitle="No departments found"
+                [emptyMessage]="
+                  searchForm.get('name')?.value
+                    ? 'Try adjusting your search criteria'
+                    : 'Create your first department to get started'
+                "
+                [showCreateOnEmpty]="!searchForm.get('name')?.value"
+                createButtonText="Create Department"
+                createPermission="department.create"
+                (actionClick)="onTableAction($event)"
+                (createClick)="openDepartmentFormDialog()"
+              ></app-generic-table>
             </mat-card-content>
           </mat-card>
         </div>

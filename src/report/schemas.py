@@ -124,6 +124,7 @@ class ReportResponse(BaseModel):
         start_date (date): Report period start date.
         end_date (date): Report period end date.
         report_type (str): Type of report (employee, department, org_unit).
+        filter_name (str): Name of the filter entity (department/org unit name).
         generated_at (datetime): When the report was generated.
         employees (list[EmployeeReportData]): Employee data in the report.
 
@@ -132,5 +133,6 @@ class ReportResponse(BaseModel):
     start_date: date
     end_date: date
     report_type: str
+    filter_name: Union[str, None] = None
     generated_at: datetime = Field(default_factory=datetime.now)
     employees: list[EmployeeReportData] = Field(default_factory=list)

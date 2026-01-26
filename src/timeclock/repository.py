@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from src.employee.models import Employee
 from src.timeclock.models import TimeclockEntry
-from src.timeclock.schemas import TimeclockEntryBase, TimeclockEntryWithName
+from src.timeclock.schemas import (
+    TimeclockEntryBase,
+    TimeclockEntryCreate,
+    TimeclockEntryWithName,
+)
 
 
 def timeclock(badge_number: str, db: Session) -> bool:
@@ -163,3 +167,28 @@ def delete_timeclock_entry(
     """
     db.delete(timeclock_entry)
     db.commit()
+
+
+def create_timeclock_entry(
+    request: TimeclockEntryCreate, db: Session
+) -> TimeclockEntry:
+    """Create a new timeclock entry (manual entry).
+
+    Args:
+        request (TimeclockEntryCreate): Request data for creating timeclock
+            entry.
+        db (Session): Database session for the current request.
+
+    Returns:
+        TimeclockEntry: The newly created timeclock entry.
+
+    """
+    new_entry = TimeclockEntry(
+        badge_number=request.badge_number,
+        clock_in=request.clock_in,
+        clock_out=request.clock_out,
+    )
+    db.add(new_entry)
+    db.commit()
+    db.refresh(new_entry)
+    return new_entry

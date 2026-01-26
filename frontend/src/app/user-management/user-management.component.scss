@@ -137,18 +137,23 @@
       .user-info-cell,
       .user-info {
         @extend .table-cell-content;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: $gap-sm;
 
-        .user-icon,
-        .user-avatar {
-          mat-icon {
-            color: var(--sys-primary);
-            font-size: 1.2rem;
-            width: 1.2rem;
-            height: 1.2rem;
-          }
+        .user-icon {
+          color: var(--sys-primary);
+          font-size: 2.5rem;
+          width: 2.5rem;
+          height: 2.5rem;
+          flex-shrink: 0;
         }
 
         .user-details {
+          display: flex;
+          flex-direction: column;
+
           .badge-number {
             font-weight: 600;
             font-family: "Roboto Mono", monospace;

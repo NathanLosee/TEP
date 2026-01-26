@@ -1,0 +1,92 @@
+<h2 mat-dialog-title>
+  <mat-icon>supervisor_account</mat-icon>
+  Select Manager
+</h2>
+
+<mat-dialog-content>
+  <div class="search-container">
+    <!-- Search Input -->
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search by name or badge number</mat-label>
+      <input
+        matInput
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Type to search..."
+        autofocus
+      />
+      <mat-icon matPrefix>search</mat-icon>
+      <button
+        *ngIf="searchTerm"
+        matSuffix
+        mat-icon-button
+        (click)="searchTerm = ''; onSearchChange()"
+        aria-label="Clear search"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!-- Current Selection -->
+    <div *ngIf="selectedManager" class="current-selection">
+      <span class="selection-label">Selected:</span>
+      <div class="selected-manager">
+        <mat-icon>person</mat-icon>
+        <span class="manager-name">
+          {{ selectedManager.first_name }} {{ selectedManager.last_name }}
+        </span>
+        <span class="manager-badge">#{{ selectedManager.badge_number }}</span>
+        <button mat-icon-button (click)="clearSelection()" matTooltip="Clear selection">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Manager List -->
+    <div class="manager-list-container">
+      <mat-selection-list [multiple]="false" class="manager-list">
+        <mat-list-option
+          *ngFor="let manager of filteredManagers"
+          [value]="manager"
+          [selected]="isSelected(manager)"
+          (click)="selectManager(manager)"
+        >
+          <div class="manager-item">
+            <mat-icon matListItemIcon>person</mat-icon>
+            <div class="manager-info">
+              <span class="manager-name">
+                {{ manager.first_name }} {{ manager.last_name }}
+              </span>
+              <span class="manager-badge">#{{ manager.badge_number }}</span>
+            </div>
+            <span class="manager-org" *ngIf="manager.org_unit">
+              {{ manager.org_unit.name }}
+            </span>
+          </div>
+        </mat-list-option>
+      </mat-selection-list>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredManagers.length === 0" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <p>No managers found matching "{{ searchTerm }}"</p>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-button color="warn" (click)="clearSelection(); confirmSelection()">
+    No Manager
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="confirmSelection()"
+    [disabled]="!selectedManager"
+  >
+    <mat-icon>check</mat-icon>
+    Confirm Selection
+  </button>
+</mat-dialog-actions>

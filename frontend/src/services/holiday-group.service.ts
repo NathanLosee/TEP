@@ -19,6 +19,7 @@ export interface HolidayGroup {
   id?: number;
   name: string;
   holidays: Holiday[];
+  employee_count?: number;
 }
 
 /**

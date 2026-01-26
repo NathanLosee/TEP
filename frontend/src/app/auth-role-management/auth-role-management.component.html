@@ -10,25 +10,19 @@
         <button
           mat-raised-button
           color="primary"
-          (click)="toggleForm()"
+          (click)="addAuthRole()"
           [disabled]="isLoading"
           class="add-btn"
           [disableIfNoPermission]="'auth_role.create'"
           matTooltip="Requires auth_role.create permission"
           [matTooltipDisabled]="true"
         >
-          <mat-icon>{{ showForm ? "close" : "add" }}</mat-icon>
-          {{ showForm ? "Cancel" : "Add Auth Role" }}
+          <mat-icon>add</mat-icon>
+          Add Auth Role
         </button>
       </div>
     </div>
   </div>
-
-  <app-auth-role-form
-    *ngIf="showForm"
-    (formSubmitted)="saveAuthRole($event)"
-    (formCancelled)="cancelAction()"
-  ></app-auth-role-form>
 
   <!-- Main Content Tabs -->
   <mat-card class="content-card">
@@ -60,196 +54,48 @@
             </mat-card-header>
 
             <mat-card-content>
-              <div class="table-container">
-                <table
-                  mat-table
-                  [dataSource]="filteredRoles"
-                  class="roles-table"
-                >
-                  <!-- Name Column -->
-                  <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef>Role Name</th>
-                    <td mat-cell *matCellDef="let role">
-                      <div class="role-name">
-                        <mat-icon class="role-icon">security</mat-icon>
-                        <div class="group-info">
-                          <div class="group-name">{{ role.name }}</div>
-                        </div>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <!-- Permissions Column -->
-                  <ng-container matColumnDef="permissions">
-                    <th mat-header-cell *matHeaderCellDef>Permissions</th>
-                    <td mat-cell *matCellDef="let role">
-                      <div class="permissions-cell">
-                        <span class="permission-count"
-                          >{{ role.permissions.length }} permissions</span
+              <app-generic-table
+                [data]="filteredRoles"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="isLoading"
+                emptyIcon="security"
+                emptyTitle="No auth roles found"
+                [emptyMessage]="
+                  searchForm.get('name')?.value
+                    ? 'Try adjusting your search criteria'
+                    : 'Create your first auth role to get started'
+                "
+                [showCreateOnEmpty]="!searchForm.get('name')?.value"
+                createButtonText="Create Auth Role"
+                createPermission="auth_role.create"
+                (actionClick)="onTableAction($event)"
+                (createClick)="addAuthRole()"
+              >
+                <!-- Custom template for permissions column -->
+                <ng-template appTableCell="permissions" let-role>
+                  <div class="permissions-cell">
+                    <span class="permission-count"
+                      >{{ role.permissions.length }} permissions</span
+                    >
+                    <div class="permission-preview">
+                      <mat-chip-set>
+                        <mat-chip
+                          *ngFor="let permission of role.permissions.slice(0, 3)"
                         >
-                        <div class="permission-preview">
-                          <mat-chip-set>
-                            <mat-chip
-                              *ngFor="
-                                let permission of role.permissions.slice(0, 3)
-                              "
-                            >
-                              {{ permission.resource }}
-                            </mat-chip>
-                            <mat-chip
-                              *ngIf="role.permissions.length > 3"
-                              class="more-chip"
-                            >
-                              +{{ role.permissions.length - 3 }} more
-                            </mat-chip>
-                          </mat-chip-set>
-                        </div>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <!-- Actions Column -->
-                  <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef>Actions</th>
-                    <td mat-cell *matCellDef="let role">
-                      <div class="action-buttons">
-                        <button
-                          mat-icon-button
-                          matTooltip="View Details"
-                          (click)="viewDetails(role)"
-                          class="view-btn"
-                          [disableIfNoPermission]="'auth_role.read'"
+                          {{ permission.resource }}
+                        </mat-chip>
+                        <mat-chip
+                          *ngIf="role.permissions.length > 3"
+                          class="more-chip"
                         >
-                          <mat-icon>info</mat-icon>
-                        </button>
-                        <button
-                          mat-icon-button
-                          matTooltip="Edit Role"
-                          color="primary"
-                          (click)="editRole(role)"
-                          [disableIfNoPermission]="'auth_role.update'"
-                        >
-                          <mat-icon>edit</mat-icon>
-                        </button>
-                        <button
-                          mat-icon-button
-                          matTooltip="Delete Role"
-                          color="warn"
-                          (click)="deleteRole(role)"
-                          [disabled]="role.user_count > 0"
-                          class="delete-btn"
-                          [disableIfNoPermission]="'auth_role.delete'"
-                        >
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    </td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                  <tr
-                    mat-row
-                    *matRowDef="let row; columns: displayedColumns"
-                  ></tr>
-                </table>
-
-                <!-- Role Details Expansion Panels -->
-                <div class="tab-content" *ngIf="selectedRole">
-                  <mat-card class="entity-details-card">
-                    <mat-card-header>
-                      <mat-card-title>
-                        <mat-icon>security</mat-icon>
-                        {{ selectedRole.name }}
-                      </mat-card-title>
-                      <mat-card-subtitle
-                        >Role Details and User Management</mat-card-subtitle
-                      >
-                    </mat-card-header>
-
-                    <mat-card-content>
-                      <mat-divider></mat-divider>
-
-                      <!-- Role Permissions Section -->
-                      <div class="role-permissions-section">
-                        <h3>
-                          <mat-icon>verified_user</mat-icon>
-                          Permissions ({{ selectedRole.permissions.length }})
-                        </h3>
-                        <div class="permission-chips">
-                          <mat-chip-set>
-                            <mat-chip
-                              *ngFor="
-                                let permission of selectedRole.permissions
-                              "
-                            >
-                              {{ permission.resource }}
-                            </mat-chip>
-                          </mat-chip-set>
-                        </div>
-                        <p *ngIf="selectedRole.permissions.length === 0" class="no-items">
-                          No permissions assigned to this role
-                        </p>
-                      </div>
-
-                      <mat-divider></mat-divider>
-
-                      <!-- Assigned Users Section -->
-                      <div class="role-users-section">
-                        <h3>
-                          <mat-icon>people</mat-icon>
-                          Assigned Users ({{ selectedRoleUsers.length }})
-                        </h3>
-                        <div class="users-list" *ngIf="selectedRoleUsers.length > 0">
-                          <mat-chip-set>
-                            <mat-chip *ngFor="let user of selectedRoleUsers">
-                              {{ user.badge_number }}
-                            </mat-chip>
-                          </mat-chip-set>
-                        </div>
-                        <p *ngIf="selectedRoleUsers.length === 0" class="no-items">
-                          No users assigned to this role
-                        </p>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
-                </div>
-
-                <!-- Empty State -->
-                <div
-                  class="empty-state"
-                  *ngIf="filteredRoles.length === 0 && !isLoading"
-                >
-                  <mat-icon class="empty-icon">security</mat-icon>
-                  <h3>No auth roles found</h3>
-                  <p *ngIf="searchForm.get('name')?.value">
-                    Try adjusting your search criteria
-                  </p>
-                  <p *ngIf="!searchForm.get('name')?.value">
-                    Create your first auth role to get started
-                  </p>
-                  <button
-                    mat-raised-button
-                    color="primary"
-                    (click)="toggleForm()"
-                    *ngIf="!searchForm.get('name')?.value"
-                    [disableIfNoPermission]="'auth_role.create'"
-                    matTooltip="Requires auth_role.create permission"
-                    [matTooltipDisabled]="true"
-                  >
-                    <mat-icon>add</mat-icon>
-                    Create Auth Role
-                  </button>
-                </div>
-
-                <!-- Loading State -->
-                <div *ngIf="isLoading" class="loading-container">
-                  <mat-progress-spinner
-                    mode="indeterminate"
-                    diameter="60"
-                  ></mat-progress-spinner>
-                  <p>Loading auth roles...</p>
-                </div>
-              </div>
+                          +{{ role.permissions.length - 3 }} more
+                        </mat-chip>
+                      </mat-chip-set>
+                    </div>
+                  </div>
+                </ng-template>
+              </app-generic-table>
             </mat-card-content>
           </mat-card>
         </div>

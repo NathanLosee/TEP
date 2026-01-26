@@ -1,0 +1,122 @@
+@use '../../../styles/common' as *;
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--sys-on-surface);
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  mat-icon {
+    color: var(--sys-primary);
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+.auth-role-form {
+  min-width: 500px;
+  max-width: 700px;
+
+  .full-width {
+    width: 100%;
+    margin-bottom: $spacing-md;
+  }
+
+  .permissions-section {
+    margin-top: $spacing-md;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: $gap-sm;
+      margin-bottom: $spacing-md;
+      color: var(--sys-on-surface);
+      font-size: $font-size-lg;
+      font-weight: 600;
+
+      mat-icon {
+        color: var(--sys-primary);
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+
+    mat-accordion {
+      mat-expansion-panel {
+        margin-bottom: $spacing-xs;
+        background: var(--sys-surface-variant);
+        border-radius: $border-radius-md !important;
+
+        &::ng-deep {
+          .mat-expansion-panel-header {
+            padding: $padding-sm $padding-md;
+          }
+
+          .mat-expansion-panel-body {
+            padding: $padding-sm $padding-md $padding-md;
+          }
+        }
+      }
+
+      mat-panel-title {
+        display: flex;
+        align-items: center;
+        gap: $gap-sm;
+        font-weight: 500;
+
+        mat-icon {
+          font-size: 1.1rem;
+          width: 1.1rem;
+          height: 1.1rem;
+          color: var(--sys-primary);
+        }
+      }
+
+      mat-panel-description {
+        color: var(--sys-on-surface-variant);
+        font-size: $font-size-sm;
+      }
+
+      .permission-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: $gap-sm;
+
+        .permission-checkbox {
+          display: block;
+
+          .permission-label {
+            .permission-resource {
+              font-size: $font-size-sm;
+              color: var(--sys-on-surface);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: $padding-md;
+  gap: $gap-sm;
+
+  button {
+    mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-right: $spacing-xs;
+    }
+
+    mat-progress-spinner {
+      display: inline-block;
+      margin-right: $spacing-xs;
+    }
+  }
+}

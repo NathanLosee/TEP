@@ -39,7 +39,9 @@
       "Bash(grep:*)",
       "Bash(tee:*)",
       "Bash(.venvScriptspython.exe -m pytest tests/ -v --tb=short)",
-      "Bash(.venv/Scripts/python.exe -m pytest tests/ -v --tb=short)"
+      "Bash(.venv/Scripts/python.exe -m pytest tests/ -v --tb=short)",
+      "Bash(copy:*)",
+      "Bash(alembic current:*)"
     ]
   }
 }

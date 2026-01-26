@@ -9,16 +9,11 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PartialObserver } from 'rxjs';
@@ -26,11 +21,20 @@ import {
   HolidayGroup,
   HolidayGroupService,
 } from '../../services/holiday-group.service';
+import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import {
+  GenericTableComponent,
+  TableCellDirective,
+} from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
 import { HolidayFormDialogComponent } from './holiday-form-dialog/holiday-form-dialog.component';
 import { HolidayGroupDetailsDialogComponent } from './holiday-group-details-dialog/holiday-group-details-dialog.component';
 import { HolidayGroupEmployeesDialogComponent } from './holiday-group-employees-dialog/holiday-group-employees-dialog.component';
-import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 
 @Component({
   selector: 'app-holiday-group-management',
@@ -38,23 +42,20 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
-    MatDatepickerModule,
     MatDialogModule,
-    MatExpansionModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatTableModule,
     MatTabsModule,
     MatTooltipModule,
-    ReactiveFormsModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
+    TableCellDirective,
   ],
   templateUrl: './holiday-group-management.component.html',
   styleUrl: './holiday-group-management.component.scss',
@@ -77,8 +78,50 @@ export class HolidayGroupManagementComponent implements OnInit {
   // UI State
   isLoading = false;
 
-  // Table columns
-  displayedColumns: string[] = ['name', 'holidays_count', 'actions'];
+  // Table configuration
+  columns: TableColumn<HolidayGroup>[] = [
+    {
+      key: 'name',
+      header: 'Group Name',
+      type: 'icon-text',
+      icon: 'event',
+    },
+    {
+      key: 'holidays_count',
+      header: 'Holidays',
+      type: 'template',
+    },
+  ];
+
+  actions: TableAction<HolidayGroup>[] = [
+    {
+      icon: 'visibility',
+      tooltip: 'View Details',
+      action: 'viewDetails',
+      permission: 'holiday_group.read',
+    },
+    {
+      icon: 'people',
+      tooltip: 'View Employees',
+      action: 'viewEmployees',
+      permission: 'holiday_group.read',
+    },
+    {
+      icon: 'edit',
+      tooltip: 'Edit Group',
+      action: 'edit',
+      color: 'primary',
+      permission: 'holiday_group.update',
+    },
+    {
+      icon: 'delete',
+      tooltip: 'Delete Group',
+      action: 'delete',
+      color: 'warn',
+      permission: 'holiday_group.delete',
+      disabled: (group: HolidayGroup) => (group.employee_count || 0) > 0,
+    },
+  ];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
@@ -133,6 +176,23 @@ export class HolidayGroupManagementComponent implements OnInit {
 
       return matchesSearch;
     });
+  }
+
+  onTableAction(event: TableActionEvent<HolidayGroup>) {
+    switch (event.action) {
+      case 'viewDetails':
+        this.viewHolidayDetails(event.row);
+        break;
+      case 'viewEmployees':
+        this.viewEmployees(event.row);
+        break;
+      case 'edit':
+        this.openHolidayFormDialog(event.row);
+        break;
+      case 'delete':
+        this.deleteGroup(event.row);
+        break;
+    }
   }
 
   viewEmployees(group: HolidayGroup) {

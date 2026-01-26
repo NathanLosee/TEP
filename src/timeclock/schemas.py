@@ -15,6 +15,30 @@ from src.services import validate
 from src.timeclock.constants import EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN
 
 
+class TimeclockEntryCreate(BaseModel):
+    """Pydantic schema for creating a new timeclock entry.
+
+    Attributes:
+        badge_number (str): Employee's badge number.
+        clock_in (datetime): Employee's clock-in timestamp.
+        clock_out (Union[datetime, None]): Employee's clock-out timestamp.
+
+    """
+
+    badge_number: str
+    clock_in: datetime
+    clock_out: Union[datetime, None] = Field(default=None)
+
+    @model_validator(mode="after")
+    def check_datetimes(self):
+        validate(
+            not self.clock_out or self.clock_out >= self.clock_in,
+            EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN,
+            status.HTTP_400_BAD_REQUEST,
+        )
+        return self
+
+
 class TimeclockEntryBase(BaseModel):
     """Pydantic schema for request/response data.
 

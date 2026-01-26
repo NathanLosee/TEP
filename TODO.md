@@ -161,50 +161,41 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ### UI/UX Improvements
 
-- [ ] **Make Material Design Theme Configurable via Environment Variables**
-  - **Scope**:
-    - Surface colors (primary, secondary, tertiary)
-    - Background colors
-    - Logo URL/path used on frontend
-    - Brand colors
-  - **Files**:
-    - `frontend/src/environments/environment.ts`
-    - `frontend/src/environments/environment.development.ts`
-    - `frontend/src/styles.scss`
+- [x] **Make Material Design Theme Configurable via System Settings** ✅ (Completed)
   - **Implementation**:
-    1. Add theme variables to environment files
-    2. Create theme configuration service
-    3. Dynamically apply CSS variables based on config
-    4. Allow logo replacement via environment variable
+    - Theme colors (primary, secondary, accent/tertiary) configurable via System Settings UI
+    - Logo uploadable via System Settings (stored in database)
+    - `SystemSettingsService.applyTheme()` dynamically applies CSS variables
+    - Default colors match Angular Material M3 theme (`#02E600`, `#BBCBB2`, `#CDCD00`)
+    - When using defaults, SCSS theme is preserved; custom colors generate tonal palette
+  - **Files Modified**:
+    - `frontend/src/services/system-settings.service.ts`
+    - `frontend/src/app/system-settings/` (UI components)
+    - `src/system_settings/` (backend API and models)
   - **Priority**: LOW - Customization
   - **Benefit**: Easy theme customization without code changes
 
-- [ ] **Enhance PDF Report Appearance**
-  - **Current State**: Reports are plain and functional
-  - **File**: `src/report/service.py` (PDF generation logic)
-  - **Proposed Enhancements**:
+- [x] **Enhance PDF Report Appearance** ✅ (Completed)
+  - **Implemented Features**:
     1. **Logo Integration**:
-       - Add company logo as large background watermark (semi-transparent)
-       - OR add logo in header/corner of each page
-       - Make logo path configurable via environment variable
+       - Large semi-transparent watermark (6 inches) centered on each page
+       - Uses logo from System Settings (stored in database)
     2. **Layout Improvements**:
-       - Start employee timeclock details on same page as summaries (reduce whitespace)
-       - Improve table alignment and spacing
-       - Add professional header/footer with page numbers
+       - Employee summary and details kept together on same page (`KeepTogether`)
+       - Skip general summary for single-employee reports (avoids empty section)
+       - Department/Org Unit name displayed in header when applicable
     3. **Styling Enhancements**:
-       - Add color to headers (use theme colors from config)
-       - Better typography hierarchy
-       - Improved border styles for tables
-       - Add subtle background colors for alternating rows
+       - Colored headers with proper typography
+       - Table styling with borders and background colors
+       - Monthly breakdown with totals
     4. **Additional Elements**:
        - Report generation date/time in header
-       - Company name/info in header (from config)
-       - Report title with styling
-       - Summary box with key metrics highlighted
-  - **Technical Approach**:
-    - Use ReportLab's `canvas.drawImage()` for watermark
-    - Create reusable template with header/footer
-    - Define style constants at top of file for easy customization
+       - Company name in header (from System Settings)
+       - Report period displayed
+  - **Files Modified**:
+    - `src/report/pdf_export.py` - PDF generation with watermark and styling
+    - `src/report/service.py` - Added filter_name for dept/org unit
+    - `src/report/schemas.py` - Added filter_name to ReportResponse
   - **Priority**: LOW - Polish
   - **Benefit**: More professional-looking reports for clients/management
 
@@ -264,19 +255,18 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ### Production Packaging
 
-- [ ] **Create Production Build Scripts**
-  - **Backend**:
-    - Script to bundle Python application with dependencies
-    - Generate standalone executable (PyInstaller or similar)
-    - Include all required assets (migrations, keys directory structure)
-  - **Frontend**:
-    - Production build configuration
-    - AOT compilation
-    - Asset optimization and minification
-  - **Files to Create**:
-    - `scripts/build_backend.py` - Backend packaging script
-    - `scripts/build_frontend.sh` - Frontend build script
-    - `scripts/package_release.py` - Complete release packager
+- [x] **Create Production Build Scripts** ✅ (Completed)
+  - **Implementation**:
+    - `scripts/build_release.py` - Complete release packager with:
+      - Prerequisite checking (poetry, node, npm)
+      - Backend + frontend test execution
+      - Frontend production build (Angular AOT compilation)
+      - Backend packaging with dependencies
+      - Database structure and migrations
+      - Configuration templates
+      - Documentation bundling
+      - ZIP archive creation
+  - **Usage**: `python scripts/build_release.py --version 1.0.0`
   - **Priority**: HIGH - Required for distribution
 
 - [ ] **Create Installation Package**
@@ -331,15 +321,15 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
     - Reverse proxy setup (if using separate web server)
   - **Priority**: HIGH - Production requirement
 
-- [ ] **Database Bundling**
-  - **Approach**:
-    - Bundle empty SQLite database with schema
-    - Run migrations on first startup
-    - Provide backup/restore utilities
-  - **Files to Create**:
-    - `scripts/init_database.py` - Initialize database
-    - `scripts/backup_database.py` - Backup utility
-    - `scripts/restore_database.py` - Restore utility
+- [x] **Database Bundling** ✅ (Completed)
+  - **Implementation**:
+    - `scripts/init_database.py` - Initialize database with Alembic migrations
+    - `scripts/backup_database.py` - Timestamped backups with optional gzip compression
+    - `scripts/restore_database.py` - Restore with safety backup and integrity verification
+  - **Features**:
+    - Schema verification after initialization
+    - Automatic old backup cleanup (configurable retention)
+    - Safety backup before restore operations
   - **Priority**: HIGH - Production requirement
 
 - [ ] **Configuration Management**
@@ -353,14 +343,14 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
     - Generate random JWT secret
   - **Priority**: HIGH - Production requirement
 
-- [ ] **License Key Generator Tool**
-  - **Purpose**: Separate tool for generating license keys
+- [x] **License Key Generator Tool** ✅ (Completed)
+  - **Implementation**: `tools/license_generator.py`
   - **Features**:
-    - Generate Ed25519 key pair (one-time setup)
-    - Generate signed license keys
-    - Revocation support (future)
-  - **Security**: Keep private key separate from application
-  - **File**: `tools/license_generator.py`
+    - Generate Ed25519 key pair (`--generate-keypair`)
+    - Generate signed license keys (`--generate-license --private-key FILE`)
+    - Verify license keys (`--verify-license KEY --public-key FILE`)
+    - Batch key generation (`--count N`)
+  - **Security**: Private key stored separately, not distributed with application
   - **Priority**: HIGH - Required for licensing
 
 - [ ] **Update Mechanism**
@@ -405,6 +395,12 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - [x] **Move Hardcoded Error Messages to Constants** - Timeclock routes cleaned up
 - [x] **Implement License System** - Ed25519 cryptographic license activation
 - [x] **Add Comprehensive Testing** - 233 backend + 325 frontend tests (all passing)
+- [x] **Generic Table Component Refactoring** - Created reusable `GenericTableComponent` used by all 9 management pages
+- [x] **License Reactivation Bug Fix** - Fixed UNIQUE constraint error when reactivating a license that was deactivated offline
+- [x] **System Settings Theme Configuration** - Logo upload, theme colors configurable via UI
+- [x] **PDF Report Enhancements** - Watermark, improved layout, dept/org headers
+- [x] **Database Utilities** - init_database.py, backup_database.py, restore_database.py
+- [x] **License Key Generator** - tools/license_generator.py with key pair generation and verification
 
 ---
 
@@ -421,7 +417,7 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - Database query optimization for reports with >1000 entries
 
 ### Security Checklist
-- [ ] Change default root password handling
+- [x] Change default root password handling (see High Priority - completed)
 - [ ] Review CORS configuration for production
 - [ ] Ensure HTTPS in production
 - [ ] Regular security audits of dependencies
@@ -429,4 +425,4 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ---
 
-**Last Updated**: 2026-01-13
+**Last Updated**: 2026-01-26

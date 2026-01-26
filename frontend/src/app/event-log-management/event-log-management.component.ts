@@ -1,20 +1,30 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
-import { EventLogService, EventLog } from '../../services/event-log.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { EventLog, EventLogService } from '../../services/event-log.service';
 import { PermissionService } from '../../services/permission.service';
+import {
+  GenericTableComponent,
+  TableCellDirective,
+} from '../shared/components/generic-table';
+import { TableAction, TableColumn } from '../shared/models/table.models';
+import { EventLogDetailDialogComponent } from './event-log-detail-dialog.component';
 
 @Component({
   selector: 'app-event-log-management',
@@ -26,15 +36,16 @@ import { PermissionService } from '../../services/permission.service';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule,
     MatFormFieldModule,
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatProgressSpinnerModule,
     MatTooltipModule,
     MatChipsModule,
     MatTabsModule,
+    MatDialogModule,
+    GenericTableComponent,
+    TableCellDirective,
   ],
   templateUrl: './event-log-management.component.html',
   styleUrl: './event-log-management.component.scss',
@@ -43,6 +54,7 @@ export class EventLogManagementComponent implements OnInit {
   private eventLogService = inject(EventLogService);
   private permissionService = inject(PermissionService);
   private fb = inject(FormBuilder);
+  private dialog = inject(MatDialog);
 
   // Data
   eventLogs: EventLog[] = [];
@@ -51,8 +63,38 @@ export class EventLogManagementComponent implements OnInit {
   // UI State
   isLoading = false;
 
-  // Table columns
-  displayedColumns = ['timestamp', 'badge_number', 'log', 'type'];
+  // Table configuration
+  columns: TableColumn<EventLog>[] = [
+    {
+      key: 'timestamp',
+      header: 'Timestamp',
+      type: 'template',
+    },
+    {
+      key: 'badge_number',
+      header: 'Badge Number',
+      type: 'chip',
+    },
+    {
+      key: 'log',
+      header: 'Log Message',
+      type: 'template',
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      type: 'template',
+    },
+  ];
+
+  // Table actions
+  actions: TableAction<EventLog>[] = [
+    {
+      icon: 'visibility',
+      tooltip: 'View Full Log',
+      action: 'view',
+    },
+  ];
 
   // Search form
   searchForm: FormGroup;
@@ -180,5 +222,25 @@ export class EventLogManagementComponent implements OnInit {
 
   formatTimestamp(timestamp: string): string {
     return new Date(timestamp).toLocaleString();
+  }
+
+  truncateLog(log: string, maxLength: number = 80): string {
+    if (log.length <= maxLength) {
+      return log;
+    }
+    return log.substring(0, maxLength) + '...';
+  }
+
+  onTableAction(event: { action: string; row: EventLog }) {
+    if (event.action === 'view') {
+      this.viewLogDetail(event.row);
+    }
+  }
+
+  viewLogDetail(log: EventLog) {
+    this.dialog.open(EventLogDetailDialogComponent, {
+      width: '600px',
+      data: log,
+    });
   }
 }

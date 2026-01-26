@@ -8,14 +8,11 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PartialObserver } from 'rxjs';
@@ -24,6 +21,12 @@ import {
   DepartmentService,
 } from '../../services/department.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { GenericTableComponent } from '../shared/components/generic-table';
+import {
+  TableAction,
+  TableActionEvent,
+  TableColumn,
+} from '../shared/models/table.models';
 import { DepartmentEmployeesDialogComponent } from './department-employees-dialog/department-employees-dialog.component';
 import { DepartmentFormDialogComponent } from './department-form-dialog/department-form-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
@@ -35,7 +38,6 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -43,11 +45,10 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
     MatInputModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatChipsModule,
     MatTooltipModule,
-    MatProgressSpinnerModule,
     MatTabsModule,
     DisableIfNoPermissionDirective,
+    GenericTableComponent,
   ],
   templateUrl: './department-management.component.html',
   styleUrl: './department-management.component.scss',
@@ -70,8 +71,38 @@ export class DepartmentManagementComponent implements OnInit {
   // UI State
   isLoading = false;
 
-  // Table columns
-  displayedColumns: string[] = ['name', 'actions'];
+  // Table configuration
+  columns: TableColumn<Department>[] = [
+    {
+      key: 'name',
+      header: 'Department Name',
+      type: 'icon-text',
+      icon: 'business',
+    },
+  ];
+
+  actions: TableAction<Department>[] = [
+    {
+      icon: 'people',
+      tooltip: 'View Employees',
+      action: 'view',
+      permission: 'department.read',
+    },
+    {
+      icon: 'edit',
+      tooltip: 'Edit Department',
+      action: 'edit',
+      color: 'primary',
+      permission: 'department.update',
+    },
+    {
+      icon: 'delete',
+      tooltip: 'Delete Department',
+      action: 'delete',
+      color: 'warn',
+      permission: 'department.delete',
+    },
+  ];
 
   constructor() {
     this.searchForm = this.formBuilder.group({
@@ -122,6 +153,20 @@ export class DepartmentManagementComponent implements OnInit {
 
       return matchesSearch;
     });
+  }
+
+  onTableAction(event: TableActionEvent<Department>) {
+    switch (event.action) {
+      case 'view':
+        this.viewEmployees(event.row);
+        break;
+      case 'edit':
+        this.openDepartmentFormDialog(event.row);
+        break;
+      case 'delete':
+        this.deleteDepartment(event.row);
+        break;
+    }
   }
 
   viewEmployees(department: Department) {
