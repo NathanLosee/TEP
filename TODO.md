@@ -240,13 +240,16 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
   - **Files**: Add examples to route docstrings
   - **Priority**: LOW - Documentation
 
-- [ ] **Create Deployment Guide**
-  - **Topics**:
+- [x] **Create Deployment Guide** ✅ (Completed)
+  - **File**: `DEPLOYMENT.md`
+  - **Topics Covered**:
     - Production environment setup
     - Environment variable configuration
     - Database backup strategies
-    - SSL/HTTPS setup
+    - SSL/HTTPS setup recommendations
     - CORS configuration for production
+    - Windows service management
+    - Troubleshooting guide
   - **Priority**: LOW - Documentation
 
 ---
@@ -258,67 +261,96 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - [x] **Create Production Build Scripts** ✅ (Completed)
   - **Implementation**:
     - `scripts/build_release.py` - Complete release packager with:
-      - Prerequisite checking (poetry, node, npm)
+      - Prerequisite checking (poetry, node, npm, pyinstaller)
       - Backend + frontend test execution
       - Frontend production build (Angular AOT compilation)
-      - Backend packaging with dependencies
+      - Backend packaging (source mode or PyInstaller executable)
       - Database structure and migrations
       - Configuration templates
       - Documentation bundling
       - ZIP archive creation
-  - **Usage**: `python scripts/build_release.py --version 1.0.0`
+    - `tep.spec` - PyInstaller spec file for Windows executable
+    - `run_server.py` - Entry point for uvicorn server
+  - **Usage**:
+    - Source mode: `python scripts/build_release.py --version 1.0.0`
+    - Executable mode: `python scripts/build_release.py --version 1.0.0 --executable`
   - **Priority**: HIGH - Required for distribution
 
-- [ ] **Create Installation Package**
-  - **Type**: Windows installer (.msi or .exe)
-  - **Contents**:
-    - Backend executable
-    - Frontend static files
-    - Database initialization scripts
-    - Default configuration templates
-    - License activation tool
+- [x] **Create Installation Package** ✅ (Completed)
+  - **Type**: Windows installer (.exe) using NSIS
+  - **Files**:
+    - `installer/tep-installer.nsi` - NSIS installer script
+    - `installer/favicon.ico` - Installer icon
+    - `LICENSE` - License agreement shown during install
   - **Installer Features**:
     - Custom installation directory selection
-    - Service installation option
+    - Configuration page for root password and port
     - Desktop shortcut creation
-    - Start menu entries
-    - Automatic database initialization
-  - **Tools**:
-    - NSIS (Nullsoft Scriptable Install System)
-    - Or WiX Toolset for MSI
+    - Start menu entries with Open TEP, Documentation, Uninstall
+    - Windows Firewall rule configuration
+    - Start/Stop batch scripts
+    - Uninstaller with option to keep data
+  - **Usage**:
+    - `python scripts/build_release.py --version 1.0.0 --executable --installer`
+    - Or standalone: `makensis /DVERSION=1.0.0 installer/tep-installer.nsi`
   - **Priority**: HIGH - Required for distribution
 
-- [ ] **Create Deployment Documentation**
-  - **Topics**:
-    - System requirements
-    - Installation steps
-    - Initial configuration
-    - License activation process
-    - Backup procedures
-    - Update/upgrade process
-    - Uninstallation
-    - Troubleshooting common issues
+- [x] **Create Deployment Documentation** ✅ (Completed)
   - **File**: `DEPLOYMENT.md`
+  - **Topics Covered**:
+    - System requirements
+    - Installation methods (Windows installer, PyInstaller executable, manual)
+    - Environment variable configuration
+    - Database initialization and management
+    - Backup/restore procedures
+    - License activation
+    - Service management (standalone and Windows service via NSSM)
+    - Troubleshooting
+    - Security best practices
   - **Priority**: HIGH - Required for distribution
 
-- [ ] **Backend Service Configuration**
-  - **Windows Service**:
-    - Create Windows service wrapper for backend
-    - Auto-start on boot
-    - Graceful shutdown handling
-    - Service logging
-  - **Tools**: NSSM (Non-Sucking Service Manager) or custom service wrapper
+- [x] **Backend Service Configuration** ✅ (Completed)
+  - **Implementation**: PowerShell script using NSSM for Windows service management
+  - **Files**:
+    - `scripts/install-service.ps1` - Automated NSSM download and service installation
+  - **Features**:
+    - Auto-downloads NSSM if not present
+    - Configures service with auto-start on boot
+    - Log rotation for stdout/stderr
+    - Automatic restart on failure
+    - Interactive prompts for starting service
+  - **Installer Integration**:
+    - NSIS installer includes `install-service.bat` and `uninstall-service.bat`
+    - Uninstaller automatically removes Windows service
+  - **Usage**:
+    - `.\scripts\install-service.ps1` - Install as service
+    - `.\scripts\install-service.ps1 -Uninstall` - Remove service
   - **Priority**: HIGH - Production requirement
 
-- [ ] **Frontend Web Server Setup**
-  - **Options**:
-    1. Bundle with lightweight web server (e.g., Nginx for Windows)
-    2. Or serve frontend directly from FastAPI
-  - **Configuration**:
-    - Static file serving
-    - Gzip compression
-    - Cache headers
-    - Reverse proxy setup (if using separate web server)
+- [x] **Configuration Management** ✅ (Completed)
+  - **Implementation**:
+    - `.env.example` template file created with documented configuration options
+    - Installer prompts for root password and backend port
+    - Installer auto-generates secure random JWT_KEY_PASSWORD (32-byte base64)
+    - RSA keys are generated on first run (existing `load_keys()` function)
+    - JWT key encryption supported via JWT_KEY_PASSWORD environment variable
+  - **Files**:
+    - `.env.example` - Configuration template with all options documented
+    - `installer/tep-installer.nsi` - NSIS installer with key generation
+    - `src/services.py` - RSA key generation and encryption
+  - **Priority**: HIGH - Production requirement
+
+- [x] **Frontend Web Server Setup** ✅ (Completed)
+  - **Implementation**: Frontend served directly from FastAPI in production mode
+  - **Features**:
+    - Static file serving for Angular assets (JS, CSS, images)
+    - Client-side routing support (returns index.html for Angular routes)
+    - Single-server deployment (no separate web server needed)
+    - Automatic frontend detection from `../frontend` relative to executable
+  - **Files Modified**:
+    - `src/main.py` - Added `setup_static_files()` for production mode
+    - `src/config.py` - Handle PyInstaller .env file path
+    - `run_server.py` - Load .env early, database auto-initialization
   - **Priority**: HIGH - Production requirement
 
 - [x] **Database Bundling** ✅ (Completed)
@@ -330,17 +362,6 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
     - Schema verification after initialization
     - Automatic old backup cleanup (configurable retention)
     - Safety backup before restore operations
-  - **Priority**: HIGH - Production requirement
-
-- [ ] **Configuration Management**
-  - **Default Configuration**:
-    - Bundle template `.env.example` file
-    - Installer prompts for critical settings (port, passwords)
-    - Create configuration UI (optional, future enhancement)
-  - **Security**:
-    - Generate unique RSA keys during installation
-    - Prompt for secure root password
-    - Generate random JWT secret
   - **Priority**: HIGH - Production requirement
 
 - [x] **License Key Generator Tool** ✅ (Completed)
@@ -401,6 +422,13 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - [x] **PDF Report Enhancements** - Watermark, improved layout, dept/org headers
 - [x] **Database Utilities** - init_database.py, backup_database.py, restore_database.py
 - [x] **License Key Generator** - tools/license_generator.py with key pair generation and verification
+- [x] **PyInstaller Support** - tep.spec, run_server.py, --executable flag in build_release.py
+- [x] **Deployment Documentation** - Comprehensive DEPLOYMENT.md with configuration, database, service management
+- [x] **Frontend Web Server Setup** - Single-server deployment: FastAPI serves Angular in production mode
+- [x] **Windows Installer** - NSIS installer with config page, shortcuts, firewall rules, uninstaller
+- [x] **Backend Service Configuration** - PowerShell script with NSSM for Windows service management
+- [x] **Configuration Management** - .env.example template, auto-generated JWT_KEY_PASSWORD in installer
+- [x] **Create Deployment Guide** - Comprehensive DEPLOYMENT.md (was listed in Documentation section)
 
 ---
 
@@ -425,4 +453,4 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ---
 
-**Last Updated**: 2026-01-26
+**Last Updated**: 2026-01-27

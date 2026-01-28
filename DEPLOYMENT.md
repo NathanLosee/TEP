@@ -71,13 +71,13 @@ Complete guide for deploying TEP (Timeclock and Employee Payroll) in production 
 
 3. **Configuration**
    - Set backend port (default: 8000)
-   - Set frontend port (default: 4200)
+   - Set root administrator password (minimum 8 characters, 12+ recommended)
    - Configure firewall rules (automatic)
 
 4. **Security Setup**
-   - Installer generates RSA key pair for JWT authentication
-   - Set root administrator password (required)
-   - Password requirements: minimum 12 characters
+   - Installer auto-generates secure JWT_KEY_PASSWORD (32-byte random)
+   - RSA key pair for JWT authentication is generated on first startup
+   - Root administrator password is stored in `.env` file
 
 5. **Service Installation**
    - Installer registers TEP as Windows service
@@ -91,13 +91,198 @@ Complete guide for deploying TEP (Timeclock and Employee Payroll) in production 
 
 7. **Complete Installation**
    - Launch TEP application
-   - Access via desktop shortcut or `http://localhost:4200`
+   - Access via desktop shortcut or `http://localhost:8000`
+   - In single-server mode, both API and frontend are served on port 8000
 
-### Method 2: Manual Installation (Development/Advanced)
+### Method 2: Standalone Executable (PyInstaller)
+
+**For deployments without Python installed.**
+
+The build script can create a standalone Windows executable that bundles Python and all dependencies. In production mode, the backend also serves the Angular frontend, providing a **single-server deployment** - no separate web server needed.
+
+1. **Build the Executable**
+   ```cmd
+   cd TEP
+   python scripts/build_release.py --version 1.0.0 --executable
+   ```
+
+2. **Locate Output**
+   - Build output: `build/TEP-1.0.0/`
+   - Backend executable: `build/TEP-1.0.0/backend/tep.exe`
+   - Frontend files: `build/TEP-1.0.0/frontend/`
+   - Release archive: `releases/TEP-1.0.0.zip`
+
+3. **Deploy to Target Machine**
+   - Extract `TEP-1.0.0.zip` to installation directory (e.g., `C:\Program Files\TEP`)
+   - No Python installation required
+   - All dependencies bundled (~65 MB total)
+   - Directory structure should be:
+     ```
+     C:\Program Files\TEP\
+     ├── backend\
+     │   ├── tep.exe
+     │   ├── _internal\
+     │   └── .env           # Create this file
+     └── frontend\
+         ├── index.html
+         ├── main-*.js
+         ├── styles-*.css
+         └── ...
+     ```
+
+4. **Configure Environment**
+   Create a `.env` file in the **backend directory** (next to `tep.exe`):
+   ```env
+   # Required settings
+   ENVIRONMENT=production
+   ROOT_PASSWORD=YourSecurePassword123!
+
+   # Optional settings
+   LOG_LEVEL=INFO
+   BACKEND_PORT=8000
+   DATABASE_URL=sqlite:///tep_prod.sqlite
+   ```
+
+5. **Start Server**
+   ```cmd
+   cd "C:\Program Files\TEP\backend"
+   tep.exe
+   ```
+
+   **Expected Output:**
+   ```
+   Loaded environment from: C:\Program Files\TEP\backend\.env
+   ============================================================
+   TEP - Timeclock and Employee Payroll
+   ============================================================
+   Environment: production
+   Starting server on 0.0.0.0:8000
+   ============================================================
+   Initializing database...
+   Database initialized successfully.
+   INFO:     Serving frontend from: C:\Program Files\TEP\frontend
+   INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+   ```
+
+6. **Access the Application**
+   - Open browser to: `http://localhost:8000`
+   - The server provides both the API and the Angular frontend
+   - API endpoints: `http://localhost:8000/docs` (Swagger UI)
+   - Frontend routes are handled by Angular client-side routing
+
+**Note:** In production mode, the database is automatically initialized on first startup using SQLAlchemy's `create_all()`. This creates all required tables if they don't exist.
+
+### Method 3: Manual Installation (Development/Advanced)
 
 **For development or custom deployments.**
 
 See [README.md](README.md) for development setup instructions.
+
+---
+
+## Configuration
+
+### Environment Variables
+
+TEP uses environment variables for configuration. Create a `.env` file in the backend directory or set system environment variables.
+
+**Required Variables:**
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `ENVIRONMENT` | Runtime environment | `development` | `production` |
+| `ROOT_PASSWORD` | Initial root user password | (none - required in prod) | `MySecurePass123!` |
+
+**Optional Variables:**
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `LOG_LEVEL` | Logging verbosity | `INFO` | `DEBUG`, `WARNING`, `ERROR` |
+| `DATABASE_URL` | SQLite database path | Auto-generated | `sqlite:///data/tep.sqlite` |
+| `CORS_ORIGINS` | Allowed CORS origins | `http://localhost:4200` | `https://myapp.com` |
+| `BACKEND_PORT` | Server port | `8000` | `8080` |
+| `BACKEND_HOST` | Server bind address | `0.0.0.0` | `127.0.0.1` |
+| `JWT_KEY_PASSWORD` | Password to encrypt JWT RSA key | (none) | `YourSecretKeyPassword` |
+
+**Example `.env` File:**
+
+```env
+# TEP Configuration
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+
+# Security - CHANGE THESE IN PRODUCTION
+ROOT_PASSWORD=ChangeThisSecurePassword123!
+
+# Database
+DATABASE_URL=sqlite:///tep_prod.sqlite
+
+# CORS - Set to your frontend domain (in single-server mode, this may not be needed)
+CORS_ORIGINS=https://timeclock.yourcompany.com
+
+# Server
+BACKEND_PORT=8000
+BACKEND_HOST=0.0.0.0
+
+# Security - Password for encrypting JWT RSA private key
+JWT_KEY_PASSWORD=YourSecureKeyEncryptionPassword
+```
+
+### Database Paths
+
+The database location is determined by:
+
+1. `DATABASE_URL` environment variable (if set)
+2. Automatic based on `ENVIRONMENT`:
+   - Production: `sqlite:///tep_prod.sqlite`
+   - Development: `sqlite:///tep_dev.sqlite`
+
+**Important:** The database file is created relative to the working directory. When running as a service, ensure the working directory is set correctly.
+
+### Database Initialization
+
+**Method 1: Using Alembic (Recommended)**
+
+```cmd
+# Navigate to project directory
+cd "C:\Program Files\TEP\backend"
+
+# Run all migrations
+alembic upgrade head
+```
+
+**Method 2: Using Init Script**
+
+```cmd
+cd "C:\Program Files\TEP"
+python scripts/init_database.py
+
+# With custom path
+python scripts/init_database.py --db-path "C:\Data\tep.sqlite"
+
+# Force reinitialize (WARNING: deletes existing data)
+python scripts/init_database.py --force
+```
+
+**Method 3: Copy Pre-initialized Database**
+
+For standalone executable deployments, you can copy a pre-initialized database:
+
+```cmd
+# From development environment
+copy "tep_dev.sqlite" "C:\Program Files\TEP\backend\tep_prod.sqlite"
+```
+
+### First Startup Behavior
+
+On first startup, TEP automatically:
+
+1. **Checks Database** - Verifies database exists and has correct schema
+2. **Creates Root User** - If no root user exists:
+   - Uses `ROOT_PASSWORD` environment variable
+   - In production: **Fails if `ROOT_PASSWORD` not set**
+   - In development: Generates random password (displayed in console)
+3. **Validates License** - Checks for active license (admin features locked if none)
 
 ---
 
@@ -106,8 +291,9 @@ See [README.md](README.md) for development setup instructions.
 ### First Launch
 
 1. **Access Application**
-   - Open browser to `http://localhost:4200` (or configured port)
+   - Open browser to `http://localhost:8000` (or configured port)
    - Or use desktop shortcut
+   - In single-server mode, the API and frontend are both on the same port
 
 2. **Login as Root User**
    - Username: `0` (badge number zero)
@@ -176,22 +362,20 @@ See [README.md](README.md) for development setup instructions.
 
 ### Port Configuration
 
-**Default Ports:**
-- Backend API: `8000`
-- Frontend: `4200`
+**Single-Server Mode (Standalone Executable):**
+- Only one port needed: `8000` (default)
+- Backend serves both API and frontend
 
-**To Change Ports:**
+**Separate Frontend Mode (Development):**
+- Backend API: `8000`
+- Frontend dev server: `4200`
+
+**To Change Port:**
 
 1. Stop TEP service
-2. Edit configuration:
-   ```
-   File: C:\Program Files\TEP\config\.env
-
-   # Backend port
-   BACKEND_PORT=8000
-
-   # Frontend (requires rebuild)
-   FRONTEND_PORT=4200
+2. Edit `.env` file:
+   ```env
+   BACKEND_PORT=8080
    ```
 3. Restart TEP service
 
@@ -218,35 +402,60 @@ netsh advfirewall firewall add rule name="TEP Frontend" dir=in action=allow prot
 
 ### Database Location
 
-**Default Location:**
+The database location depends on configuration:
+
+| Environment | Default Location |
+|-------------|------------------|
+| Production | `tep_prod.sqlite` (in working directory) |
+| Development | `tep_dev.sqlite` (in working directory) |
+| Custom | Set via `DATABASE_URL` environment variable |
+
+**Recommended Production Location:**
 ```
-C:\Program Files\TEP\data\tep.sqlite
+C:\Program Files\TEP\data\tep_prod.sqlite
+```
+
+To use a custom location, set the environment variable:
+```cmd
+set DATABASE_URL=sqlite:///C:/ProgramData/TEP/tep.sqlite
 ```
 
 ### Backup Database
 
-**Recommended Schedule:** Daily backups with weekly archival
+**Recommended Schedule:** Daily backups with 30-day retention
+
+**Using Backup Script:**
+
+```cmd
+# Basic backup (creates timestamped file in ./backups/)
+python scripts/backup_database.py
+
+# Backup with compression
+python scripts/backup_database.py --compress
+
+# Custom paths
+python scripts/backup_database.py --db-path "C:\Data\tep.sqlite" --output-dir "D:\Backups"
+
+# Cleanup old backups (keep 30 most recent)
+python scripts/backup_database.py --cleanup --keep 30
+```
+
+**Backup Output:**
+- Uncompressed: `backups/tep_YYYYMMDD_HHMMSS.sqlite`
+- Compressed: `backups/tep_YYYYMMDD_HHMMSS.sqlite.gz`
 
 **Manual Backup:**
 
-1. **Using Bundled Script:**
-   ```cmd
-   cd "C:\Program Files\TEP"
-   scripts\backup_database.exe
-   ```
-   Backup saved to: `C:\Program Files\TEP\backups\tep_YYYYMMDD_HHMMSS.sqlite`
+```cmd
+# Stop service first (recommended but not required for SQLite)
+net stop TEPService
 
-2. **Manual Copy:**
-   ```cmd
-   # Stop service first
-   net stop TEPService
+# Copy database
+copy "C:\Program Files\TEP\data\tep_prod.sqlite" "C:\Backups\tep_backup.sqlite"
 
-   # Copy database
-   copy "C:\Program Files\TEP\data\tep.sqlite" "C:\Backups\tep_backup.sqlite"
-
-   # Restart service
-   net start TEPService
-   ```
+# Restart service
+net start TEPService
+```
 
 **Automated Backup (Task Scheduler):**
 
@@ -255,44 +464,91 @@ C:\Program Files\TEP\data\tep.sqlite
 3. Name: "TEP Daily Backup"
 4. Trigger: Daily at 2:00 AM
 5. Action: Start a program
-   - Program: `C:\Program Files\TEP\scripts\backup_database.exe`
-6. Finish
+   - Program: `python`
+   - Arguments: `scripts/backup_database.py --compress --cleanup`
+   - Start in: `C:\Program Files\TEP`
 
 ### Restore Database
 
-**To restore from backup:**
+**Using Restore Script (Recommended):**
+
+```cmd
+# Restore from backup (creates safety backup first)
+python scripts/restore_database.py backups/tep_20260113_120000.sqlite
+
+# Restore compressed backup (auto-detected)
+python scripts/restore_database.py backups/tep_20260113_120000.sqlite.gz
+
+# Restore with verification
+python scripts/restore_database.py backups/tep_backup.sqlite --verify
+
+# Skip confirmation prompt
+python scripts/restore_database.py backups/tep_backup.sqlite --force
+```
+
+**Manual Restore:**
 
 ```cmd
 # Stop service
 net stop TEPService
 
 # Backup current database (safety)
-copy "C:\Program Files\TEP\data\tep.sqlite" "C:\Program Files\TEP\data\tep_before_restore.sqlite"
+copy "C:\Program Files\TEP\data\tep_prod.sqlite" "C:\Program Files\TEP\data\tep_before_restore.sqlite"
 
 # Restore backup
-copy "C:\Backups\tep_backup.sqlite" "C:\Program Files\TEP\data\tep.sqlite"
+copy "C:\Backups\tep_backup.sqlite" "C:\Program Files\TEP\data\tep_prod.sqlite"
 
 # Restart service
 net start TEPService
 ```
 
-**Using Restore Script:**
+### Database Initialization
+
+**Initialize New Database:**
+
 ```cmd
-cd "C:\Program Files\TEP"
-scripts\restore_database.exe "C:\Backups\tep_backup.sqlite"
+# Initialize with default settings
+python scripts/init_database.py
+
+# Custom database path
+python scripts/init_database.py --db-path "C:\Data\tep.sqlite"
+
+# Initialize and verify schema
+python scripts/init_database.py --verify
+
+# Force reinitialize (WARNING: deletes all data!)
+python scripts/init_database.py --force
 ```
+
+**Expected Tables:**
+- `alembic_version` - Migration tracking
+- `auth_roles`, `auth_role_permissions`, `auth_role_memberships` - Authorization
+- `departments`, `department_memberships` - Organization
+- `employees` - Employee records
+- `event_logs` - Audit trail
+- `holiday_groups`, `holidays` - Holiday scheduling
+- `licenses` - License management
+- `org_units` - Organizational units
+- `registered_browsers` - Device registration
+- `timeclock_entries` - Time tracking
+- `users` - User accounts
+- `system_settings` - Application settings
 
 ### Database Maintenance
 
-**Optimize Database (Monthly):**
+**Check Integrity:**
 ```cmd
-cd "C:\Program Files\TEP"
-scripts\optimize_database.exe
+sqlite3 "tep_prod.sqlite" "PRAGMA integrity_check;"
 ```
 
-**Check Database Integrity:**
+**Optimize Database (Monthly):**
 ```cmd
-sqlite3 "C:\Program Files\TEP\data\tep.sqlite" "PRAGMA integrity_check;"
+sqlite3 "tep_prod.sqlite" "VACUUM;"
+```
+
+**Analyze for Query Optimization:**
+```cmd
+sqlite3 "tep_prod.sqlite" "ANALYZE;"
 ```
 
 ---
@@ -350,6 +606,42 @@ Response:
 
 ## Service Management
 
+### Running the Standalone Executable
+
+**For PyInstaller builds without Windows service:**
+
+```cmd
+# Navigate to backend directory
+cd "C:\Program Files\TEP\backend"
+
+# Set required environment variables
+set ENVIRONMENT=production
+set ROOT_PASSWORD=YourSecurePassword123!
+set DATABASE_URL=sqlite:///tep_prod.sqlite
+
+# Run the server
+tep.exe
+```
+
+**Expected Output:**
+```
+============================================================
+TEP - Timeclock and Employee Payroll
+============================================================
+Environment: production
+Starting server on 0.0.0.0:8000
+============================================================
+INFO:     Started server process [12345]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+**Running in Background (PowerShell):**
+```powershell
+Start-Process -FilePath "C:\Program Files\TEP\backend\tep.exe" -WindowStyle Hidden
+```
+
 ### TEP Windows Service
 
 **Service Name:** `TEPService`
@@ -373,6 +665,50 @@ net stop TEPService && net start TEPService
 ```cmd
 sc query TEPService
 ```
+
+**Installing as Windows Service (using NSSM):**
+
+If you want to run the standalone executable as a Windows service, use the included install script:
+
+```powershell
+# Run as Administrator
+cd "C:\Program Files\TEP"
+
+# Install service (downloads NSSM automatically if needed)
+.\scripts\install-service.ps1 -InstallDir "C:\Program Files\TEP" -Port 8000
+
+# Or with custom service name
+.\scripts\install-service.ps1 -InstallDir "C:\Program Files\TEP" -ServiceName "TEPService" -Port 8000
+
+# Uninstall service
+.\scripts\install-service.ps1 -Uninstall
+```
+
+The script will:
+- Download NSSM automatically if not present
+- Configure the service with auto-start on boot
+- Set up log rotation for stdout/stderr
+- Configure automatic restart on failure
+- Prompt to start the service immediately
+
+**Alternative: Manual NSSM Installation**
+
+```cmd
+# Download NSSM from https://nssm.cc/
+# Install service
+nssm install TEPService "C:\Program Files\TEP\backend\tep.exe"
+
+# Set working directory
+nssm set TEPService AppDirectory "C:\Program Files\TEP\backend"
+
+# Configure startup
+nssm set TEPService Start SERVICE_AUTO_START
+
+# Start service
+nssm start TEPService
+```
+
+Note: Environment variables are read from the `.env` file in the backend directory, so you don't need to set them via NSSM.
 
 ### Service Configuration
 
@@ -690,6 +1026,70 @@ When contacting support, provide:
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2026-01-13
+## Build Scripts Reference
+
+### build_release.py
+
+Creates a production release package.
+
+```cmd
+# Source distribution (requires Python on target)
+python scripts/build_release.py --version 1.0.0
+
+# Standalone executable (PyInstaller)
+python scripts/build_release.py --version 1.0.0 --executable
+
+# With Windows installer (NSIS)
+python scripts/build_release.py --version 1.0.0 --executable --installer
+
+# Skip tests for quick builds
+python scripts/build_release.py --version 1.0.0 --executable --skip-tests
+
+# Custom output directory
+python scripts/build_release.py --version 1.0.0 --output-dir ./my-build
+```
+
+**Output Structure:**
+```
+build/TEP-1.0.0/
+├── backend/           # Backend executable or source
+│   ├── tep.exe        # (executable mode)
+│   ├── _internal/     # (executable mode) bundled dependencies
+│   └── ...
+├── frontend/          # Angular production build
+├── database/          # Migration scripts
+├── config/            # Configuration templates
+│   └── .env.example
+├── scripts/           # Utility scripts
+│   ├── backup_database.py
+│   └── license_generator.py
+└── docs/              # Documentation
+    ├── README.md
+    └── VERSION.json
+```
+
+### Database Scripts
+
+| Script | Description |
+|--------|-------------|
+| `scripts/init_database.py` | Initialize new database with schema |
+| `scripts/backup_database.py` | Create timestamped backups |
+| `scripts/restore_database.py` | Restore from backup file |
+
+### License Tools
+
+| Script | Description |
+|--------|-------------|
+| `tools/license_generator.py` | Generate Ed25519 key pairs and license keys |
+
+### Service Management Scripts
+
+| Script | Description |
+|--------|-------------|
+| `scripts/install-service.ps1` | Install/uninstall TEP as Windows service using NSSM |
+
+---
+
+**Document Version:** 1.2
+**Last Updated:** 2026-01-27
 **Compatible with:** TEP v1.0.0+

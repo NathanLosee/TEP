@@ -1,6 +1,26 @@
 """Module providing application configuration settings."""
 
+import sys
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_env_file_path() -> str:
+    """Get the path to the .env file.
+
+    Handles both PyInstaller bundle and development environments.
+
+    Returns:
+        str: Path to the .env file.
+    """
+    if getattr(sys, 'frozen', False):
+        # Running as PyInstaller bundle - .env is in the executable directory
+        exe_dir = Path(sys.executable).parent
+        return str(exe_dir / ".env")
+    else:
+        # Running from source - .env is in project root
+        return "../.env"
 
 
 class Settings(BaseSettings):
@@ -41,4 +61,4 @@ class Settings(BaseSettings):
         """
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
-    model_config = SettingsConfigDict(env_file="../.env")
+    model_config = SettingsConfigDict(env_file=get_env_file_path(), extra="ignore")

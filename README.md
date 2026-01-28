@@ -124,9 +124,11 @@ The application will be available at:
 
 **Root User (Development)**
 - **Badge Number**: `0`
-- **Password**: `password123` (or value of `ROOT_PASSWORD` env var)
+- **Password**: Auto-generated on first run (printed to console) or value of `ROOT_PASSWORD` env var
 
-**Important**: Change the root password in production!
+**Important**:
+- In production, `ROOT_PASSWORD` environment variable **must** be set
+- In development, if not set, a secure random password is generated and displayed in the console
 
 ## Testing
 
@@ -180,6 +182,7 @@ TEP/
 │   ├── org_unit/                # Organizational units
 │   ├── registered_browser/      # Browser registration for timeclock
 │   ├── report/                  # Payroll report generation
+│   ├── system_settings/         # Application settings (theme, logo)
 │   ├── timeclock/               # Clock in/out operations
 │   ├── user/                    # User authentication
 │   ├── config.py               # Application configuration
@@ -195,9 +198,23 @@ TEP/
 ├── tests/                       # Backend tests
 │   ├── integration/            # API integration tests
 │   └── unit/                   # Unit tests
+├── scripts/                     # Utility scripts
+│   ├── build_release.py        # Production build script
+│   ├── init_database.py        # Database initialization
+│   ├── backup_database.py      # Database backup utility
+│   └── restore_database.py     # Database restore utility
+├── tools/                       # Development/admin tools
+│   └── license_generator.py    # License key generation
+├── installer/                   # NSIS Windows installer
+│   ├── tep-installer.nsi       # NSIS installer script
+│   └── favicon.ico             # Installer icon
 ├── alembic/                    # Database migrations
+├── run_server.py               # Server entry point (for PyInstaller)
+├── tep.spec                    # PyInstaller build specification
 ├── pyproject.toml              # Poetry dependencies
-└── README.md                   # This file
+├── .env.example                # Environment configuration template
+├── README.md                   # This file
+└── DEPLOYMENT.md               # Production deployment guide
 ```
 
 ## API Overview
@@ -246,6 +263,64 @@ To activate a license:
 3. Enter the license key
 4. Click "Activate License"
 
+## Production Build
+
+### Building a Release Package
+
+The project includes a build script that creates a production-ready release package.
+
+**Source Distribution** (requires Python on target):
+```bash
+python scripts/build_release.py --version 1.0.0
+```
+
+**Standalone Executable** (PyInstaller, no Python required):
+```bash
+python scripts/build_release.py --version 1.0.0 --executable
+```
+
+**Windows Installer** (NSIS, includes executable):
+```bash
+python scripts/build_release.py --version 1.0.0 --executable --installer
+```
+
+**Quick Build** (skip tests):
+```bash
+python scripts/build_release.py --version 1.0.0 --executable --skip-tests
+```
+
+### Build Output
+
+The build creates:
+- `build/TEP-{version}/` - Complete release package
+- `releases/TEP-{version}.zip` - Distribution archive
+- `releases/TEP-Setup-{version}.exe` - Windows installer (with `--installer` flag)
+
+Package contents:
+- `backend/` - Backend executable or source code
+- `frontend/` - Angular production build
+- `config/` - Configuration templates (.env.example)
+- `scripts/` - Utility scripts (backup, restore, license generator)
+- `docs/` - Documentation
+
+### Running the Executable
+
+```bash
+# Navigate to backend directory
+cd build/TEP-1.0.0/backend
+
+# Set environment (Windows)
+set ENVIRONMENT=production
+set ROOT_PASSWORD=YourSecurePassword123
+
+# Run server
+tep.exe
+```
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+---
+
 ## Development
 
 ### Database Migrations
@@ -280,8 +355,10 @@ The project uses:
 | `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR) |
 | `ENVIRONMENT` | `development` | Environment mode (development, production, test) |
 | `CORS_ORIGINS` | `http://localhost:4200` | Allowed CORS origins (comma-separated) |
-| `ROOT_PASSWORD` | `password` | Default root user password |
+| `ROOT_PASSWORD` | *(required in production)* | Root user password (auto-generated in dev if not set) |
 | `DATABASE_URL` | `sqlite:///tep.sqlite` | Database connection string |
+| `JWT_KEY_PASSWORD` | *(optional)* | Password to encrypt JWT RSA private key |
+| `BACKEND_PORT` | `8000` | Backend server port |
 
 ## Security Considerations
 

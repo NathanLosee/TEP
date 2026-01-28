@@ -41,7 +41,22 @@
       "Bash(.venvScriptspython.exe -m pytest tests/ -v --tb=short)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/ -v --tb=short)",
       "Bash(copy:*)",
-      "Bash(alembic current:*)"
+      "Bash(alembic current:*)",
+      "Bash(pyinstaller:*)",
+      "Bash(poetry run pyinstaller:*)",
+      "Bash(timeout:*)",
+      "Bash(poetry install:*)",
+      "Bash(poetry lock:*)",
+      "Bash(ENVIRONMENT=production timeout 10:*)",
+      "Bash(poetry add:*)",
+      "Bash(npm --version:*)",
+      "Bash(xcopy:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(dir \"c:\\\\Users\\\\Sand-\\\\OneDrive\\\\Documents\\\\MonteVista_Apps\\\\TEP\\\\dist\\\\frontend\")",
+      "Bash(set:*)",
+      "Bash(tep.exe)",
+      "Bash(curl:*)",
+      "Bash(dir:*)"
     ]
   }
 }

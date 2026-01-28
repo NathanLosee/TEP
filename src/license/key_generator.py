@@ -18,6 +18,7 @@ License keys can be in two formats:
 2. Hex format: 128-character hex string (compact)
 """
 
+import sys
 from pathlib import Path
 from typing import List, Optional
 
@@ -68,7 +69,15 @@ def _load_word_list() -> List[str]:
     Returns:
         list[str]: List of uppercase words
     """
-    words_file = Path(__file__).parent.parent.parent / "words.txt"
+    # Handle PyInstaller bundled environment
+    if getattr(sys, 'frozen', False):
+        # Running as PyInstaller bundle - words.txt is in the bundle root
+        base_path = Path(sys._MEIPASS)
+    else:
+        # Running as script - words.txt is in project root
+        base_path = Path(__file__).parent.parent.parent
+
+    words_file = base_path / "words.txt"
     with open(words_file, "r", encoding="utf-8") as f:
         return [line.strip().upper() for line in f if line.strip()]
 

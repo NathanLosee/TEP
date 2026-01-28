@@ -39,17 +39,17 @@ def print_step(message: str):
 
 def print_success(message: str):
     """Print a success message."""
-    print(f"{Colors.OKGREEN}✓ {message}{Colors.ENDC}")
+    print(f"{Colors.OKGREEN}[OK] {message}{Colors.ENDC}")
 
 
 def print_error(message: str):
     """Print an error message."""
-    print(f"{Colors.FAIL}✗ {message}{Colors.ENDC}", file=sys.stderr)
+    print(f"{Colors.FAIL}[ERROR] {message}{Colors.ENDC}", file=sys.stderr)
 
 
 def print_warning(message: str):
     """Print a warning message."""
-    print(f"{Colors.WARNING}⚠ {message}{Colors.ENDC}")
+    print(f"{Colors.WARNING}[WARN] {message}{Colors.ENDC}")
 
 
 def run_command(cmd: list, cwd: Path = None) -> bool:
@@ -81,8 +81,11 @@ def run_command(cmd: list, cwd: Path = None) -> bool:
         return False
 
 
-def check_prerequisites() -> bool:
+def check_prerequisites(use_pyinstaller: bool = False) -> bool:
     """Check that required tools are available.
+
+    Args:
+        use_pyinstaller: Whether PyInstaller build is enabled
 
     Returns:
         bool: True if all prerequisites are met
@@ -94,6 +97,9 @@ def check_prerequisites() -> bool:
         ("node", ["node", "--version"]),
         ("npm", ["npm", "--version"]),
     ]
+
+    if use_pyinstaller:
+        prerequisites.append(("pyinstaller", ["pyinstaller", "--version"]))
 
     all_ok = True
     for name, cmd in prerequisites:
@@ -173,7 +179,7 @@ def build_frontend(output_dir: Path) -> bool:
 
 
 def build_backend(output_dir: Path) -> bool:
-    """Build backend package.
+    """Build backend package (source copy mode).
 
     Args:
         output_dir: Directory for build output
@@ -181,7 +187,7 @@ def build_backend(output_dir: Path) -> bool:
     Returns:
         bool: True if build succeeded
     """
-    print_step("Building Backend")
+    print_step("Building Backend (Source Mode)")
 
     backend_output = output_dir / "backend"
     backend_output.mkdir(parents=True, exist_ok=True)
@@ -194,6 +200,7 @@ def build_backend(output_dir: Path) -> bool:
         "alembic.ini",
         "pyproject.toml",
         "poetry.lock",
+        "run_server.py",
     ]
 
     for item in src_files:
@@ -217,6 +224,71 @@ def build_backend(output_dir: Path) -> bool:
         return False
 
     print_success("Backend built successfully")
+    return True
+
+
+def build_backend_executable(output_dir: Path) -> bool:
+    """Build backend as standalone executable using PyInstaller.
+
+    Args:
+        output_dir: Directory for build output
+
+    Returns:
+        bool: True if build succeeded
+    """
+    print_step("Building Backend Executable (PyInstaller)")
+
+    spec_file = Path("tep.spec")
+    if not spec_file.exists():
+        print_error(f"Spec file not found: {spec_file}")
+        return False
+
+    # Clean previous PyInstaller build
+    for dir_name in ["build", "dist"]:
+        build_dir = Path(dir_name)
+        if build_dir.exists():
+            print(f"Cleaning previous build: {build_dir}")
+            shutil.rmtree(build_dir)
+
+    # Run PyInstaller
+    print("Running PyInstaller...")
+    if not run_command(["pyinstaller", str(spec_file), "--noconfirm"]):
+        print_error("PyInstaller build failed")
+        return False
+
+    # Check output
+    dist_dir = Path("dist") / "tep"
+    if not dist_dir.exists():
+        print_error(f"Build output not found: {dist_dir}")
+        return False
+
+    # Copy to output directory
+    backend_output = output_dir / "backend"
+    print(f"Copying executable to: {backend_output}")
+    shutil.copytree(dist_dir, backend_output, dirs_exist_ok=True)
+
+    # Verify executable exists
+    exe_path = backend_output / "tep.exe"
+    if exe_path.exists():
+        exe_size_mb = exe_path.stat().st_size / (1024 * 1024)
+        print_success(f"Backend executable built: {exe_path} ({exe_size_mb:.1f} MB)")
+    else:
+        # On non-Windows, check for tep without .exe
+        exe_path = backend_output / "tep"
+        if exe_path.exists():
+            exe_size_mb = exe_path.stat().st_size / (1024 * 1024)
+            print_success(f"Backend executable built: {exe_path} ({exe_size_mb:.1f} MB)")
+        else:
+            print_warning("Executable not found at expected path")
+
+    # Clean up PyInstaller artifacts
+    print("Cleaning up PyInstaller artifacts...")
+    for dir_name in ["build"]:
+        build_dir = Path(dir_name)
+        if build_dir.exists():
+            shutil.rmtree(build_dir)
+
+    print_success("Backend executable built successfully")
     return True
 
 
@@ -262,30 +334,26 @@ def create_config_templates(output_dir: Path) -> bool:
     config_output = output_dir / "config"
     config_output.mkdir(parents=True, exist_ok=True)
 
-    # Create .env.example
-    env_example = """# TEP Configuration File
+    # Copy .env.example if it exists
+    env_example_src = Path(".env.example")
+    if env_example_src.exists():
+        shutil.copy2(env_example_src, config_output / ".env.example")
+        print_success("Copied .env.example")
+    else:
+        # Fallback: Create minimal .env.example
+        env_example = """# TEP Configuration File
 # Copy this file to .env and customize for your environment
+# See DEPLOYMENT.md for detailed configuration instructions
 
-# Application Environment (development, production, test)
 ENVIRONMENT=production
-
-# Logging Level (DEBUG, INFO, WARNING, ERROR)
 LOG_LEVEL=INFO
-
-# Backend Server Port
 BACKEND_PORT=8000
-
-# CORS Origins (comma-separated)
-CORS_ORIGINS=http://localhost:4200
-
-# Root User Password (CHANGE THIS!)
 ROOT_PASSWORD=change_this_secure_password
-
-# Database URL
 DATABASE_URL=sqlite:///data/tep.sqlite
 """
+        (config_output / ".env.example").write_text(env_example)
+        print_warning("Created minimal .env.example (source file not found)")
 
-    (config_output / ".env.example").write_text(env_example)
     print_success("Configuration templates created")
 
     return True
@@ -393,6 +461,72 @@ def create_archive(output_dir: Path, version: str) -> bool:
     return True
 
 
+def build_installer(version: str) -> bool:
+    """Build Windows installer using NSIS.
+
+    Args:
+        version: Version string
+
+    Returns:
+        bool: True if installer created successfully
+    """
+    print_step("Building Windows Installer (NSIS)")
+
+    installer_dir = Path("installer")
+    installer_script = installer_dir / "tep-installer.nsi"
+
+    if not installer_script.exists():
+        print_error(f"Installer script not found: {installer_script}")
+        return False
+
+    # Check if NSIS is available
+    try:
+        result = subprocess.run(
+            ["makensis", "/VERSION"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        print_success(f"NSIS: {result.stdout.strip()}")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print_error("NSIS (makensis) not found. Install from https://nsis.sourceforge.io/")
+        print_warning("Skipping installer creation. Build output is still available.")
+        return False
+
+    # Ensure favicon is in installer directory
+    favicon_src = Path("frontend") / "public" / "favicon.ico"
+    favicon_dst = installer_dir / "favicon.ico"
+    if favicon_src.exists() and not favicon_dst.exists():
+        shutil.copy2(favicon_src, favicon_dst)
+        print_success("Copied favicon to installer directory")
+
+    # Verify LICENSE file exists
+    if not Path("LICENSE").exists():
+        print_warning("LICENSE file not found - installer may fail")
+
+    # Create releases directory
+    Path("releases").mkdir(exist_ok=True)
+
+    # Build installer
+    print(f"Building installer for version {version}...")
+    if not run_command([
+        "makensis",
+        f"/DVERSION={version}",
+        str(installer_script)
+    ]):
+        print_error("NSIS build failed")
+        return False
+
+    installer_path = Path("releases") / f"TEP-Setup-{version}.exe"
+    if installer_path.exists():
+        installer_size_mb = installer_path.stat().st_size / (1024 * 1024)
+        print_success(f"Installer: {installer_path} ({installer_size_mb:.2f} MB)")
+    else:
+        print_warning("Installer file not found at expected location")
+
+    return True
+
+
 def main():
     """Main entry point for the build script."""
     parser = argparse.ArgumentParser(
@@ -400,17 +534,28 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 This script performs the following steps:
-  1. Checks prerequisites (poetry, node, npm)
+  1. Checks prerequisites (poetry, node, npm, pyinstaller if --executable)
   2. Runs all tests (backend + frontend)
   3. Builds frontend production bundle
-  4. Packages backend with dependencies
+  4. Packages backend (source or executable via PyInstaller)
   5. Prepares database and migrations
   6. Creates configuration templates
   7. Copies utility scripts and documentation
   8. Creates release archive
+  9. Optionally creates Windows installer (--installer)
 
-Example:
+Examples:
+  # Build with source distribution (requires Python on target)
   python build_release.py --version 1.0.0
+
+  # Build with standalone executable (no Python required on target)
+  python build_release.py --version 1.0.0 --executable
+
+  # Build executable with Windows installer
+  python build_release.py --version 1.0.0 --executable --installer
+
+  # Quick build for testing (skip tests)
+  python build_release.py --version 1.0.0 --executable --skip-tests
         """
     )
 
@@ -439,7 +584,24 @@ Example:
         help="Skip creating zip archive"
     )
 
+    parser.add_argument(
+        "--executable",
+        action="store_true",
+        help="Build backend as standalone executable using PyInstaller"
+    )
+
+    parser.add_argument(
+        "--installer",
+        action="store_true",
+        help="Create Windows installer using NSIS (requires --executable)"
+    )
+
     args = parser.parse_args()
+
+    # Validate arguments
+    if args.installer and not args.executable:
+        print_error("--installer requires --executable flag")
+        return 1
 
     print(f"{Colors.HEADER}")
     print("=" * 60)
@@ -449,7 +611,7 @@ Example:
 
     try:
         # Check prerequisites
-        if not check_prerequisites():
+        if not check_prerequisites(use_pyinstaller=args.executable):
             print_error("Prerequisites check failed")
             return 1
 
@@ -468,10 +630,15 @@ Example:
             shutil.rmtree(output_dir)
         output_dir.mkdir(parents=True)
 
-        # Build steps
+        # Build steps - choose backend build mode
+        if args.executable:
+            backend_step = ("Backend (Executable)", lambda: build_backend_executable(output_dir))
+        else:
+            backend_step = ("Backend (Source)", lambda: build_backend(output_dir))
+
         steps = [
             ("Frontend", lambda: build_frontend(output_dir)),
-            ("Backend", lambda: build_backend(output_dir)),
+            backend_step,
             ("Database", lambda: package_database(output_dir)),
             ("Configuration", lambda: create_config_templates(output_dir)),
             ("Scripts", lambda: create_scripts(output_dir)),
@@ -491,14 +658,23 @@ Example:
         else:
             print_warning("Skipping archive creation (--skip-archive)")
 
+        # Create installer (optional)
+        installer_created = False
+        if args.installer:
+            installer_created = build_installer(args.version)
+            if not installer_created:
+                print_warning("Installer creation failed, but build is complete")
+
         # Success!
         print(f"\n{Colors.OKGREEN}")
         print("=" * 60)
-        print(f"✓ Build completed successfully!")
+        print(f"Build completed successfully!")
         print(f"  Version: {args.version}")
         print(f"  Output: {output_dir}")
         if not args.skip_archive:
             print(f"  Archive: releases/TEP-{args.version}.zip")
+        if installer_created:
+            print(f"  Installer: releases/TEP-Setup-{args.version}.exe")
         print("=" * 60)
         print(f"{Colors.ENDC}")
 
