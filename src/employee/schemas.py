@@ -10,6 +10,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.constants import BADGE_NUMBER_REGEX
 from src.department.schemas import DepartmentExtended
 from src.employee.constants import NAME_REGEX
 from src.holiday_group.schemas import HolidayGroupExtended
@@ -37,7 +38,7 @@ class EmployeeBase(BaseModel):
 
     """
 
-    badge_number: str
+    badge_number: str = Field(pattern=BADGE_NUMBER_REGEX)
     first_name: str = Field(pattern=NAME_REGEX)
     last_name: str = Field(pattern=NAME_REGEX)
     payroll_type: str

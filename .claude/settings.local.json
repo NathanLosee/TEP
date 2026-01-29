@@ -56,7 +56,8 @@
       "Bash(set:*)",
       "Bash(tep.exe)",
       "Bash(curl:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npx playwright install:*)"
     ]
   }
 }

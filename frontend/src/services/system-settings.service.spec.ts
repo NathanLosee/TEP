@@ -150,8 +150,14 @@ describe('SystemSettingsService', () => {
       };
 
       service.uploadLogo(file).subscribe(settings => {
+        // Response should match server response
         expect(settings).toEqual(settingsWithLogo);
-        expect(service.getCachedSettings()).toEqual(settingsWithLogo);
+
+        // Cached settings should have the logo info plus logo_updated_at
+        const cached = service.getCachedSettings();
+        expect(cached?.has_logo).toBe(true);
+        expect(cached?.logo_filename).toBe('logo.png');
+        expect(cached?.logo_updated_at).toBeDefined();
         done();
       });
 
@@ -178,8 +184,16 @@ describe('SystemSettingsService', () => {
   });
 
   describe('getLogoUrl', () => {
-    it('should return correct logo URL', () => {
-      expect(service.getLogoUrl()).toBe(`${baseUrl}/logo`);
+    it('should return correct logo URL with cache buster', () => {
+      const url = service.getLogoUrl();
+      // URL should contain the base path and a cache buster param
+      expect(url).toContain('/system-settings/logo');
+      expect(url).toContain('?t=');
+    });
+
+    it('should use provided cache buster', () => {
+      const url = service.getLogoUrl(12345);
+      expect(url).toContain('?t=12345');
     });
   });
 
@@ -224,38 +238,80 @@ describe('SystemSettingsService', () => {
   });
 
   describe('applyTheme', () => {
-    it('should set CSS custom properties', () => {
+    afterEach(() => {
+      // Clean up any custom theme
+      service.clearCustomTheme();
+    });
+
+    it('should set CSS custom properties with tonal palette for non-default colors', () => {
       const root = document.documentElement;
-      const originalStyle = root.style.getPropertyValue('--sys-primary');
 
-      service.applyTheme(mockSettings);
+      // Use non-default colors so they actually get applied
+      const customSettings: SystemSettings = {
+        ...mockSettings,
+        primary_color: '#FF0000',  // Not the default #673AB7
+        secondary_color: '#00FF00',  // Not the default #FF4081
+        accent_color: '#0000FF'  // Not the default #FFD740
+      };
 
-      expect(root.style.getPropertyValue('--sys-primary')).toBe(mockSettings.primary_color);
-      expect(root.style.getPropertyValue('--sys-secondary')).toBe(mockSettings.secondary_color);
-      expect(root.style.getPropertyValue('--sys-tertiary')).toBe(mockSettings.accent_color);
+      service.applyTheme(customSettings);
 
-      // Clean up
-      root.style.setProperty('--sys-primary', originalStyle);
+      // Check that theme properties are set (tonal palette values, not raw colors)
+      expect(root.style.getPropertyValue('--sys-primary')).toBeTruthy();
+      expect(root.style.getPropertyValue('--app-primary-base'))
+        .toBe(customSettings.primary_color);
+      expect(root.style.getPropertyValue('--app-secondary-base'))
+        .toBe(customSettings.secondary_color);
+      expect(root.style.getPropertyValue('--app-tertiary-base'))
+        .toBe(customSettings.accent_color);
+    });
+
+    it('should clear custom theme for default colors', () => {
+      const root = document.documentElement;
+
+      // First apply custom colors
+      const customSettings: SystemSettings = {
+        ...mockSettings,
+        primary_color: '#FF0000',
+        secondary_color: '#00FF00',
+        accent_color: '#0000FF'
+      };
+      service.applyTheme(customSettings);
+      expect(root.style.getPropertyValue('--sys-primary')).toBeTruthy();
+
+      // Then apply default colors - should clear
+      // These are the actual default colors from SystemSettingsService
+      const defaultSettings: SystemSettings = {
+        ...mockSettings,
+        primary_color: '#02E600',  // SystemSettingsService.DEFAULT_PRIMARY
+        secondary_color: '#BBCBB2',  // SystemSettingsService.DEFAULT_SECONDARY
+        accent_color: '#CDCD00'  // SystemSettingsService.DEFAULT_ACCENT
+      };
+      service.applyTheme(defaultSettings);
+
+      // Should be cleared (empty string)
+      expect(root.style.getPropertyValue('--sys-primary')).toBe('');
     });
   });
 
   describe('color utilities', () => {
-    it('should correctly identify contrast colors', () => {
-      // Light background should get dark text
-      const lightSettings: SystemSettings = {
-        ...mockSettings,
-        primary_color: '#FFFFFF'
-      };
-      service.applyTheme(lightSettings);
-      expect(document.documentElement.style.getPropertyValue('--sys-on-primary')).toBe('#000000');
+    afterEach(() => {
+      service.clearCustomTheme();
+    });
 
-      // Dark background should get light text
-      const darkSettings: SystemSettings = {
+    it('should set on-primary color from tonal palette', () => {
+      // The service uses tone20 for --sys-on-primary, not direct luminance check
+      const customSettings: SystemSettings = {
         ...mockSettings,
-        primary_color: '#000000'
+        primary_color: '#FF0000'  // Non-default color
       };
-      service.applyTheme(darkSettings);
-      expect(document.documentElement.style.getPropertyValue('--sys-on-primary')).toBe('#FFFFFF');
+      service.applyTheme(customSettings);
+
+      // on-primary should be set (tone20 of the palette)
+      const onPrimary = document.documentElement.style.getPropertyValue(
+        '--sys-on-primary'
+      );
+      expect(onPrimary).toBeTruthy();
     });
   });
 });

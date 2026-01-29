@@ -3,7 +3,7 @@
 from typing import List, Union
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from src.department.models import Department
 from src.employee.models import Employee
@@ -40,7 +40,16 @@ def get_employees(db: Session) -> list[Employee]:
         list[Employee]: The retrieved employees.
 
     """
-    return list(db.scalars(select(Employee)).all())
+    return list(
+        db.scalars(
+            select(Employee)
+            .options(
+                selectinload(Employee.org_unit),
+                selectinload(Employee.holiday_group),
+                selectinload(Employee.departments),
+            )
+        ).all()
+    )
 
 
 def get_employee_by_id(id: int, db: Session) -> Union[Employee, None]:
@@ -102,7 +111,11 @@ def search_for_employees(
         list[Employee]: The retrieved employees.
 
     """
-    query = db.query(Employee)
+    query = db.query(Employee).options(
+        selectinload(Employee.org_unit),
+        selectinload(Employee.holiday_group),
+        selectinload(Employee.departments),
+    )
     if department_name:
         query = query.filter(
             Employee.departments.has(Department.name.contains(department_name))

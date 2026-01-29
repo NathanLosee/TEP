@@ -366,8 +366,11 @@ describe('HolidayGroupDetailsDialogComponent', () => {
     });
 
     it('should display both recurring and one-time holidays', () => {
-      const holidayItems = fixture.debugElement.queryAll(By.css('.holiday-item'));
-      expect(holidayItems.length).toBe(2);
+      // Template uses mat-expansion-panel for each holiday
+      const holidayPanels = fixture.debugElement.queryAll(
+        By.css('mat-expansion-panel')
+      );
+      expect(holidayPanels.length).toBe(2);
     });
 
     it('should show recurring badge only for recurring holiday', () => {

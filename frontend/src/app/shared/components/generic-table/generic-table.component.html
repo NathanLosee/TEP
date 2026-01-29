@@ -39,66 +39,62 @@
       {{ col.header }}
     </th>
     <td mat-cell *matCellDef="let row">
-      <!-- Check for custom template first -->
-      <ng-container *ngIf="getTemplate(col.key) as template; else defaultCell">
-        <ng-container
-          *ngTemplateOutlet="template; context: { $implicit: row, column: col }"
-        ></ng-container>
-      </ng-container>
+      <ng-container [ngSwitch]="col.type">
+        <!-- Text -->
+        <span *ngSwitchCase="'text'">{{ getValue(row, col) }}</span>
 
-      <!-- Default cell rendering based on type -->
-      <ng-template #defaultCell>
-        <ng-container [ngSwitch]="col.type">
-          <!-- Text -->
-          <span *ngSwitchCase="'text'">{{ getValue(row, col) }}</span>
+        <!-- Icon with text -->
+        <div *ngSwitchCase="'icon-text'" class="table-cell-content">
+          <mat-icon>{{ col.icon }}</mat-icon>
+          <span>{{ getValue(row, col) }}</span>
+        </div>
 
-          <!-- Icon with text -->
-          <div *ngSwitchCase="'icon-text'" class="table-cell-content">
-            <mat-icon>{{ col.icon }}</mat-icon>
-            <span>{{ getValue(row, col) }}</span>
-          </div>
+        <!-- Single Chip -->
+        <mat-chip *ngSwitchCase="'chip'" [ngClass]="col.chipClass?.(row)">
+          {{ getValue(row, col) }}
+        </mat-chip>
 
-          <!-- Single Chip -->
-          <mat-chip *ngSwitchCase="'chip'" [ngClass]="col.chipClass?.(row)">
-            {{ getValue(row, col) }}
+        <!-- Chip list preview -->
+        <mat-chip-set *ngSwitchCase="'chip-list'" class="chip-list-cell">
+          <mat-chip *ngFor="let item of getValue(row, col)?.slice(0, 3)">
+            {{ item }}
           </mat-chip>
-
-          <!-- Chip list preview -->
-          <mat-chip-set *ngSwitchCase="'chip-list'" class="chip-list-cell">
-            <mat-chip *ngFor="let item of getValue(row, col)?.slice(0, 3)">
-              {{ item }}
-            </mat-chip>
-            <mat-chip
-              *ngIf="getValue(row, col)?.length > 3"
-              class="more-chip"
-              [matTooltip]="getValue(row, col)?.slice(3).join(', ')"
-            >
-              +{{ getValue(row, col).length - 3 }} more
-            </mat-chip>
-          </mat-chip-set>
-
-          <!-- Status indicator -->
-          <div
-            *ngSwitchCase="'status'"
-            class="status-indicator"
-            [ngClass]="getStatusClass(row, col)"
+          <mat-chip
+            *ngIf="getValue(row, col)?.length > 3"
+            class="more-chip"
+            [matTooltip]="getValue(row, col)?.slice(3).join(', ')"
           >
-            <mat-icon>{{ getStatusIcon(row, col) }}</mat-icon>
-            <span>{{ getValue(row, col) }}</span>
-          </div>
+            +{{ getValue(row, col).length - 3 }} more
+          </mat-chip>
+        </mat-chip-set>
 
-          <!-- Date -->
-          <span *ngSwitchCase="'date'">
-            {{ getValue(row, col) | date : (col.dateFormat || 'medium') }}
-          </span>
+        <!-- Status indicator -->
+        <div
+          *ngSwitchCase="'status'"
+          class="status-indicator"
+          [ngClass]="getStatusClass(row, col)"
+        >
+          <mat-icon>{{ getStatusIcon(row, col) }}</mat-icon>
+          <span>{{ getValue(row, col) }}</span>
+        </div>
 
-          <!-- Template type - handled via content projection above -->
-          <ng-container *ngSwitchCase="'template'"></ng-container>
+        <!-- Date -->
+        <span *ngSwitchCase="'date'">
+          {{ getValue(row, col) | date : (col.dateFormat || 'medium') }}
+        </span>
 
-          <!-- Default fallback -->
-          <span *ngSwitchDefault>{{ getValue(row, col) }}</span>
+        <!-- Template type - use content projection -->
+        <ng-container *ngSwitchCase="'template'">
+          <ng-container *ngIf="getTemplate(col.key) as template">
+            <ng-container
+              *ngTemplateOutlet="template; context: { $implicit: row, column: col }"
+            ></ng-container>
+          </ng-container>
         </ng-container>
-      </ng-template>
+
+        <!-- Default fallback -->
+        <span *ngSwitchDefault>{{ getValue(row, col) }}</span>
+      </ng-container>
     </td>
   </ng-container>
 

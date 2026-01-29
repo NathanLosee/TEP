@@ -39,6 +39,7 @@ def create_holiday_group(
     caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new holiday group data.
 
@@ -195,6 +196,7 @@ def update_holiday_group(
     caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.update"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update data for holiday group with provided id.
 
@@ -243,6 +245,7 @@ def delete_holiday_group(
     caller_badge: str = Security(
         requires_permission, scopes=["holiday_group.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete holiday group data with provided id.
 

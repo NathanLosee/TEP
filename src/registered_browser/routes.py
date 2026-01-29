@@ -1,6 +1,7 @@
 """Module defining API for registered browser operations."""
 
-from fastapi import APIRouter, Depends, Request, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.database import get_db
@@ -52,6 +53,7 @@ def register_browser(
     caller_badge: str = Security(
         requires_permission, scopes=["registered_browser.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Register a new browser.
 
@@ -76,31 +78,35 @@ def register_browser(
             "Invalid UUID format. Expected format: WORD-WORD-WORD-NUMBER",
             status.HTTP_400_BAD_REQUEST,
         )
-        # Check if UUID already exists
-        existing_browser_uuid = get_registered_browser_by_uuid(
-            request.browser_uuid, db
-        )
-        validate(
-            not existing_browser_uuid,
-            EXC_MSG_BROWSER_ALREADY_REGISTERED,
-            status.HTTP_409_CONFLICT,
-        )
-
-    # Check if browser name already exists
-    existing_browser_name = get_registered_browser_by_name(
-        request.browser_name, db
-    )
-    validate(
-        not existing_browser_name,
-        EXC_MSG_BROWSER_NAME_ALREADY_EXISTS,
-        status.HTTP_409_CONFLICT,
-    )
 
     # Set IP address from request if not provided
     if not request.ip_address:
         request.ip_address = http_request.client.host if http_request.client else None
 
-    browser = create_registered_browser_in_db(request, db)
+    # Use database constraint to handle uniqueness (avoids race condition)
+    try:
+        browser = create_registered_browser_in_db(request, db)
+    except IntegrityError:
+        db.rollback()
+        # Determine which constraint was violated by checking what exists
+        existing_uuid = get_registered_browser_by_uuid(request.browser_uuid, db)
+        if existing_uuid:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=EXC_MSG_BROWSER_ALREADY_REGISTERED,
+            )
+        existing_name = get_registered_browser_by_name(request.browser_name, db)
+        if existing_name:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=EXC_MSG_BROWSER_NAME_ALREADY_EXISTS,
+            )
+        # If neither found (shouldn't happen), raise generic conflict
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Browser registration conflict",
+        )
+
     log_args = {
         "browser_id": browser.id,
         "browser_uuid": browser.browser_uuid,
@@ -200,6 +206,7 @@ def delete_browser(
     caller_badge: str = Security(
         requires_permission, scopes=["registered_browser.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete a registered browser.
 

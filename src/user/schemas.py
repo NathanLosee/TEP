@@ -6,7 +6,9 @@ Classes:
 
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from src.constants import BADGE_NUMBER_REGEX
 
 
 class UserBase(BaseModel):
@@ -18,7 +20,7 @@ class UserBase(BaseModel):
 
     """
 
-    badge_number: str
+    badge_number: str = Field(pattern=BADGE_NUMBER_REGEX)
     password: str
 
 
@@ -44,4 +46,4 @@ class UserResponse(BaseModel):
     """
 
     id: int
-    badge_number: str
+    badge_number: str = Field(pattern=BADGE_NUMBER_REGEX)

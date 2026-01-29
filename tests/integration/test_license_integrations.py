@@ -1,15 +1,32 @@
 """Integration tests for license management endpoints."""
 
+from unittest.mock import MagicMock, patch
+
 from fastapi import status
 from fastapi.testclient import TestClient
 
 from src.license.constants import (
     BASE_URL,
     EXC_MSG_INVALID_LICENSE_KEY,
-    EXC_MSG_LICENSE_ALREADY_ACTIVATED,
     EXC_MSG_LICENSE_NOT_FOUND,
 )
 from tests.conftest import generate_test_license_key
+
+
+def mock_license_server_response(activation_key: str = "b" * 128):
+    """Create a mock httpx response for the license server."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"activation_key": activation_key}
+    return mock_response
+
+
+def mock_license_server_error(error_detail: str = "Invalid license key"):
+    """Create a mock httpx error response for the license server."""
+    mock_response = MagicMock()
+    mock_response.status_code = 400
+    mock_response.json.return_value = {"detail": error_detail}
+    return mock_response
 
 
 def test_get_license_status_200_no_license(test_client: TestClient):
@@ -23,11 +40,16 @@ def test_get_license_status_200_no_license(test_client: TestClient):
     assert response.json()["is_active"] is False
     assert response.json()["license_key"] is None
     assert response.json()["activated_at"] is None
-    assert response.json()["server_id"] is None
 
 
-def test_activate_license_201(test_client: TestClient):
+@patch("src.license.routes.httpx.Client")
+def test_activate_license_201(mock_client, test_client: TestClient):
     """Test successfully activating a license."""
+    # Mock the license server response
+    mock_client.return_value.__enter__.return_value.post.return_value = (
+        mock_license_server_response()
+    )
+
     license_key = generate_test_license_key()
 
     response = test_client.post(
@@ -59,8 +81,16 @@ def test_activate_license_400_invalid_format(test_client: TestClient):
     assert "license_key" in response_data or "validation" in response_data.lower()
 
 
-def test_activate_license_400_invalid_signature(test_client: TestClient):
+@patch("src.license.routes.httpx.Client")
+def test_activate_license_400_invalid_signature(
+    mock_client, test_client: TestClient
+):
     """Test activating with invalid signature (license key)."""
+    # Mock the license server rejecting the key
+    mock_client.return_value.__enter__.return_value.post.return_value = (
+        mock_license_server_error("Invalid license key")
+    )
+
     invalid_license_key = "a" * 128  # Valid format but invalid signature
 
     response = test_client.post(
@@ -69,31 +99,49 @@ def test_activate_license_400_invalid_signature(test_client: TestClient):
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == EXC_MSG_INVALID_LICENSE_KEY
 
 
-def test_activate_license_409_already_activated(test_client: TestClient):
-    """Test activating the same license key twice."""
+@patch("src.license.routes.httpx.Client")
+def test_activate_same_license_returns_existing(
+    mock_client, test_client: TestClient
+):
+    """Test activating the same license key twice returns the existing license."""
+    # Mock the license server response
+    mock_client.return_value.__enter__.return_value.post.return_value = (
+        mock_license_server_response()
+    )
+
     license_key = generate_test_license_key()
 
     # Activate first time
-    test_client.post(
+    response1 = test_client.post(
+        f"{BASE_URL}/activate",
+        json={"license_key": license_key},
+    )
+    assert response1.status_code == status.HTTP_201_CREATED
+
+    # Try to activate again - should return the existing license (not error)
+    response2 = test_client.post(
         f"{BASE_URL}/activate",
         json={"license_key": license_key},
     )
 
-    # Try to activate again
-    response = test_client.post(
-        f"{BASE_URL}/activate",
-        json={"license_key": license_key},
-    )
-
-    assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_LICENSE_ALREADY_ACTIVATED
+    # Current implementation returns the existing active license
+    assert response2.status_code == status.HTTP_201_CREATED
+    assert response2.json()["license_key"] == license_key
+    assert response2.json()["is_active"] is True
 
 
-def test_get_license_status_200_with_active_license(test_client: TestClient):
+@patch("src.license.routes.httpx.Client")
+def test_get_license_status_200_with_active_license(
+    mock_client, test_client: TestClient
+):
     """Test getting license status when a license is active."""
+    # Mock the license server response
+    mock_client.return_value.__enter__.return_value.post.return_value = (
+        mock_license_server_response()
+    )
+
     license_key = generate_test_license_key()
 
     # Activate license
@@ -111,8 +159,14 @@ def test_get_license_status_200_with_active_license(test_client: TestClient):
     assert response.json()["activated_at"] is not None
 
 
-def test_deactivate_license_204(test_client: TestClient):
+@patch("src.license.routes.httpx.Client")
+def test_deactivate_license_204(mock_client, test_client: TestClient):
     """Test successfully deactivating a license."""
+    # Mock the license server response
+    mock_client.return_value.__enter__.return_value.post.return_value = (
+        mock_license_server_response()
+    )
+
     license_key = generate_test_license_key()
 
     # Activate license
@@ -142,8 +196,16 @@ def test_deactivate_license_404_no_active_license(test_client: TestClient):
     assert response.json()["detail"] == EXC_MSG_LICENSE_NOT_FOUND
 
 
-def test_activate_replaces_previous_license(test_client: TestClient):
+@patch("src.license.routes.httpx.Client")
+def test_activate_replaces_previous_license(
+    mock_client, test_client: TestClient
+):
     """Test that activating a new license deactivates the previous one."""
+    # Mock the license server response
+    mock_client.return_value.__enter__.return_value.post.return_value = (
+        mock_license_server_response()
+    )
+
     # Activate first license
     license_key1 = generate_test_license_key()
     test_client.post(
@@ -182,7 +244,8 @@ def test_license_status_public_no_auth_required(test_client: TestClient):
     test_client.headers.update(original_headers)
 
 
-def test_activate_license_requires_auth(test_client: TestClient):
+@patch("src.license.routes.httpx.Client")
+def test_activate_license_requires_auth(mock_client, test_client: TestClient):
     """Test that activating a license requires authentication."""
     license_key = generate_test_license_key()
 

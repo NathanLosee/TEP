@@ -13,7 +13,7 @@ from src.report.constants import BASE_URL
 from src.report.pdf_export import generate_pdf_report
 from src.report.schemas import ReportRequest, ReportResponse
 from src.report.service import generate_report
-from src.services import requires_permission
+from src.services import requires_license, requires_permission
 from src.system_settings.repository import get_logo, get_settings
 
 router = APIRouter(prefix=BASE_URL, tags=["Reports"])
@@ -24,6 +24,7 @@ def create_report(
     request: ReportRequest,
     db: Annotated[Session, Depends(get_db)],
     caller_badge: str = Security(requires_permission, scopes=["report.read"]),
+    _: None = Depends(requires_license),
 ) -> ReportResponse:
     """Generate a timeclock report.
 
@@ -66,6 +67,7 @@ def export_report_pdf(
     caller_badge: str = Security(
         requires_permission, scopes=["report.export"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Export timeclock report as PDF.
 

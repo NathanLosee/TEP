@@ -38,6 +38,7 @@ def create_org_unit(
     caller_badge: str = Security(
         requires_permission, scopes=["org_unit.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new org unit.
 
@@ -161,6 +162,7 @@ def update_org_unit(
     caller_badge: str = Security(
         requires_permission, scopes=["org_unit.update"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update data for org unit with provided id.
 
@@ -206,6 +208,7 @@ def delete_org_unit(
     caller_badge: str = Security(
         requires_permission, scopes=["org_unit.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete org unit with provided id.
 

@@ -48,26 +48,18 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ### Architecture & Design
 
-- [ ] **Document and Standardize License Enforcement Strategy**
-  - **Question**: Should READ operations require a license?
-  - **Issue**: License checks inconsistently applied (some GET endpoints have it, others don't)
-  - **Solution**:
-    1. Document the strategy (which operations need license)
-    2. Apply consistently across all admin routes
-  - **Files**: All route files in admin modules
+- [x] **Document and Standardize License Enforcement Strategy** ✅ (Completed)
+  - **Strategy Implemented**:
+    - **No license required**: READ operations (GET), public endpoints (login, logout, refresh, license management, browser verify/recover, system settings/logo GET)
+    - **License required**: WRITE operations (POST, PUT, DELETE) on all admin data, plus timeclock punch-in/out and report generation
+  - **Files Updated**: All route files (auth_role, department, org_unit, holiday_group, employee, user, registered_browser, event_log, timeclock, system_settings, report)
+  - **Benefit**: Users can evaluate the system (view data), but modifications and core operations require a valid license
   - **Priority**: MEDIUM - Feature clarity
 
-- [ ] **Fix Race Condition in Browser Registration**
-  - **Issue**: Check-then-act pattern without transaction lock
-  - **File**: `src/registered_browser/routes.py:68-75`
-  - **Solution**: Rely on database unique constraint + catch `IntegrityError`
-  - **Example**:
-    ```python
-    try:
-        browser = browser_repository.create_registered_browser(request, db)
-    except IntegrityError:
-        raise HTTPException(409, "UUID already exists")
-    ```
+- [x] **Fix Race Condition in Browser Registration** ✅ (Completed)
+  - ~~**Issue**: Check-then-act pattern without transaction lock~~
+  - **File**: `src/registered_browser/routes.py`
+  - **Solution**: Removed pre-checks, rely on database unique constraint + catch `IntegrityError`
   - **Priority**: MEDIUM - Data integrity
 
 ### Testing
@@ -91,19 +83,21 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ### Performance Optimizations
 
-- [ ] **Add Database Indexes**
-  - **Recommendation**: Add indexes on frequently queried fields:
-    - `employees.badge_number` (employee lookups are frequent)
-    - `licenses.is_active` (license status checks)
-    - `timeclock_entries.registered_at` (timeclock queries)
-    - `timeclock_entries.last_seen` (session tracking)
+- [x] **Add Database Indexes** ✅ (Completed)
+  - **Indexes Added**:
+    - `licenses.is_active` - for license status checks
+    - `timeclock_entries.clock_in` - for date range queries
+    - `timeclock_entries.badge_number` - for employee filtering
+    - `registered_browsers.fingerprint_hash` - for fingerprint lookups
+    - `registered_browsers.last_seen` - for session cleanup queries
+  - **Migration**: `e5f6a7b8c9d0_add_performance_indexes.py`
   - **Priority**: LOW - Performance
 
-- [ ] **Prevent N+1 Query Issues**
-  - **Areas to Check**:
-    - Employee queries with manager relationships
-    - Timeclock entries with employee details
-  - **Solution**: Add `selectinload()` for eager loading where needed
+- [x] **Prevent N+1 Query Issues** ✅ (Completed)
+  - **Fixed in `src/employee/repository.py`**:
+    - `get_employees()` - Added `selectinload()` for org_unit, holiday_group, departments
+    - `search_for_employees()` - Added `selectinload()` for org_unit, holiday_group, departments
+  - Timeclock queries already use JOINs (no N+1 issue)
   - **Priority**: LOW - Performance
 
 - [ ] **Add Frontend Caching**
@@ -134,26 +128,26 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
     ```
   - **Priority**: LOW - Developer experience
 
-- [ ] **Scheduled Cleanup for Stale Browser Sessions**
-  - **Current**: Manual cleanup called in verify endpoint
-  - **File**: `src/registered_browser/routes.py:119-120`
-  - **Solution**: Use scheduled task or middleware for automatic cleanup
+- [x] **Scheduled Cleanup for Stale Browser Sessions** ✅ (Completed)
+  - **Implementation**: Background task using FastAPI lifespan context manager
+  - **Files Created/Modified**:
+    - `src/scheduler.py` - New module with `periodic_cleanup()` task (runs every 5 minutes)
+    - `src/main.py` - Added lifespan handler to start/stop scheduler
+  - **Note**: Direct calls in verify/recover endpoints kept as immediate fallback
   - **Priority**: LOW - Architecture improvement
 
 ### Validation
 
-- [ ] **Add Badge Number Format Validation**
-  - **Issue**: No regex validation on badge numbers
-  - **Impact**: Users could create invalid badge numbers (e.g., "!!!" or spaces)
-  - **Files**: `src/employee/routes.py`, `src/user/routes.py`
-  - **Solution**: Add regex pattern to schemas
+- [x] **Add Badge Number Format Validation** ✅ (Completed)
+  - **Pattern**: `^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$` (alphanumeric, dashes, underscores, 1-20 chars)
+  - **Files Updated**:
+    - `src/constants.py` - Added `BADGE_NUMBER_REGEX` and `EXC_MSG_INVALID_BADGE_FORMAT`
+    - `src/employee/schemas.py` - Added pattern validation to `badge_number` field
+    - `src/user/schemas.py` - Added pattern validation to `badge_number` fields
   - **Priority**: LOW - Data quality
 
-- [ ] **Add Server ID Format Validation**
-  - **File**: `src/license/schemas.py:19`
-  - **Issue**: No format validation for `server_id` if provided
-  - **Solution**: Add regex or format validator
-  - **Priority**: LOW - Data quality
+- [x] **~~Add Server ID Format Validation~~** ✅ (No longer applicable)
+  - **Reason**: The `server_id` field was removed in migration `d4e5f6a7b8c9`. Machine binding is now handled via the `activation_key` signed by the license server.
 
 ---
 
@@ -415,7 +409,20 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - [x] **Fix README.md** - Was referencing "Super Health API" instead of TEP
 - [x] **Move Hardcoded Error Messages to Constants** - Timeclock routes cleaned up
 - [x] **Implement License System** - Ed25519 cryptographic license activation
-- [x] **Add Comprehensive Testing** - 233 backend + 325 frontend tests (all passing)
+- [x] **Add Comprehensive Testing** - 249 backend + 343 frontend unit tests (all passing)
+- [x] **E2E Testing with Playwright** - Comprehensive end-to-end test suite covering all 12 admin management pages:
+  - Authentication (login, logout, session persistence, protected routes)
+  - Navigation (all admin navigation links)
+  - Employees (list, add/edit forms, search, actions, status columns)
+  - Users (list, add user, password change dialogs)
+  - Auth Roles (role list, add role, permission checkboxes, details)
+  - Reports (generation, date range filters, PDF export)
+  - Event Logs (log list, details dialog, columns)
+  - Org Units (org unit management, view employees)
+  - Registered Browsers (browser registration, UUID generation)
+  - Timeclock Entries (entries management, date filters, add/edit)
+  - Timeclock Frontpage (punch in/out, employee selection)
+  - Settings (system settings, theme, logo, license, departments, holiday groups)
 - [x] **Generic Table Component Refactoring** - Created reusable `GenericTableComponent` used by all 9 management pages
 - [x] **License Reactivation Bug Fix** - Fixed UNIQUE constraint error when reactivating a license that was deactivated offline
 - [x] **System Settings Theme Configuration** - Logo upload, theme colors configurable via UI
@@ -429,6 +436,12 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - [x] **Backend Service Configuration** - PowerShell script with NSSM for Windows service management
 - [x] **Configuration Management** - .env.example template, auto-generated JWT_KEY_PASSWORD in installer
 - [x] **Create Deployment Guide** - Comprehensive DEPLOYMENT.md (was listed in Documentation section)
+- [x] **Fix Race Condition in Browser Registration** - Removed check-then-act pattern, now uses database constraint with IntegrityError handling
+- [x] **Standardize License Enforcement Strategy** - READ operations don't require license, WRITE operations do. Applied consistently across all 11 route modules
+- [x] **Add Database Indexes** - Added 5 indexes for performance on licenses, timeclock_entries, and registered_browsers tables
+- [x] **Prevent N+1 Query Issues** - Added selectinload() for employee relationships in get_employees() and search_for_employees()
+- [x] **Add Badge Number Format Validation** - Added regex pattern to schemas for employee and user badge numbers (alphanumeric, dashes, underscores, 1-20 chars)
+- [x] **Scheduled Cleanup for Stale Browser Sessions** - Background task via FastAPI lifespan runs cleanup every 5 minutes
 
 ---
 
@@ -438,6 +451,55 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 - Target: 70%+ code coverage
 - Focus on critical paths first (authentication, license, timeclock)
 - Add integration tests for race conditions
+
+### Running Tests
+
+**Backend Tests (pytest)**:
+```bash
+cd TEP
+python -m pytest tests/ -v
+```
+
+**Frontend Unit Tests (Karma/Jasmine)**:
+```bash
+cd frontend
+npm test
+```
+
+**E2E Tests (Playwright)**:
+```bash
+# First, start both servers:
+# Terminal 1 - Backend:
+cd TEP && python -m uvicorn src.main:app --reload
+
+# Terminal 2 - Frontend:
+cd frontend && npm start
+
+# Terminal 3 - Run E2E tests:
+cd frontend
+npm run e2e              # Run all E2E tests
+npm run e2e:headed       # Run with visible browser
+npm run e2e:ui           # Interactive UI mode
+npm run e2e:debug        # Debug mode
+npm run e2e:report       # View HTML report
+
+# Run specific test file:
+npx playwright test auth.spec.ts
+npx playwright test employees.spec.ts
+```
+
+**E2E Test Files** (11 test files in `frontend/e2e/`):
+- `auth.spec.ts` - Login, logout, session persistence
+- `navigation.spec.ts` - All admin navigation links
+- `employees.spec.ts` - Employee management CRUD
+- `users.spec.ts` - User management, password change
+- `auth-roles.spec.ts` - Role and permission management
+- `reports.spec.ts` - Report generation and export
+- `event-logs.spec.ts` - Event log viewing
+- `org-units.spec.ts` - Org units and registered browsers
+- `timeclock.spec.ts` - Timeclock entries and frontpage
+- `settings.spec.ts` - System settings, departments, holiday groups
+- `example.spec.ts` - Smoke tests, API health, accessibility
 
 ### Performance Targets
 - API response time: < 200ms for most endpoints
@@ -453,4 +515,4 @@ This document tracks planned improvements, bug fixes, and enhancements for the T
 
 ---
 
-**Last Updated**: 2026-01-27
+**Last Updated**: 2026-01-29

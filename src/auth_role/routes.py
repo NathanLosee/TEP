@@ -135,7 +135,6 @@ def create_auth_role_membership(
 def get_auth_roles(
     db: Session = Depends(get_db),
     user_id: int = Security(requires_permission, scopes=["auth_role.read"]),
-    _: None = Depends(requires_license),
 ):
     """Retrieve all auth roles.
 
@@ -160,7 +159,6 @@ def get_auth_role_by_id(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.read"]
     ),
-    _: None = Depends(requires_license),
 ):
     """Retrieve data for auth role with provided id.
 
@@ -193,7 +191,6 @@ def get_users_by_auth_role(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.read", "user.read"]
     ),
-    _: None = Depends(requires_license),
 ):
     """Retrieve all users with a given auth role.
 

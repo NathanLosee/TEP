@@ -45,6 +45,7 @@ def create_department(
     caller_badge: str = Security(
         requires_permission, scopes=["department.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new department.
 
@@ -81,6 +82,7 @@ def create_department_membership(
     caller_badge: str = Security(
         requires_permission, scopes=["department.assign", "employee.read"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new membership.
 
@@ -224,6 +226,7 @@ def update_department(
     caller_badge: str = Security(
         requires_permission, scopes=["department.update"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update data for department with provided id.
 
@@ -272,6 +275,7 @@ def delete_department(
     caller_badge: str = Security(
         requires_permission, scopes=["department.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete department with provided id.
 
@@ -310,6 +314,7 @@ def delete_department_membership(
         requires_permission,
         scopes=["department.unassign", "employee.read"],
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete membership.
 

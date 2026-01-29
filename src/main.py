@@ -1,6 +1,8 @@
 """Primary driver for application."""
 
+import asyncio
 import sys
+from contextlib import asynccontextmanager
 from http import HTTPStatus
 from importlib import import_module
 from pathlib import Path
@@ -16,6 +18,7 @@ from starlette.types import Message
 from src.config import Settings
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
+from src.scheduler import periodic_cleanup
 from src.services import (
     clear_database,
     create_root_user_if_not_exists,
@@ -24,7 +27,24 @@ from src.services import (
     validate_license_on_startup,
 )
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifespan events."""
+    # Startup: Start background scheduler
+    cleanup_task = asyncio.create_task(periodic_cleanup())
+
+    yield
+
+    # Shutdown: Cancel background tasks
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
+
+
+app = FastAPI(lifespan=lifespan)
 settings = Settings()
 formatter = CustomFormatter("%(asctime)s")
 logger = get_logger(__name__, formatter, log_level=settings.LOG_LEVEL)

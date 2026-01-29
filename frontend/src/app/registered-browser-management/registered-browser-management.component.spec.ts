@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -20,6 +20,18 @@ import { RegisteredBrowserManagementComponent } from './registered-browser-manag
 import { RegisteredBrowserService, RegisteredBrowser, RegisteredBrowserCreate } from '../../services/registered-browser.service';
 import { BrowserUuidService } from '../../services/browser-uuid.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+
+/**
+ * Helper function to initialize the component and flush all async operations.
+ * This prevents ExpressionChangedAfterItHasBeenCheckedError by ensuring
+ * all async operations complete before tests run.
+ */
+function initializeComponent(fixture: ComponentFixture<RegisteredBrowserManagementComponent>): void {
+  fixture.detectChanges(); // Trigger ngOnInit
+  flush(); // Flush all pending async operations (timers and microtasks)
+  fixture.detectChanges(); // Update view after async operations complete
+  flush(); // Ensure any secondary effects are also flushed
+}
 
 describe('RegisteredBrowserManagementComponent', () => {
   let component: RegisteredBrowserManagementComponent;
@@ -140,15 +152,15 @@ describe('RegisteredBrowserManagementComponent', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      expect(mockErrorDialog.openErrorDialog).toHaveBeenCalledWith('Failed to load devices', error);
+      expect(mockErrorDialog.openErrorDialog).toHaveBeenCalledWith('Failed to load browsers', error);
       expect(component.isLoading).toBe(false);
     });
   });
 
   describe('generateBrowserUUID', () => {
-    beforeEach(() => {
-      fixture.detectChanges();
-    });
+    beforeEach(fakeAsync(() => {
+      initializeComponent(fixture);
+    }));
 
     it('should generate UUID in correct format', () => {
       component.generateBrowserUUID();
@@ -272,9 +284,9 @@ describe('RegisteredBrowserManagementComponent', () => {
   });
 
   describe('Device Registration Form', () => {
-    beforeEach(() => {
-      fixture.detectChanges();
-    });
+    beforeEach(fakeAsync(() => {
+      initializeComponent(fixture);
+    }));
 
     it('should initialize form with empty values', () => {
       expect(component.registerForm.get('browser_name')?.value).toBe('');
@@ -319,9 +331,9 @@ describe('RegisteredBrowserManagementComponent', () => {
   });
 
   describe('registerBrowser', () => {
-    beforeEach(() => {
-      fixture.detectChanges();
-    });
+    beforeEach(fakeAsync(() => {
+      initializeComponent(fixture);
+    }));
 
     it('should register browser with valid form data', fakeAsync(() => {
       const newBrowser: RegisteredBrowser = {
@@ -351,7 +363,7 @@ describe('RegisteredBrowserManagementComponent', () => {
         user_agent: navigator.userAgent
       }));
       expect(mockSnackBar.open).toHaveBeenCalledWith(
-        'Device registered successfully',
+        'Browser registered successfully',
         'Close',
         jasmine.objectContaining({ duration: 4000, panelClass: ['snack-success'] })
       );
@@ -380,15 +392,15 @@ describe('RegisteredBrowserManagementComponent', () => {
 
       await component.registerBrowser();
 
-      expect(mockErrorDialog.openErrorDialog).toHaveBeenCalledWith('Failed to register device', error);
+      expect(mockErrorDialog.openErrorDialog).toHaveBeenCalledWith('Failed to register browser', error);
       expect(component.isRegistering).toBe(false);
     });
   });
 
   describe('deleteBrowser', () => {
-    beforeEach(() => {
-      fixture.detectChanges();
-    });
+    beforeEach(fakeAsync(() => {
+      initializeComponent(fixture);
+    }));
 
     it('should delete device after confirmation', fakeAsync(() => {
       spyOn(window, 'confirm').and.returnValue(true);

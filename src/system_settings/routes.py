@@ -5,7 +5,7 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from src.database import get_db
-from src.services import requires_permission, validate
+from src.services import requires_license, requires_permission, validate
 from src.system_settings.constants import (
     ALLOWED_LOGO_TYPES,
     BASE_URL,
@@ -68,6 +68,7 @@ def update_system_settings(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.update"]  # Admin permission
     ),
+    _: None = Depends(requires_license),
 ):
     """Update system settings (colors, company name).
 
@@ -104,6 +105,7 @@ async def upload_logo(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.update"]  # Admin permission
     ),
+    _: None = Depends(requires_license),
 ):
     """Upload a new logo image.
 
@@ -195,6 +197,7 @@ def delete_logo_image(
     caller_badge: str = Security(
         requires_permission, scopes=["auth_role.update"]  # Admin permission
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete the logo image.
 

@@ -11,8 +11,7 @@ describe('LicenseService', () => {
   const mockActiveLicenseStatus: LicenseStatus = {
     is_active: true,
     license_key: 'EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88',
-    activated_at: '2024-01-15T10:30:00Z',
-    server_id: 'server-123'
+    activated_at: '2024-01-15T10:30:00Z'
   };
 
   beforeEach(() => {
@@ -37,8 +36,7 @@ describe('LicenseService', () => {
       const mockStatus: LicenseStatus = {
         is_active: true,
         license_key: 'EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88',
-        activated_at: '2024-01-15T10:30:00Z',
-        server_id: 'server-123'
+        activated_at: '2024-01-15T10:30:00Z'
       };
 
       service.checkLicense();
@@ -74,8 +72,7 @@ describe('LicenseService', () => {
       const mockStatus: LicenseStatus = {
         is_active: true,
         license_key: 'EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88',
-        activated_at: '2024-01-15T10:30:00Z',
-        server_id: 'server-123'
+        activated_at: '2024-01-15T10:30:00Z'
       };
 
       service.getLicenseStatus().subscribe(status => {
@@ -108,9 +105,9 @@ describe('LicenseService', () => {
       const mockResponse: LicenseActivationResponse = {
         id: 1,
         license_key: licenseKey,
+        activation_key: 'b'.repeat(128),
         activated_at: '2024-01-15T10:30:00Z',
-        is_active: true,
-        server_id: 'server-123'
+        is_active: true
       };
 
       service.activateLicense(licenseKey).subscribe(response => {
@@ -149,9 +146,9 @@ describe('LicenseService', () => {
       const mockResponse: LicenseActivationResponse = {
         id: 1,
         license_key: licenseKey,
+        activation_key: 'b'.repeat(128),
         activated_at: '2024-01-15T10:30:00Z',
-        is_active: true,
-        server_id: 'server-123'
+        is_active: true
       };
 
       service.activateLicense(licenseKey).subscribe(() => {
@@ -160,8 +157,7 @@ describe('LicenseService', () => {
         statusReq.flush({
           is_active: true,
           license_key: licenseKey,
-          activated_at: '2024-01-15T10:30:00Z',
-          server_id: 'server-123'
+          activated_at: '2024-01-15T10:30:00Z'
         });
 
         service.isLicensed$().subscribe(isLicensed => {
@@ -218,8 +214,7 @@ describe('LicenseService', () => {
       const mockStatus: LicenseStatus = {
         is_active: true,
         license_key: 'EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88',
-        activated_at: '2024-01-15T10:30:00Z',
-        server_id: 'server-123'
+        activated_at: '2024-01-15T10:30:00Z'
       };
 
       service['licenseStatus$'].next(mockStatus);
@@ -230,8 +225,7 @@ describe('LicenseService', () => {
       const mockStatus: LicenseStatus = {
         is_active: false,
         license_key: null,
-        activated_at: null,
-        server_id: null
+        activated_at: null
       };
 
       service['licenseStatus$'].next(mockStatus);
@@ -249,8 +243,7 @@ describe('LicenseService', () => {
       const mockStatus: LicenseStatus = {
         is_active: true,
         license_key: 'EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88',
-        activated_at: '2024-01-15T10:30:00Z',
-        server_id: 'server-123'
+        activated_at: '2024-01-15T10:30:00Z'
       };
 
       service['licenseStatus$'].next(mockStatus);
@@ -267,8 +260,7 @@ describe('LicenseService', () => {
       const mockStatus: LicenseStatus = {
         is_active: false,
         license_key: null,
-        activated_at: null,
-        server_id: null
+        activated_at: null
       };
 
       service['licenseStatus$'].next(mockStatus);
@@ -313,8 +305,7 @@ describe('LicenseService', () => {
         service['licenseStatus$'].next({
           is_active: true,
           license_key: 'EAGLE-RIVER-MOUNTAIN-42-TIGER-CLOUD-JADE-88',
-          activated_at: '2024-01-15T10:30:00Z',
-          server_id: 'server-123'
+          activated_at: '2024-01-15T10:30:00Z'
         });
       }, 10);
 
@@ -323,8 +314,7 @@ describe('LicenseService', () => {
         service['licenseStatus$'].next({
           is_active: false,
           license_key: null,
-          activated_at: null,
-          server_id: null
+          activated_at: null
         });
       }, 20);
     });

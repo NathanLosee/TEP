@@ -28,12 +28,13 @@ class TimeclockEntry(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     clock_in: Mapped[datetime] = mapped_column(
-        nullable=False, default=datetime.now(timezone.utc)
+        nullable=False, default=datetime.now(timezone.utc), index=True
     )
     clock_out: Mapped[datetime] = mapped_column(nullable=True, default=None)
     badge_number: Mapped[str] = mapped_column(
         ForeignKey(EMPLOYEE_IDENTIFIER + ".badge_number", onupdate="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     __tablename__ = IDENTIFIER

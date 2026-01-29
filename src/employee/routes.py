@@ -41,6 +41,7 @@ def create_employee(
     caller_badge: str = Security(
         requires_permission, scopes=["employee.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new employee data.
 
@@ -343,6 +344,7 @@ def update_employee_by_id(
     caller_badge: str = Security(
         requires_permission, scopes=["employee.update"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update data for employee with provided id.
 
@@ -387,6 +389,7 @@ def update_employee_badge_number(
     caller_badge: str = Security(
         requires_permission, scopes=["employee.update.badge_number"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update employee's badge number.
 
@@ -438,6 +441,7 @@ def delete_employee_by_id(
     caller_badge: str = Security(
         requires_permission, scopes=["employee.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete employee data with provided id.
 

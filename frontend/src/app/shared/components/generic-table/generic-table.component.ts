@@ -115,18 +115,25 @@ export class GenericTableComponent<T = any>
   /** Internal data source for the table */
   tableDataSource = new MatTableDataSource<T>([]);
 
-  /** Map of column key to template */
-  private templateMap = new Map<string, TemplateRef<any>>();
+  /** Map of column key to template - built lazily */
+  private templateMap: Map<string, TemplateRef<any>> | null = null;
 
   ngAfterViewInit() {
     if (this.enableSort && this.sort) {
       this.tableDataSource.sort = this.sort;
     }
+    // Template map will be built lazily on first access
+  }
 
-    // Build template map
-    this.cellTemplates?.forEach((directive) => {
-      this.templateMap.set(directive.columnKey, directive.templateRef);
-    });
+  /** Build the template map from ContentChildren - called lazily */
+  private buildTemplateMap(): Map<string, TemplateRef<any>> {
+    if (this.templateMap === null) {
+      this.templateMap = new Map<string, TemplateRef<any>>();
+      this.cellTemplates?.forEach((directive) => {
+        this.templateMap!.set(directive.columnKey, directive.templateRef);
+      });
+    }
+    return this.templateMap;
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -172,7 +179,7 @@ export class GenericTableComponent<T = any>
 
   /** Get template for a column */
   getTemplate(key: string): TemplateRef<any> | null {
-    return this.templateMap.get(key) || null;
+    return this.buildTemplateMap().get(key) || null;
   }
 
   /** Handle action button click */

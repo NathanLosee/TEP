@@ -15,7 +15,7 @@ from src.event_log.repository import (
     get_event_log_entries as get_event_log_entries_from_db,
 )
 from src.event_log.schemas import EventLogBase, EventLogExtended
-from src.services import requires_permission, validate
+from src.services import requires_license, requires_permission, validate
 from src.user.repository import get_user_by_badge_number
 
 router = APIRouter(prefix=BASE_URL, tags=["event_log"])
@@ -32,6 +32,7 @@ def create_event_log(
     caller_badge: str = Security(
         requires_permission, scopes=["event_log.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Insert new event log data.
 
@@ -140,6 +141,7 @@ def delete_event_log(
     caller_badge: str = Security(
         requires_permission, scopes=["event_log.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete event log data with provided id.
 

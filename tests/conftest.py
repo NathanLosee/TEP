@@ -4,7 +4,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from src import services
 from src.auth_role.constants import BASE_URL as AUTH_ROLE_URL
@@ -20,7 +20,7 @@ from src.employee.constants import BASE_URL as EMPLOYEE_URL
 from src.employee.models import Employee
 from src.event_log.constants import BASE_URL as EVENT_LOG_URL
 from src.holiday_group.constants import BASE_URL as HOLIDAY_GROUP_URL
-from src.license.key_generator import (
+from tools.license_generator import (
     generate_key_pair,
     generate_license_key as _generate_license_key,
 )
@@ -304,6 +304,9 @@ def setup_test_module(test_client: TestClient, request):
     This fixture runs once per test module to reduce overhead from
     repeated login and license activation/deactivation operations.
     """
+    from src.license.repository import create_license, deactivate_all_licenses
+    from src.services import set_license_activated
+
     module_name = request.module.__name__
 
     # Login once per module and cache the token
@@ -315,20 +318,17 @@ def setup_test_module(test_client: TestClient, request):
     _module_auth_token[module_name] = auth_token
     test_client.headers.update({"Authorization": f"Bearer {auth_token}"})
 
-    # Activate a test license for this module
-    test_client.delete("/licenses/deactivate")  # Clear any existing license
-    license_key = generate_test_license_key()
-    activation_response = test_client.post(
-        "/licenses/activate",
-        json={"license_key": license_key},
-    )
-
-    # Verify activation succeeded
-    if activation_response.status_code != 201:
-        raise RuntimeError(
-            f"Failed to activate test license: {activation_response.status_code} - "
-            f"{activation_response.text}"
-        )
+    # Activate a test license directly in the database (no license server needed)
+    db = TestingSessionLocal()
+    try:
+        deactivate_all_licenses(db)  # Clear any existing licenses
+        license_key = generate_test_license_key()
+        # Create a fake activation key (not cryptographically valid, but tests don't verify it)
+        fake_activation_key = "a" * 128
+        create_license(license_key, fake_activation_key, db)
+        set_license_activated(True)
+    finally:
+        db.close()
 
     yield
 
@@ -363,7 +363,14 @@ def restore_auth(test_client: TestClient, request):
 
 
 # Generate a test key pair once for the entire test session
-_test_private_key, _test_public_key = generate_key_pair()
+# generate_key_pair returns file paths, so we need to read the key content
+import tempfile
+from pathlib import Path
+
+_test_keys_dir = Path(tempfile.mkdtemp())
+_test_private_key_path, _test_public_key_path = generate_key_pair(_test_keys_dir)
+_test_private_key = _test_private_key_path.read_bytes()
+_test_public_key = _test_public_key_path.read_bytes()
 
 # Store test signatures and their corresponding messages for verification
 _test_signatures = {}
@@ -371,38 +378,6 @@ _test_signatures = {}
 # Patch the PUBLIC_KEY_PEM in the key_generator module to use test public key
 import src.license.key_generator as key_gen_module
 key_gen_module.PUBLIC_KEY_PEM = _test_public_key
-
-# Patch the verify_license_key function to accept our test signatures
-_original_verify = key_gen_module.verify_license_key
-
-def _test_verify_license_key(license_key: str) -> bool:
-    """Test version of verify_license_key that verifies against test signatures."""
-    if license_key in _test_signatures:
-        # This is a test signature, verify it
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.exceptions import InvalidSignature
-
-        try:
-            public_key = serialization.load_pem_public_key(_test_public_key)
-            if not isinstance(public_key, Ed25519PublicKey):
-                return False
-
-            signature_bytes = bytes.fromhex(license_key)
-            message = _test_signatures[license_key]
-            public_key.verify(signature_bytes, message)
-            return True
-        except (InvalidSignature, ValueError):
-            return False
-    else:
-        # Fall back to original verification for non-test keys
-        return _original_verify(license_key)
-
-key_gen_module.verify_license_key = _test_verify_license_key
-
-# Also patch it in the routes module where it was imported
-import src.license.routes as license_routes_module
-license_routes_module.verify_license_key = _test_verify_license_key
 
 
 def generate_test_license_key() -> str:

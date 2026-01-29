@@ -14,7 +14,7 @@ from src.employee.repository import (
     search_for_employees as search_for_employees_from_db,
 )
 from src.registered_browser.repository import get_registered_browser_by_uuid
-from src.services import create_event_log, requires_permission, validate
+from src.services import create_event_log, requires_license, requires_permission, validate
 from src.timeclock.constants import (
     BASE_URL,
     EXC_MSG_EMPLOYEE_NOT_ALLOWED,
@@ -49,6 +49,7 @@ def timeclock(
     badge_number: str,
     db: Session = Depends(get_db),
     x_device_uuid: Optional[str] = Header(None, alias="X-Device-UUID"),
+    _: None = Depends(requires_license),
 ):
     """Clock in/out an employee.
 
@@ -186,6 +187,7 @@ def create_manual_timeclock_entry(
     caller_badge: str = Security(
         requires_permission, scopes=["timeclock.create"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Create a manual timeclock entry.
 
@@ -263,6 +265,7 @@ def update_timeclock_by_id(
     caller_badge: str = Security(
         requires_permission, scopes=["timeclock.update"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Update data for timeclock entry with provided id.
 
@@ -304,6 +307,7 @@ def delete_timeclock_by_id(
     caller_badge: str = Security(
         requires_permission, scopes=["timeclock.delete"]
     ),
+    _: None = Depends(requires_license),
 ):
     """Delete timeclock data with provided id.
 

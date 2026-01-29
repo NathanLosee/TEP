@@ -35,6 +35,6 @@ class License(Base):
     activated_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now()
     )
-    is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(nullable=False, default=True, index=True)
 
     __tablename__ = IDENTIFIER

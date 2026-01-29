@@ -23,6 +23,7 @@ from src.services import (
     create_event_log,
     generate_access_token,
     generate_refresh_token,
+    requires_license,
     requires_permission,
     validate,
     verify_password,
@@ -64,6 +65,7 @@ def create_user(
     request: UserBase,
     db: Session = Depends(get_db),
     caller_badge: str = Security(requires_permission, scopes=["user.create"]),
+    _: None = Depends(requires_license),
 ):
     """Insert new user data.
 
@@ -177,6 +179,7 @@ def update_user_password(
     request: UserPasswordChange,
     db: Session = Depends(get_db),
     caller_badge: str = Security(requires_permission, scopes=[]),
+    _: None = Depends(requires_license),
 ):
     """Update a user's password.
 
@@ -251,6 +254,7 @@ def delete_user_by_id(
     id: int,
     db: Session = Depends(get_db),
     caller_badge: str = Security(requires_permission, scopes=["user.delete"]),
+    _: None = Depends(requires_license),
 ):
     """Delete a user by a provided id.
 

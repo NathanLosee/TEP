@@ -37,14 +37,14 @@ class RegisteredBrowser(Base):
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     browser_uuid: Mapped[str] = mapped_column(unique=True, nullable=False)
     browser_name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    fingerprint_hash: Mapped[Optional[str]] = mapped_column(nullable=True)
+    fingerprint_hash: Mapped[Optional[str]] = mapped_column(nullable=True, index=True)
     user_agent: Mapped[Optional[str]] = mapped_column(nullable=True)
     ip_address: Mapped[Optional[str]] = mapped_column(nullable=True)
     registered_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now()
     )
     last_seen: Mapped[datetime] = mapped_column(
-        nullable=False, server_default=func.now(), onupdate=func.now()
+        nullable=False, server_default=func.now(), onupdate=func.now(), index=True
     )
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
     active_session_fingerprint: Mapped[Optional[str]] = mapped_column(nullable=True)

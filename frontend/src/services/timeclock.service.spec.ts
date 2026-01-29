@@ -302,7 +302,7 @@ describe('TimeclockService', () => {
       });
 
       const req = httpMock.expectOne(`${baseUrl}/${entryId}`);
-      expect(req.request.method).toBe('POST');
+      expect(req.request.method).toBe('PUT');
       expect(req.request.body).toEqual(update);
       req.flush(update);
     });

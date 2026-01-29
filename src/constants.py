@@ -3,7 +3,13 @@
 DIGIT_REGEX = "[[:digit:]]"
 CAP_CHAR_REGEX = "[[:upper:]]"
 NAME_CHAR_REGEX = "[-'' [:alpha:]]"
+# Badge numbers: alphanumeric, may include dashes or underscores, 1-20 characters
+BADGE_NUMBER_REGEX = r"^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$"
 EXC_MSG_IDS_DO_NOT_MATCH = "Ids in body and path do not match."
+EXC_MSG_INVALID_BADGE_FORMAT = (
+    "Badge number must be 1-20 characters, start with a letter or number, "
+    "and contain only letters, numbers, dashes, or underscores."
+)
 
 RESOURCE_SCOPES = {
     "auth_role.create": "Create Auth Role",
