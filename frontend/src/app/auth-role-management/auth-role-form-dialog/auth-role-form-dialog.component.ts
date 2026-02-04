@@ -173,7 +173,6 @@ export class AuthRoleFormDialogComponent {
               this.isLoading = false;
             },
             error: (error) => {
-              console.error('Error updating auth role:', error);
               this.isLoading = false;
             },
           });
@@ -185,7 +184,6 @@ export class AuthRoleFormDialogComponent {
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error creating auth role:', error);
             this.isLoading = false;
           },
         });

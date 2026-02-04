@@ -1,7 +1,6 @@
 """Database interactivity for registered browser operations."""
 
 from datetime import datetime
-from typing import Union
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -39,7 +38,7 @@ def create_registered_browser(
 
 def get_registered_browser_by_uuid(
     browser_uuid: str, db: Session
-) -> Union[RegisteredBrowser, None]:
+) -> RegisteredBrowser | None:
     """Retrieve registered browser by UUID.
 
     Args:
@@ -47,7 +46,7 @@ def get_registered_browser_by_uuid(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[RegisteredBrowser, None]: The retrieved browser or None if not
+        RegisteredBrowser | None: The retrieved browser or None if not
             found.
 
     """
@@ -73,7 +72,7 @@ def get_all_registered_browsers(db: Session) -> list[RegisteredBrowser]:
 
 def get_registered_browser_by_name(
     browser_name: str, db: Session
-) -> Union[RegisteredBrowser, None]:
+) -> RegisteredBrowser | None:
     """Retrieve registered browser by name.
 
     Args:
@@ -81,7 +80,7 @@ def get_registered_browser_by_name(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[RegisteredBrowser, None]: The retrieved browser
+        RegisteredBrowser | None: The retrieved browser
             or None if not found.
 
     """
@@ -94,7 +93,7 @@ def get_registered_browser_by_name(
 
 def get_registered_browser_by_fingerprint(
     fingerprint_hash: str, db: Session
-) -> Union[RegisteredBrowser, None]:
+) -> RegisteredBrowser | None:
     """Retrieve registered browser by fingerprint hash.
 
     Args:
@@ -102,7 +101,7 @@ def get_registered_browser_by_fingerprint(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[RegisteredBrowser, None]: The retrieved browser
+        RegisteredBrowser | None: The retrieved browser
             or None if not found.
 
     """

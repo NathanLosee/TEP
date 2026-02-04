@@ -4,12 +4,12 @@ import time
 from collections import defaultdict
 from threading import Lock
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Security
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from src.database import get_db
-from src.services import is_license_activated
+from src.services import is_license_activated, requires_permission
 
 router = APIRouter(tags=["health"])
 
@@ -87,8 +87,12 @@ def health_check(db: Session = Depends(get_db)):
 
 
 @router.get("/metrics", status_code=200)
-def get_metrics():
-    """Application metrics.
+def get_metrics(
+    caller_badge: str = Security(
+        requires_permission, scopes=["system.read"]
+    ),
+):
+    """Application metrics (admin only).
 
     Returns request counts, error rates, and response time statistics.
 

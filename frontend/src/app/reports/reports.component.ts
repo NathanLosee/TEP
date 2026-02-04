@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -19,6 +19,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import {
   Department,
@@ -73,7 +75,8 @@ interface EmployeeCalendar {
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.scss',
 })
-export class ReportsComponent implements OnInit {
+export class ReportsComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private reportService = inject(ReportService);
@@ -136,7 +139,9 @@ export class ReportsComponent implements OnInit {
     });
 
     // Subscribe to report type changes to reset filters
-    this.reportForm.get('reportType')?.valueChanges.subscribe((reportType) => {
+    this.reportForm.get('reportType')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((reportType) => {
       this.reportForm.patchValue({
         employee: null,
         department: null,
@@ -158,6 +163,11 @@ export class ReportsComponent implements OnInit {
     this.loadOrgUnits();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadEmployees() {
     this.employeeService.getEmployees().subscribe({
       next: (data) => {
@@ -165,7 +175,6 @@ export class ReportsComponent implements OnInit {
         this.employees = data.filter((emp) => emp.id !== 0);
       },
       error: (error) => {
-        console.error('Error loading employees:', error);
         this.showSnackBar('Failed to load employees', 'error');
       },
     });
@@ -177,7 +186,6 @@ export class ReportsComponent implements OnInit {
         this.departments = data;
       },
       error: (error) => {
-        console.error('Error loading departments:', error);
         this.showSnackBar('Failed to load departments', 'error');
       },
     });
@@ -190,7 +198,6 @@ export class ReportsComponent implements OnInit {
         this.orgUnits = data.filter((unit) => unit.id !== 0);
       },
       error: (error) => {
-        console.error('Error loading org units:', error);
         this.showSnackBar('Failed to load org units', 'error');
       },
     });
@@ -230,7 +237,6 @@ export class ReportsComponent implements OnInit {
         this.showSnackBar('Report generated successfully', 'success');
       },
       error: (error) => {
-        console.error('Error generating report:', error);
         this.isLoading = false;
         this.showSnackBar('Failed to generate report', 'error');
       },
@@ -266,7 +272,7 @@ export class ReportsComponent implements OnInit {
           this.showSnackBar('PDF exported successfully', 'success');
         },
         error: (error) => {
-          console.error('Error exporting PDF:', error);
+          // Error handled by snackBar notification below
           this.showSnackBar('Failed to export PDF', 'error');
         },
       });

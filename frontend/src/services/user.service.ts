@@ -53,7 +53,7 @@ export class UserService {
             badge_number: payload.sub || ''
           });
         } catch (error) {
-          console.error('Error decoding token:', error);
+          // Token decode error - permissions will not be set
         }
       })
     );
@@ -84,7 +84,7 @@ export class UserService {
             badge_number: payload.sub || ''
           });
         } catch (error) {
-          console.error('Error decoding token:', error);
+          // Token decode error - permissions will not be set
         }
       })
     );

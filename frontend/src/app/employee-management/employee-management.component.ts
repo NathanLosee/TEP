@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -13,6 +13,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Department, DepartmentService } from '../../services/department.service';
 import { Employee, EmployeeService } from '../../services/employee.service';
 import { HolidayGroup, HolidayGroupService } from '../../services/holiday-group.service';
@@ -69,7 +71,8 @@ interface EmployeeListing {
   templateUrl: './employee-management.component.html',
   styleUrl: './employee-management.component.scss',
 })
-export class EmployeeManagementComponent implements OnInit {
+export class EmployeeManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -186,7 +189,7 @@ export class EmployeeManagementComponent implements OnInit {
         this.departments = departments;
       },
       error: (error) => {
-        console.error('Error loading departments:', error);
+        // Error handled by subscription error callback
       },
     });
 
@@ -196,7 +199,7 @@ export class EmployeeManagementComponent implements OnInit {
         this.orgUnits = orgUnits.filter(ou => ou.name.toLowerCase() !== 'root');
       },
       error: (error) => {
-        console.error('Error loading org units:', error);
+        // Error handled by subscription error callback
       },
     });
 
@@ -206,7 +209,7 @@ export class EmployeeManagementComponent implements OnInit {
         this.holidayGroups = holidayGroups;
       },
       error: (error) => {
-        console.error('Error loading holiday groups:', error);
+        // Error handled by subscription error callback
       },
     });
 
@@ -217,15 +220,22 @@ export class EmployeeManagementComponent implements OnInit {
         this.managers = employees.filter(emp => emp.id !== 0);
       },
       error: (error) => {
-        console.error('Error loading managers:', error);
+        // Error handled by subscription error callback
       },
     });
   }
 
   setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.loadEmployees();
-    });
+    this.searchForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadEmployees();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadEmployees() {
@@ -395,7 +405,6 @@ export class EmployeeManagementComponent implements OnInit {
   }
 
   private handleError(message: string, error: any) {
-    console.error(message, error);
     this.dialog.open(ErrorDialogComponent, {
       data: {
         title: 'Error',

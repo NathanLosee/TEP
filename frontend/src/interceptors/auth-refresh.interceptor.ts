@@ -8,7 +8,13 @@ import { Router } from '@angular/router';
 
 // Global state to handle concurrent refresh attempts
 let isRefreshing = false;
-const refreshTokenSubject = new BehaviorSubject<string | null>(null);
+let refreshTokenSubject = new BehaviorSubject<string | null>(null);
+
+/** Reset module-level refresh state (used by tests). */
+export function resetRefreshState(): void {
+  isRefreshing = false;
+  refreshTokenSubject = new BehaviorSubject<string | null>(null);
+}
 
 /**
  * Interceptor that handles expired access tokens by automatically refreshing them

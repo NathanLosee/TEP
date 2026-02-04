@@ -85,7 +85,6 @@ export class DepartmentFormDialogComponent {
               this.isLoading = false;
             },
             error: (error) => {
-              console.error('Error updating department:', error);
               this.isLoading = false;
             },
           });
@@ -96,7 +95,6 @@ export class DepartmentFormDialogComponent {
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error creating department:', error);
             this.isLoading = false;
           },
         });

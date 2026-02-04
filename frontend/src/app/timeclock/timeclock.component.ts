@@ -121,13 +121,11 @@ export class TimeclockComponent implements OnInit, OnDestroy {
             }
           },
           error: (error) => {
-            console.error('Browser verification failed:', error);
             this.isBrowserRegistered = false;
             this.browserName = null;
           },
         });
     } catch (error) {
-      console.error('Failed to generate fingerprint:', error);
       this.isBrowserRegistered = false;
       this.browserName = null;
     }
@@ -188,7 +186,6 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   checkStatus() {
     this.timeclockService.checkStatus(this.badgeNumber).subscribe({
       next: (response) => {
-        console.log(response);
         this.openTimeclockDialog(this.badgeNumber, response.message);
       },
       error: (error) => {
@@ -259,7 +256,6 @@ export class TimeclockComponent implements OnInit, OnDestroy {
             );
           },
           error: (error) => {
-            console.error('Recovery failed:', error);
             this.isRecovering = false;
 
             // Display user-friendly error message
@@ -276,7 +272,6 @@ export class TimeclockComponent implements OnInit, OnDestroy {
           },
         });
     } catch (error) {
-      console.error('Failed to generate fingerprint:', error);
       this.recoveryError = 'Failed to initialize recovery. Please try again.';
       this.isRecovering = false;
     }

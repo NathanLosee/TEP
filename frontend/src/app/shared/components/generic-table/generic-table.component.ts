@@ -99,7 +99,7 @@ export class GenericTableComponent<T = any>
   @Input() createButtonText = 'Create New';
 
   /** Create button permission */
-  @Input() creatapermission?: string;
+  @Input() createPermission?: string;
 
   /** Emitted when an action button is clicked */
   @Output() actionClick = new EventEmitter<TableActionEvent<T>>();

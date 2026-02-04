@@ -1,7 +1,5 @@
 """Module providing database interactivity for employee-related operations."""
 
-from typing import List, Union
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -52,7 +50,7 @@ def get_employees(db: Session) -> list[Employee]:
     )
 
 
-def get_employee_by_id(id: int, db: Session) -> Union[Employee, None]:
+def get_employee_by_id(id: int, db: Session) -> Employee | None:
     """Retrieve an employee by a provided id.
 
     Args:
@@ -60,7 +58,7 @@ def get_employee_by_id(id: int, db: Session) -> Union[Employee, None]:
         db (Session): Database session for the current request.
 
     Returns:
-        (Union[Employee, None]): The employee with the provided id, or
+        (Employee | None): The employee with the provided id, or
             None if not found.
 
     """
@@ -69,7 +67,7 @@ def get_employee_by_id(id: int, db: Session) -> Union[Employee, None]:
 
 def get_employee_by_badge_number(
     badge_number: str, db: Session
-) -> Union[Employee, None]:
+) -> Employee | None:
     """Retrieve an employee by a provided badge number.
 
     Args:
@@ -77,7 +75,7 @@ def get_employee_by_badge_number(
         db (Session): Database session for the current request.
 
     Returns:
-        (Union[Employee, None]): The employee with the provided badge number,
+        (Employee | None): The employee with the provided badge number,
             or None if not found.
 
     """
@@ -88,23 +86,23 @@ def get_employee_by_badge_number(
 
 def search_for_employees(
     db: Session,
-    department_name: Union[str, None] = None,
-    org_unit_name: Union[str, None] = None,
-    holiday_group_name: Union[str, None] = None,
-    badge_number: Union[str, None] = None,
-    first_name: Union[str, None] = None,
-    last_name: Union[str, None] = None,
-) -> List[Employee]:
+    department_name: str | None = None,
+    org_unit_name: str | None = None,
+    holiday_group_name: str | None = None,
+    badge_number: str | None = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+) -> list[Employee]:
     """Search for employees based on various criteria.
 
     Args:
-        department_name (Union[str, None]): Department name to search for.
-        org_unit_name (Union[str, None]): Org unit name to search for.
-        holiday_group_name (Union[str, None]): Holiday group name to search
+        department_name (str | None): Department name to search for.
+        org_unit_name (str | None): Org unit name to search for.
+        holiday_group_name (str | None): Holiday group name to search
             for.
-        badge_number (Union[str, None]): Badge number to search for.
-        first_name (Union[str, None]): First name to search for.
-        last_name (Union[str, None]): Last name to search for.
+        badge_number (str | None): Badge number to search for.
+        first_name (str | None): First name to search for.
+        last_name (str | None): Last name to search for.
         db (Session): Database session for the current request.
 
     Returns:

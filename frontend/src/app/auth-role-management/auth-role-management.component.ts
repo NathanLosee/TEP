@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -16,6 +16,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthRole, AuthRoleService } from '../../services/auth-role.service';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 import { ErrorDialogComponent, extractErrorDetail } from '../error-dialog/error-dialog.component';
@@ -55,7 +57,8 @@ import { AuthRoleDetailsDialogComponent } from './auth-role-details-dialog/auth-
   templateUrl: './auth-role-management.component.html',
   styleUrl: './auth-role-management.component.scss',
 })
-export class AuthRoleManagementComponent implements OnInit {
+export class AuthRoleManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private formBuilder = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -138,9 +141,16 @@ export class AuthRoleManagementComponent implements OnInit {
   }
 
   setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.filterRoles();
-    });
+    this.searchForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterRoles();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   filterRoles() {
@@ -260,7 +270,6 @@ export class AuthRoleManagementComponent implements OnInit {
   }
 
   private handleError(message: string, error: any) {
-    console.error(message, error);
     this.dialog.open(ErrorDialogComponent, {
       data: {
         title: 'Error',

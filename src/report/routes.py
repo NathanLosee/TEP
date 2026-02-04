@@ -1,5 +1,6 @@
 """Module defining FastAPI routes for report-related operations."""
 
+import logging
 from datetime import datetime
 from typing import Annotated
 
@@ -127,11 +128,11 @@ def export_report_pdf(
                 "Content-Length": str(len(pdf_bytes)),
             },
         )
-    except Exception as e:
-        # Log the real error server-side only
-        import traceback
-
-        traceback.print_exc()
+    except Exception:
+        logging.getLogger(__name__).exception(
+            "PDF generation failed"
+        )
         raise HTTPException(
-            status_code=500, detail="Error generating PDF report"
+            status_code=500,
+            detail="Error generating PDF report",
         )

@@ -61,7 +61,6 @@ export class LoginComponent {
 
     this.userService.login(formData).subscribe({
       next: (response) => {
-        console.log('Login successful:', response);
         localStorage.setItem('access_token', response.access_token);
         this.isLoading = false;
         this.router.navigate(['/admin']);

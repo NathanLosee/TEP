@@ -1,7 +1,6 @@
 """Module providing database interactivity for event log-related operations."""
 
 from datetime import datetime, timezone
-from typing import Union
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -31,7 +30,7 @@ def create_event_log(request: EventLogBase, db: Session) -> EventLog:
     return event_log_entry
 
 
-def get_event_log_by_id(id: int, db: Session) -> Union[EventLog, None]:
+def get_event_log_by_id(id: int, db: Session) -> EventLog | None:
     """Retrieve event log entry by ID.
 
     Args:
@@ -39,7 +38,7 @@ def get_event_log_by_id(id: int, db: Session) -> Union[EventLog, None]:
         db (Session): Database session for the current request.
 
     Returns:
-        Union[EventLog, None]: The retrieved event log or None if not found.
+        EventLog | None: The retrieved event log or None if not found.
 
     """
     return db.get(EventLog, id)
@@ -48,8 +47,8 @@ def get_event_log_by_id(id: int, db: Session) -> Union[EventLog, None]:
 def get_event_log_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    badge_number: Union[str, None],
-    log_filter: Union[str, None],
+    badge_number: str | None,
+    log_filter: str | None,
     db: Session,
 ) -> list[EventLog]:
     """Retrieve all event logs with given time period.

@@ -1,7 +1,5 @@
 """Module providing database interactivity for license operations."""
 
-from typing import Union
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,14 +7,14 @@ from src.license.key_generator import normalize_license_key
 from src.license.models import License
 
 
-def get_active_license(db: Session) -> Union[License, None]:
+def get_active_license(db: Session) -> License | None:
     """Retrieve the active license.
 
     Args:
         db (Session): Database session for the current request.
 
     Returns:
-        Union[License, None]: The active license or None if no license exists.
+        License | None: The active license or None if no license exists.
 
     """
     return db.scalars(
@@ -26,7 +24,7 @@ def get_active_license(db: Session) -> Union[License, None]:
 
 def get_license_by_key(
     license_key: str, db: Session
-) -> Union[License, None]:
+) -> License | None:
     """Retrieve license by key.
 
     Args:
@@ -34,7 +32,7 @@ def get_license_by_key(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[License, None]: The retrieved license or None if not found.
+        License | None: The retrieved license or None if not found.
 
     """
     # Normalize the key to hex format for comparison

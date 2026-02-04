@@ -17,3 +17,19 @@ EXC_MSG_BROWSER_NAME_ALREADY_EXISTS = (
     "Please choose a different name."
 )
 EXC_MSG_BROWSER_UUID_REQUIRED = "Browser UUID is required"
+EXC_MSG_INVALID_UUID_FORMAT = (
+    "Invalid UUID format. "
+    "Expected format: WORD-WORD-WORD-NUMBER"
+)
+EXC_MSG_INVALID_DEVICE_ID_FORMAT = (
+    "Invalid device ID format. "
+    "Expected format: WORD-WORD-WORD-NUMBER"
+)
+EXC_MSG_DEVICE_NOT_FOUND = (
+    "Device ID not found or browser is inactive"
+)
+EXC_MSG_SESSION_CONFLICT = (
+    "This device ID is currently in use by another browser."
+    " Please wait a few minutes and try again,"
+    " or contact an administrator."
+)

@@ -25,7 +25,6 @@ function initializePermissions(permissionService: PermissionService) {
           badge_number: payload.sub || ''
         });
       } catch (error) {
-        console.error('Error decoding token during initialization:', error);
         // Token is invalid, clear it
         localStorage.removeItem('access_token');
       }

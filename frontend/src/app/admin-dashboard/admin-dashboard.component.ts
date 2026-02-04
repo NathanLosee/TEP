@@ -61,7 +61,6 @@ export class AdminDashboardComponent implements OnInit {
         this.isLoadingEvents = false;
       },
       error: (error) => {
-        console.error('Error loading event logs:', error);
         this.isLoadingEvents = false;
       },
     });

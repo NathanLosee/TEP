@@ -148,7 +148,7 @@ export class TimeclockEntryFormDialogComponent implements OnInit {
           );
         },
         error: (error) => {
-          console.error('Error loading employees:', error);
+          // Error handled by subscription error callback
         },
       });
     }
@@ -202,7 +202,6 @@ export class TimeclockEntryFormDialogComponent implements OnInit {
               this.isLoading = false;
             },
             error: (error) => {
-              console.error('Error updating entry:', error);
               this.isLoading = false;
             },
           });
@@ -219,7 +218,6 @@ export class TimeclockEntryFormDialogComponent implements OnInit {
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error creating entry:', error);
             this.isLoading = false;
           },
         });

@@ -17,12 +17,19 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from sqlalchemy.orm import Session
 
+import src.license.repository as license_repository
 from src.auth_role.models import AuthRole, AuthRolePermission
+from src.config import settings
 from src.constants import RESOURCE_SCOPES
 from src.database import SessionLocal, get_db
 from src.employee.models import Employee
 from src.event_log.constants import EVENT_LOG_MSGS
 from src.event_log.models import EventLog
+from src.license.constants import EXC_MSG_LICENSE_REQUIRED
+from src.license.key_generator import (
+    get_machine_id,
+    verify_activation_key,
+)
 from src.org_unit.models import OrgUnit
 from src.timeclock.models import TimeclockEntry
 from src.user.constants import BASE_URL as USER_URL
@@ -93,8 +100,6 @@ def create_root_user_if_not_exists():
     In development, a secure random password is generated.
 
     """
-    from src.main import settings
-
     db = SessionLocal()
 
     root_org_unit = db.get(OrgUnit, 0)
@@ -289,8 +294,6 @@ def generate_access_token(user: User) -> str:
         str: The generated access token.
 
     """
-    from src.main import settings
-
     expiration = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRY_MINUTES
     )
@@ -313,8 +316,6 @@ def generate_refresh_token(user: User) -> str:
         str: The generated refresh token.
 
     """
-    from src.main import settings
-
     expiration = datetime.now(timezone.utc) + timedelta(
         minutes=settings.REFRESH_TOKEN_EXPIRY_MINUTES
     )
@@ -481,7 +482,6 @@ def get_license_status(db: Session) -> dict:
 
     """
     global is_license_activated
-    import src.license.repository as license_repository
 
     license_obj = license_repository.get_active_license(db)
 
@@ -513,7 +513,6 @@ def requires_license(db: Session = Depends(get_db)) -> None:
 
     """
     global is_license_activated
-    from src.license.constants import EXC_MSG_LICENSE_REQUIRED
 
     if not is_license_activated:
         raise HTTPException(
@@ -535,8 +534,6 @@ def validate_license_on_startup() -> bool:
 
     """
     global is_license_activated
-    import src.license.repository as license_repository
-    from src.license.key_generator import get_machine_id, verify_activation_key
 
     db = SessionLocal()
     try:

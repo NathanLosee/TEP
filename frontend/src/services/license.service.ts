@@ -68,7 +68,6 @@ export class LicenseService {
         this.saveToCache(status);
       },
       error: (error) => {
-        console.error('Failed to check license status:', error);
         // Only set inactive if we have no cached data
         if (!cached) {
           this.licenseStatus$.next({

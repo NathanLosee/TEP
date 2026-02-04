@@ -13,6 +13,10 @@ from src.registered_browser.constants import (
     EXC_MSG_BROWSER_ALREADY_REGISTERED,
     EXC_MSG_BROWSER_NAME_ALREADY_EXISTS,
     EXC_MSG_BROWSER_NOT_FOUND,
+    EXC_MSG_DEVICE_NOT_FOUND,
+    EXC_MSG_INVALID_DEVICE_ID_FORMAT,
+    EXC_MSG_INVALID_UUID_FORMAT,
+    EXC_MSG_SESSION_CONFLICT,
     IDENTIFIER,
 )
 from src.registered_browser.models import RegisteredBrowser
@@ -82,7 +86,7 @@ def register_browser(
         # Validate UUID format if provided
         validate(
             validate_uuid_format(request.browser_uuid),
-            "Invalid UUID format. Expected format: WORD-WORD-WORD-NUMBER",
+            EXC_MSG_INVALID_UUID_FORMAT,
             status.HTTP_400_BAD_REQUEST,
         )
 
@@ -286,7 +290,7 @@ def recover_browser(
     # Validate device ID format
     validate(
         validate_uuid_format(request.recovery_code),
-        "Invalid device ID format. Expected format: WORD-WORD-WORD-NUMBER",
+        EXC_MSG_INVALID_DEVICE_ID_FORMAT,
         status.HTTP_400_BAD_REQUEST,
     )
 
@@ -295,16 +299,16 @@ def recover_browser(
 
     validate(
         browser and browser.is_active,
-        "Device ID not found or browser is inactive",
+        EXC_MSG_DEVICE_NOT_FOUND,
         status.HTTP_404_NOT_FOUND,
     )
 
     # Check if device has active session with different fingerprint
     validate(
-        not has_active_session_conflict(browser, request.fingerprint_hash),
-        "This device ID is currently in use by another browser."
-        " Please wait a few minutes and try again,"
-        " or contact an administrator.",
+        not has_active_session_conflict(
+            browser, request.fingerprint_hash,
+        ),
+        EXC_MSG_SESSION_CONFLICT,
         status.HTTP_409_CONFLICT,
         field="browser_uuid",
         constraint="session",

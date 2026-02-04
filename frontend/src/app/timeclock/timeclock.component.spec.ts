@@ -227,14 +227,12 @@ describe('TimeclockComponent', () => {
 
       timeclockServiceSpy.checkStatus.and.returnValue(of(mockResponse));
       dialogSpy.open.and.returnValue(mockDialogRef);
-      spyOn(console, 'log');
       spyOn(component, 'openTimeclockDialog').and.callThrough();
 
       component.badgeNumber = 'EMP002';
       component.checkStatus();
 
       expect(timeclockServiceSpy.checkStatus).toHaveBeenCalledWith('EMP002');
-      expect(console.log).toHaveBeenCalledWith(mockResponse);
       expect(component.openTimeclockDialog).toHaveBeenCalledWith('EMP002', 'Clocked out');
     });
 

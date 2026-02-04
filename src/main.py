@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 from starlette.types import Message
 
-from src.config import Settings
+from src.config import settings
 from src.health import record_request
 from src.health import router as health_router
 from src.logger.app_logger import get_logger
@@ -61,7 +61,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(health_router)
-settings = Settings()
 formatter = CustomFormatter("%(asctime)s")
 logger = get_logger(__name__, formatter, log_level=settings.LOG_LEVEL)
 status_reasons = {x.value: x.name for x in list(HTTPStatus)}
@@ -151,8 +150,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Device-UUID"],
 )
 
 

@@ -83,7 +83,6 @@ describe('LoginComponent', () => {
     expect(component.isLoading).toBe(false);
     expect(userServiceSpy.login).toHaveBeenCalled();
     expect(localStorage.setItem).toHaveBeenCalledWith('access_token', 'test-token-123');
-    expect(console.log).toHaveBeenCalledWith('Login successful:', mockResponse);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/admin']);
   });
 

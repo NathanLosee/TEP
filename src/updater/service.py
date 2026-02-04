@@ -6,7 +6,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
-from typing import Union
 
 import httpx
 
@@ -77,14 +76,14 @@ def compare_versions(current: str, latest: str) -> int:
 
 def check_for_update(
     settings: Settings,
-) -> Union[ReleaseInfo, None]:
+) -> ReleaseInfo | None:
     """Check GitHub Releases for a newer version.
 
     Args:
         settings (Settings): Application settings with GITHUB_REPO.
 
     Returns:
-        Union[ReleaseInfo, None]: Release info if update available,
+        ReleaseInfo | None: Release info if update available,
             None otherwise.
 
     Raises:
@@ -267,11 +266,11 @@ def get_apply_script_path() -> Path:
     return base / "scripts" / "apply-update.ps1"
 
 
-def get_backup_path() -> Union[Path, None]:
+def get_backup_path() -> Path | None:
     """Find the most recent backup directory.
 
     Returns:
-        Union[Path, None]: Path to backup directory, or None.
+        Path | None: Path to backup directory, or None.
 
     """
     if getattr(sys, "frozen", False):

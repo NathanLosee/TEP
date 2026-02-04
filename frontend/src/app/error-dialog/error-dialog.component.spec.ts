@@ -66,14 +66,14 @@ describe('ErrorDialogComponent', () => {
     });
   });
 
-  it('should log error to console', () => {
+  it('should open error dialog without logging to console', () => {
     spyOn(console, 'error');
     const errorMessage = 'Test error';
     const error = 'Error details';
 
     service.openErrorDialog(errorMessage, error);
 
-    expect(console.error).toHaveBeenCalledWith(errorMessage, error);
+    expect(console.error).not.toHaveBeenCalled();
   });
 });
 

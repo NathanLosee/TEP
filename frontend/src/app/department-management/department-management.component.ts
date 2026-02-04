@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -15,7 +15,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PartialObserver } from 'rxjs';
+import { PartialObserver, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import {
   Department,
   DepartmentService,
@@ -53,7 +54,8 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
   templateUrl: './department-management.component.html',
   styleUrl: './department-management.component.scss',
 })
-export class DepartmentManagementComponent implements OnInit {
+export class DepartmentManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private formBuilder = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
@@ -116,9 +118,16 @@ export class DepartmentManagementComponent implements OnInit {
   }
 
   setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.filterDepartments();
-    });
+    this.searchForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterDepartments();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadDepartments() {
@@ -281,7 +290,6 @@ export class DepartmentManagementComponent implements OnInit {
   }
 
   private handleError(message: string, error: any) {
-    console.error(message, error);
     this.dialog.open(ErrorDialogComponent, {
       data: {
         title: 'Error',

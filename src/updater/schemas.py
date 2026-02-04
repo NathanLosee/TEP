@@ -1,7 +1,5 @@
 """Module defining schemas for updater-related operations."""
 
-from typing import Union
-
 from pydantic import BaseModel
 
 
@@ -33,23 +31,23 @@ class UpdateStatus(BaseModel):
 
     Attributes:
         current_version (str): Running application version.
-        latest_version (Union[str, None]): Latest available version.
+        latest_version (str | None): Latest available version.
         update_available (bool): Whether a newer version exists.
-        last_checked (Union[str, None]): ISO timestamp of last check.
-        download_progress (Union[float, None]): Download progress 0-100.
-        downloaded_file (Union[str, None]): Path to downloaded file.
+        last_checked (str | None): ISO timestamp of last check.
+        download_progress (float | None): Download progress 0-100.
+        downloaded_file (str | None): Path to downloaded file.
         state (str): Current state of the updater.
-        error (Union[str, None]): Error message if state is error.
+        error (str | None): Error message if state is error.
         backup_available (bool): Whether a rollback backup exists.
 
     """
 
     current_version: str
-    latest_version: Union[str, None] = None
+    latest_version: str | None = None
     update_available: bool = False
-    last_checked: Union[str, None] = None
-    download_progress: Union[float, None] = None
-    downloaded_file: Union[str, None] = None
+    last_checked: str | None = None
+    download_progress: float | None = None
+    downloaded_file: str | None = None
     state: str = "idle"
-    error: Union[str, None] = None
+    error: str | None = None
     backup_available: bool = False

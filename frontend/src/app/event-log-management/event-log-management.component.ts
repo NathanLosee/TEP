@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -17,6 +17,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { EventLog, EventLogService } from '../../services/event-log.service';
 import { PermissionService } from '../../services/permission.service';
 import {
@@ -50,7 +52,8 @@ import { EventLogDetailDialogComponent } from './event-log-detail-dialog.compone
   templateUrl: './event-log-management.component.html',
   styleUrl: './event-log-management.component.scss',
 })
-export class EventLogManagementComponent implements OnInit {
+export class EventLogManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private eventLogService = inject(EventLogService);
   private permissionService = inject(PermissionService);
   private fb = inject(FormBuilder);
@@ -120,17 +123,26 @@ export class EventLogManagementComponent implements OnInit {
   }
 
   setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.loadEventLogs();
-    });
+    this.searchForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadEventLogs();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadCurrentUserBadge() {
-    this.permissionService.permissions$.subscribe({
-      next: (permissions) => {
-        this.currentUserBadge = permissions?.badge_number || null;
-      },
-    });
+    this.permissionService.permissions$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (permissions) => {
+          this.currentUserBadge = permissions?.badge_number || null;
+        },
+      });
   }
 
   loadEventLogs() {
@@ -162,7 +174,6 @@ export class EventLogManagementComponent implements OnInit {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error loading event logs:', error);
           this.isLoading = false;
         },
       });

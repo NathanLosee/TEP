@@ -70,3 +70,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=get_env_file_path(), extra="ignore"
     )
+
+
+settings = Settings()

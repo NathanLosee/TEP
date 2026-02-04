@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -20,6 +20,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { TimeclockService } from '../../services/timeclock.service';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
@@ -71,7 +73,8 @@ interface TimeclockEntryListing {
   templateUrl: './timeclock-entries-management.component.html',
   styleUrl: './timeclock-entries-management.component.scss',
 })
-export class TimeclockEntriesManagementComponent implements OnInit {
+export class TimeclockEntriesManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private timeclockService = inject(TimeclockService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
@@ -177,9 +180,16 @@ export class TimeclockEntriesManagementComponent implements OnInit {
   }
 
   setupFilterForm() {
-    this.filterForm.valueChanges.subscribe(() => {
-      this.loadTimeEntries();
-    });
+    this.filterForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadTimeEntries();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadTimeEntries() {

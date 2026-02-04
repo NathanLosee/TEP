@@ -138,12 +138,15 @@ def create_auth_role_membership(
 )
 def get_auth_roles(
     db: Session = Depends(get_db),
-    user_id: int = Security(requires_permission, scopes=["auth_role.read"]),
+    caller_badge: str = Security(
+        requires_permission, scopes=["auth_role.read"]
+    ),
 ):
     """Retrieve all auth roles.
 
     Args:
         db (Session): Database session for current request.
+        caller_badge (str): Badge number of authenticated user.
 
     Returns:
         list[AuthRoleExtended]: The retrieved auth roles.

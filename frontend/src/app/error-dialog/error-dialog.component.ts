@@ -57,8 +57,6 @@ export class ErrorDialogComponent {
   }
 
   openErrorDialog(msg: string, error: AppError): void {
-    console.error(msg, error);
-
     let errorMessage: string;
     if (typeof error === 'string') {
       errorMessage = error;

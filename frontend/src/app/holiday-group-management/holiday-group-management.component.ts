@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -16,7 +16,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PartialObserver } from 'rxjs';
+import { PartialObserver, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import {
   HolidayGroup,
   HolidayGroupService,
@@ -60,7 +61,8 @@ import { HolidayGroupEmployeesDialogComponent } from './holiday-group-employees-
   templateUrl: './holiday-group-management.component.html',
   styleUrl: './holiday-group-management.component.scss',
 })
-export class HolidayGroupManagementComponent implements OnInit {
+export class HolidayGroupManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private formBuilder = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
@@ -135,9 +137,16 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.filterGroups();
-    });
+    this.searchForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterGroups();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadHolidayGroups() {
@@ -236,7 +245,6 @@ export class HolidayGroupManagementComponent implements OnInit {
     if (this.selectedGroup) {
       holidayGroupData.id = this.selectedGroup.id;
     }
-    console.log('Saving holiday group:', holidayGroupData);
     const observer: PartialObserver<HolidayGroup> = {
       next: (returnedGroup) => {
         // Ensure dates are properly parsed as Date objects
@@ -321,7 +329,6 @@ export class HolidayGroupManagementComponent implements OnInit {
   }
 
   private handleError(message: string, error: any) {
-    console.error(message, error);
     this.dialog.open(ErrorDialogComponent, {
       data: {
         title: 'Error',

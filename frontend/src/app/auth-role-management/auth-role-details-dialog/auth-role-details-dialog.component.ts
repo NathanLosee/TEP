@@ -58,7 +58,6 @@ export class AuthRoleDetailsDialogComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load users:', error);
         this.isLoading = false;
       },
     });

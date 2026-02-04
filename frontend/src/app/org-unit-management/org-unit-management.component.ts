@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -15,7 +15,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PartialObserver } from 'rxjs';
+import { PartialObserver, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { ErrorDialogComponent, extractErrorDetail } from '../error-dialog/error-dialog.component';
 import { GenericTableComponent } from '../shared/components/generic-table';
@@ -50,7 +51,8 @@ import { DisableIfNoPermissionDirective } from '../directives/has-permission.dir
   templateUrl: './org-unit-management.component.html',
   styleUrl: './org-unit-management.component.scss',
 })
-export class OrgUnitManagementComponent implements OnInit {
+export class OrgUnitManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private formBuilder = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
@@ -114,9 +116,16 @@ export class OrgUnitManagementComponent implements OnInit {
   }
 
   setupSearchForm() {
-    this.searchForm.valueChanges.subscribe(() => {
-      this.filterOrgUnits();
-    });
+    this.searchForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterOrgUnits();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadOrgUnits() {
@@ -197,7 +206,6 @@ export class OrgUnitManagementComponent implements OnInit {
     if (this.selectedUnit) {
       orgUnitData.id = this.selectedUnit.id;
     }
-    console.log('Saving organizational unit:', orgUnitData);
     const observer: PartialObserver<OrgUnit> = {
       next: (returnedUnit) => {
         if (this.selectedUnit) {
@@ -277,7 +285,6 @@ export class OrgUnitManagementComponent implements OnInit {
   }
 
   private handleError(message: string, error: any) {
-    console.error(message, error);
     this.dialog.open(ErrorDialogComponent, {
       data: {
         title: 'Error',

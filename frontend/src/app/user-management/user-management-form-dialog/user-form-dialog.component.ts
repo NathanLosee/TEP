@@ -128,7 +128,6 @@ export class UserFormDialogComponent {
             this.isLoading = false;
           },
           error: (error: any) => {
-            console.error('Error updating user:', error);
             this.isLoading = false;
           },
         });
@@ -140,7 +139,6 @@ export class UserFormDialogComponent {
             this.isLoading = false;
           },
           error: (error: any) => {
-            console.error('Error creating user:', error);
             this.isLoading = false;
           },
         });

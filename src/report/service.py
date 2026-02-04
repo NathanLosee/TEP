@@ -1,7 +1,6 @@
 """Module providing business logic for report generation."""
 
 from datetime import date, datetime, time, timedelta
-from typing import Union
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
@@ -31,9 +30,9 @@ def generate_report(
     start_date: date,
     end_date: date,
     db: Session,
-    employee_id: Union[int, None] = None,
-    department_id: Union[int, None] = None,
-    org_unit_id: Union[int, None] = None,
+    employee_id: int | None = None,
+    department_id: int | None = None,
+    org_unit_id: int | None = None,
 ) -> ReportResponse:
     """Generate a timeclock report for the specified parameters.
 
@@ -88,9 +87,9 @@ def generate_report(
 
 def _get_employees_for_report(
     db: Session,
-    employee_id: Union[int, None],
-    department_id: Union[int, None],
-    org_unit_id: Union[int, None],
+    employee_id: int | None,
+    department_id: int | None,
+    org_unit_id: int | None,
 ) -> list[Employee]:
     """Get list of employees to include in the report.
 

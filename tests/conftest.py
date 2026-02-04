@@ -24,7 +24,8 @@ from tools.license_generator import (
     generate_key_pair,
     generate_license_key as _generate_license_key,
 )
-from src.main import app, settings
+from src.config import settings
+from src.main import app
 from src.org_unit.constants import BASE_URL as ORG_UNIT_URL
 from src.org_unit.models import OrgUnit
 from src.timeclock.constants import BASE_URL as TIMECLOCK_URL

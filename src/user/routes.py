@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from src.auth_role.schemas import AuthRoleExtended
 from src.constants import EXC_MSG_IDS_DO_NOT_MATCH
 from src.database import get_db
-from src.main import settings
+from src.config import settings
 import src.services as services
 from src.services import (
     algorithm,

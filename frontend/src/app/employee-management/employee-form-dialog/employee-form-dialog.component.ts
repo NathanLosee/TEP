@@ -175,7 +175,6 @@ export class EmployeeFormDialogComponent {
               this.isLoading = false;
             },
             error: (error) => {
-              console.error('Error updating employee:', error);
               this.isLoading = false;
             },
           });
@@ -186,7 +185,6 @@ export class EmployeeFormDialogComponent {
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error creating employee:', error);
             this.isLoading = false;
           },
         });

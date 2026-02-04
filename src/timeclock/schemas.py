@@ -6,7 +6,6 @@ Classes:
 """
 
 from datetime import datetime
-from typing import Optional, Union
 
 from fastapi import status
 from pydantic import BaseModel, Field, model_validator
@@ -23,12 +22,12 @@ class TimeclockPunchRequest(BaseModel):
     must be preserved.
 
     Attributes:
-        client_timestamp (Optional[datetime]): Original
+        client_timestamp (datetime | None): Original
             punch timestamp from client.
 
     """
 
-    client_timestamp: Optional[datetime] = Field(default=None)
+    client_timestamp: datetime | None = Field(default=None)
 
 
 class TimeclockEntryCreate(BaseModel):
@@ -37,13 +36,13 @@ class TimeclockEntryCreate(BaseModel):
     Attributes:
         badge_number (str): Employee's badge number.
         clock_in (datetime): Employee's clock-in timestamp.
-        clock_out (Union[datetime, None]): Employee's clock-out timestamp.
+        clock_out (datetime | None): Employee's clock-out timestamp.
 
     """
 
     badge_number: str
     clock_in: datetime
-    clock_out: Union[datetime, None] = Field(default=None)
+    clock_out: datetime | None = Field(default=None)
 
     model_config = {
         "json_schema_extra": {
@@ -72,14 +71,14 @@ class TimeclockEntryBase(BaseModel):
         id (int): Timeclock entry's unique identifier.
         badge_number (str): Employee's badge number.
         clock_in (datetime): Employee's clock-in timestamp.
-        clock_out (Union[datetime, None]): Employee's clock-out timestamp.
+        clock_out (datetime | None): Employee's clock-out timestamp.
 
     """
 
     id: int
     badge_number: str
     clock_in: datetime
-    clock_out: Union[datetime, None] = Field(default=None)
+    clock_out: datetime | None = Field(default=None)
 
     @model_validator(mode="after")
     def check_datetimes(self):

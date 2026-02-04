@@ -1,7 +1,5 @@
 """Module providing database interactivity for holiday-related operations."""
 
-from typing import Union
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -45,7 +43,7 @@ def get_holiday_groups(db: Session) -> list[HolidayGroup]:
     return db.scalars(select(HolidayGroup)).all()
 
 
-def get_holiday_group_by_id(id: int, db: Session) -> Union[HolidayGroup, None]:
+def get_holiday_group_by_id(id: int, db: Session) -> HolidayGroup | None:
     """Retrieve a holiday group by a provided id.
 
     Args:
@@ -53,7 +51,7 @@ def get_holiday_group_by_id(id: int, db: Session) -> Union[HolidayGroup, None]:
         db (Session): Database session for the current request.
 
     Returns:
-        (Union[HolidayGroup, None]): The holiday group with the provided id,
+        (HolidayGroup | None): The holiday group with the provided id,
             or None if not found.
 
     """
@@ -62,7 +60,7 @@ def get_holiday_group_by_id(id: int, db: Session) -> Union[HolidayGroup, None]:
 
 def get_holiday_group_by_name(
     name: str, db: Session
-) -> Union[HolidayGroup, None]:
+) -> HolidayGroup | None:
     """Retrieve a holiday group by a provided name.
 
     Args:
@@ -70,7 +68,7 @@ def get_holiday_group_by_name(
         db (Session): Database session for the current request.
 
     Returns:
-        (Union[HolidayGroup, None]): The holiday group with the provided name,
+        (HolidayGroup | None): The holiday group with the provided name,
             or None if not found.
 
     """

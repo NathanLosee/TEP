@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +11,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthRoleService } from '../../services/auth-role.service';
+import { Employee, EmployeeService } from '../../services/employee.service';
 import {
   AuthRole,
   User,
@@ -31,11 +34,6 @@ import {
   TableColumn,
 } from '../shared/models/table.models';
 import { UserFormDialogComponent } from './user-management-form-dialog/user-form-dialog.component';
-
-interface Employee {
-  badge_number: string;
-  name: string;
-}
 
 @Component({
   selector: 'app-user-management',
@@ -60,9 +58,11 @@ interface Employee {
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss',
 })
-export class UserManagementComponent implements OnInit {
+export class UserManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private userService = inject(UserService);
   private authRoleService = inject(AuthRoleService);
+  private employeeService = inject(EmployeeService);
   private permissionService = inject(PermissionService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -120,6 +120,11 @@ export class UserManagementComponent implements OnInit {
     this.loadEmployees();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadUsers() {
     this.isLoading = true;
     this.userService.getUsers().subscribe({
@@ -144,16 +149,18 @@ export class UserManagementComponent implements OnInit {
     // Load auth roles for each user
     this.users.forEach((user) => {
       if (user.id) {
-        this.userService.getUserAuthRoles(user.id).subscribe({
-          next: (roles) => {
-            // Filter out root role (id=0)
-            const filteredRoles = roles.filter(role => role.id !== 0);
-            this.userRolesMap.set(user.id!, filteredRoles);
-          },
-          error: (error) => {
-            console.error(`Failed to load roles for user ${user.badge_number}`, error);
-          },
-        });
+        this.userService.getUserAuthRoles(user.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (roles) => {
+              // Filter out root role (id=0)
+              const filteredRoles = roles.filter(role => role.id !== 0);
+              this.userRolesMap.set(user.id!, filteredRoles);
+            },
+            error: (error) => {
+              // Error handled by subscription error callback
+            },
+          });
       }
     });
   }
@@ -175,20 +182,19 @@ export class UserManagementComponent implements OnInit {
   }
 
   loadEmployees() {
-    // Mock employee data - in real app, this would come from employee service
-    // Badge numbers are 6-digit strings
-    this.employees = [
-      { badge_number: '100001', name: 'John Doe' },
-      { badge_number: '100002', name: 'Jane Smith' },
-      { badge_number: '100003', name: 'Bob Johnson' },
-      { badge_number: '100004', name: 'Alice Williams' },
-      { badge_number: '100005', name: 'Charlie Brown' },
-      { badge_number: '100006', name: 'Diana Davis' },
-      { badge_number: '100007', name: 'Eve Miller' },
-      { badge_number: '100008', name: 'Frank Wilson' },
-      { badge_number: '100009', name: 'Grace Moore' },
-      { badge_number: '100010', name: 'Henry Taylor' },
-    ];
+    this.employeeService.getEmployees()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (employees) => {
+          this.employees = employees;
+        },
+        error: (error) => {
+          this.showSnackBar(
+            'Failed to load employees: ' + extractErrorDetail(error),
+            'error'
+          );
+        },
+      });
   }
 
   onSearchChange() {
@@ -288,7 +294,9 @@ export class UserManagementComponent implements OnInit {
     const employee = this.employees.find(
       (emp) => emp.badge_number === badgeNumber
     );
-    return employee ? employee.name : 'Unknown Employee';
+    return employee
+      ? `${employee.first_name} ${employee.last_name}`
+      : 'Unknown Employee';
   }
 
   getUserRoles(user: User): AuthRole[] {

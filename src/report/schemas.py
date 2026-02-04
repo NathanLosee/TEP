@@ -1,7 +1,6 @@
 """Module for defining report data schemas."""
 
 from datetime import date, datetime
-from typing import Union
 
 from pydantic import BaseModel, Field
 
@@ -22,9 +21,9 @@ class ReportRequest(BaseModel):
 
     start_date: date
     end_date: date
-    employee_id: Union[int, None] = None
-    department_id: Union[int, None] = None
-    org_unit_id: Union[int, None] = None
+    employee_id: int | None = None
+    department_id: int | None = None
+    org_unit_id: int | None = None
     detail_level: str = "summary"
 
     model_config = {
@@ -54,7 +53,7 @@ class TimePeriod(BaseModel):
 
     id: int
     clock_in: datetime
-    clock_out: Union[datetime, None]
+    clock_out: datetime | None
     hours: float = Field(default=0.0)
 
 
@@ -148,6 +147,6 @@ class ReportResponse(BaseModel):
     start_date: date
     end_date: date
     report_type: str
-    filter_name: Union[str, None] = None
+    filter_name: str | None = None
     generated_at: datetime = Field(default_factory=datetime.now)
     employees: list[EmployeeReportData] = Field(default_factory=list)

@@ -1,7 +1,6 @@
 """Module providing database interactivity for timeclock-related operations."""
 
 from datetime import datetime, timezone
-from typing import Union
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -78,9 +77,9 @@ def check_status(
 def get_timeclock_entries(
     start_timestamp: datetime,
     end_timestamp: datetime,
-    badge_number: Union[str, None],
-    first_name: Union[str, None],
-    last_name: Union[str, None],
+    badge_number: str | None,
+    first_name: str | None,
+    last_name: str | None,
     db: Session,
 ) -> list[TimeclockEntryWithName]:
     """Retrieve all timeclocks with given time period.
@@ -88,11 +87,11 @@ def get_timeclock_entries(
     Args:
         start_timestamp (datetime): Start timestamp for the time period.
         end_timestamp (datetime): End timestamp for the time period.
-        badge_number (Union[str, None]): Employee's badge number.
+        badge_number (str | None): Employee's badge number.
             Defaults to None.
-        first_name (Union[str, None]): Employee's first name to filter by.
+        first_name (str | None): Employee's first name to filter by.
             Defaults to None.
-        last_name (Union[str, None]): Employee's last name to filter by.
+        last_name (str | None): Employee's last name to filter by.
             Defaults to None.
         db (Session): Database session for the current request.
 
@@ -127,7 +126,7 @@ def get_timeclock_entries(
 
 def get_timeclock_entry_by_id(
     id: int, db: Session
-) -> Union[TimeclockEntry, None]:
+) -> TimeclockEntry | None:
     """Retrieve timeclock entry by ID.
 
     Args:
@@ -135,7 +134,7 @@ def get_timeclock_entry_by_id(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[TimeclockEntry, None]: The retrieved timeclock entry or None
+        TimeclockEntry | None: The retrieved timeclock entry or None
             if not found.
 
     """

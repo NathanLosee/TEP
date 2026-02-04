@@ -177,14 +177,12 @@ export class RegisteredBrowserManagementComponent implements OnInit {
             }
           },
           error: (error) => {
-            console.error('Fingerprint verification failed:', error);
             this.currentBrowserUuid = storedUuid;
             this.currentBrowserName = this.browserUuidService.getBrowserName();
             this.checkIfCurrentBrowserIsRegistered();
           },
         });
     } catch (error) {
-      console.error('Failed to generate fingerprint:', error);
       this.currentBrowserUuid = this.browserUuidService.getBrowserUuid();
       this.currentBrowserName = this.browserUuidService.getBrowserName();
       this.checkIfCurrentBrowserIsRegistered();

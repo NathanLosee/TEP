@@ -103,7 +103,6 @@ export class DepartmentEmployeesDialogComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load employees:', error);
         this.isLoading = false;
       },
     });
