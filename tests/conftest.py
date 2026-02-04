@@ -34,7 +34,7 @@ from src.user.models import User
 test_app = TestClient(app)
 settings.ENVIRONMENT = "test"
 
-TEST_DATABASE_URL = "sqlite:///tep_test.sqlite"
+TEST_DATABASE_URL = "sqlite:///tap_test.sqlite"
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine

@@ -1,10 +1,10 @@
-# TEP License Server
+# TAP License Server
 
-Standalone license generation and verification tool for the TEP (Time Entry Portal) application.
+Standalone license generation and verification tool for the TAP (Time Entry Portal) application.
 
 ## Overview
 
-This is a separate service/tool for generating and managing licenses for TEP installations. It should be kept separate from the main application deployment and used only by administrators.
+This is a separate service/tool for generating and managing licenses for TAP installations. It should be kept separate from the main application deployment and used only by administrators.
 
 **Important:** The private key used for signing licenses should never be deployed with the main application. Only the public key is embedded in the main application for verification.
 
@@ -29,13 +29,13 @@ This creates:
 - `private_key.pem` - Keep this secure! Never share it.
 - `public_key.pem` - Embed this in the main application.
 
-After generating, copy the public key content to `src/license/key_generator.py` in the main TEP application.
+After generating, copy the public key content to `src/license/key_generator.py` in the main TAP application.
 
 ### Generate a License
 
 To generate a license for a specific machine:
 
-1. Get the machine ID from the TEP application's License Management page
+1. Get the machine ID from the TAP application's License Management page
 2. Run:
 
 ```bash

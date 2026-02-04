@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,9 +9,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RouterModule } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { HasPermissionDirective } from '../directives/has-permission.directive';
 import { RequiresLicenseDirective } from '../directives/requires-license.directive';
 import { PasswordChangeDialogComponent } from '../password-change-dialog/password-change-dialog.component';
+import { UpdateService } from '../../services/update.service';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -34,10 +36,28 @@ import { UserService } from '../../services/user.service';
   templateUrl: './nav-admin.component.html',
   styleUrl: './nav-admin.component.scss',
 })
-export class NavAdminComponent {
+export class NavAdminComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private userService = inject(UserService);
+  private updateService = inject(UpdateService);
   private snackBar = inject(MatSnackBar);
+  private destroy$ = new Subject<void>();
+
+  updateAvailable = false;
+
+  ngOnInit(): void {
+    this.updateService.updateAvailable$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(available => this.updateAvailable = available);
+
+    // Trigger an initial status check (silently)
+    this.updateService.getStatus().subscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   openPasswordChangeDialog() {
     const currentBadge = this.userService.getCurrentUserBadge();

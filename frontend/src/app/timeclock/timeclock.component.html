@@ -50,6 +50,29 @@
       </button>
     </div>
 
+    <!-- Offline Status Indicator -->
+    @if (isOffline || pendingCount > 0) {
+      <mat-card class="offline-status-card">
+        <mat-card-content>
+          <div class="offline-status-indicator">
+            @if (isOffline) {
+              <mat-icon class="offline-icon">cloud_off</mat-icon>
+              <div class="status-text">
+                <strong>Offline Mode</strong>
+                <span class="offline-details">Punches will be queued and synced when connection returns</span>
+              </div>
+            } @else if (pendingCount > 0) {
+              <mat-icon class="syncing-icon">sync</mat-icon>
+              <div class="status-text">
+                <strong>Syncing...</strong>
+                <span class="sync-details">{{ pendingCount }} punch{{ pendingCount > 1 ? 'es' : '' }} pending</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
     <!-- Browser Registration Status Indicator -->
     <mat-card class="device-status-card">
       <mat-card-content>

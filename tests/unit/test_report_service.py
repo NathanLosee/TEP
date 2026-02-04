@@ -39,7 +39,7 @@ def create_mock_holiday(start_date: date, end_date: date):
     return holiday
 
 
-class TestCalculatePeriodHours:
+class TestCalculataperiodHours:
     """Tests for _calculate_period_hours function."""
 
     def test_calculate_period_hours_complete_entry(self):
@@ -84,7 +84,9 @@ class TestCalculatePeriodHours:
     def test_calculate_period_hours_rounds_to_2_decimals(self):
         """Test that hours are rounded to 2 decimal places."""
         clock_in = datetime(2024, 1, 1, 9, 0, 0)
-        clock_out = datetime(2024, 1, 1, 9, 7, 0)  # 7 minutes = 0.11666... hours
+        clock_out = datetime(
+            2024, 1, 1, 9, 7, 0
+        )  # 7 minutes = 0.11666... hours
         entry = create_mock_entry(1, "123", clock_in, clock_out)
 
         hours = _calculate_period_hours(entry)
@@ -115,14 +117,16 @@ class TestOrganizeEntriesByMonth:
         """Test organizing entries across multiple days in same month."""
         entries = [
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime(2024, 1, 16, 9, 0, 0),
-                datetime(2024, 1, 16, 17, 0, 0)
+                datetime(2024, 1, 16, 17, 0, 0),
             ),
         ]
 
@@ -136,14 +140,16 @@ class TestOrganizeEntriesByMonth:
         """Test organizing multiple clock periods on the same day."""
         entries = [
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 12, 0, 0)
+                datetime(2024, 1, 15, 12, 0, 0),
             ),
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime(2024, 1, 15, 13, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
         ]
 
@@ -158,14 +164,16 @@ class TestOrganizeEntriesByMonth:
         """Test organizing entries spanning multiple months."""
         entries = [
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime(2024, 2, 15, 9, 0, 0),
-                datetime(2024, 2, 15, 17, 0, 0)
+                datetime(2024, 2, 15, 17, 0, 0),
             ),
         ]
 
@@ -213,9 +221,10 @@ class TestCalculateEmployeeSummary:
         """Test calculating summary for single day under 40 hours/week."""
         entries = [
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             )
         ]
 
@@ -231,9 +240,10 @@ class TestCalculateEmployeeSummary:
         monday = date(2024, 1, 15)
         entries = [
             create_mock_entry(
-                i + 1, "123",
+                i + 1,
+                "123",
                 datetime.combine(monday + timedelta(days=i), time(9, 0)),
-                datetime.combine(monday + timedelta(days=i), time(17, 0))
+                datetime.combine(monday + timedelta(days=i), time(17, 0)),
             )
             for i in range(5)  # Mon-Fri, 8 hours each
         ]
@@ -252,17 +262,19 @@ class TestCalculateEmployeeSummary:
             # Mon-Fri: 8 hours each = 40 hours
             *[
                 create_mock_entry(
-                    i + 1, "123",
+                    i + 1,
+                    "123",
                     datetime.combine(monday + timedelta(days=i), time(9, 0)),
-                    datetime.combine(monday + timedelta(days=i), time(17, 0))
+                    datetime.combine(monday + timedelta(days=i), time(17, 0)),
                 )
                 for i in range(5)
             ],
             # Saturday: 5 hours overtime
             create_mock_entry(
-                6, "123",
+                6,
+                "123",
                 datetime.combine(monday + timedelta(days=5), time(9, 0)),
-                datetime.combine(monday + timedelta(days=5), time(14, 0))
+                datetime.combine(monday + timedelta(days=5), time(14, 0)),
             ),
         ]
 
@@ -282,18 +294,28 @@ class TestCalculateEmployeeSummary:
             # Week 1: 35 hours (no overtime)
             *[
                 create_mock_entry(
-                    i + 1, "123",
-                    datetime.combine(week1_monday + timedelta(days=i), time(9, 0)),
-                    datetime.combine(week1_monday + timedelta(days=i), time(16, 0))
+                    i + 1,
+                    "123",
+                    datetime.combine(
+                        week1_monday + timedelta(days=i), time(9, 0)
+                    ),
+                    datetime.combine(
+                        week1_monday + timedelta(days=i), time(16, 0)
+                    ),
                 )
                 for i in range(5)  # 7 hours each
             ],
             # Week 2: 45 hours (5 hours overtime)
             *[
                 create_mock_entry(
-                    i + 6, "123",
-                    datetime.combine(week2_monday + timedelta(days=i), time(9, 0)),
-                    datetime.combine(week2_monday + timedelta(days=i), time(18, 0))
+                    i + 6,
+                    "123",
+                    datetime.combine(
+                        week2_monday + timedelta(days=i), time(9, 0)
+                    ),
+                    datetime.combine(
+                        week2_monday + timedelta(days=i), time(18, 0)
+                    ),
                 )
                 for i in range(5)  # 9 hours each
             ],
@@ -312,15 +334,17 @@ class TestCalculateEmployeeSummary:
         entries = [
             # Regular day
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 14, 9, 0, 0),
-                datetime(2024, 1, 14, 17, 0, 0)
+                datetime(2024, 1, 14, 17, 0, 0),
             ),
             # Holiday
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
         ]
 
@@ -335,14 +359,16 @@ class TestCalculateEmployeeSummary:
         holiday = create_mock_holiday(date(2024, 1, 15), date(2024, 1, 17))
         entries = [
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime(2024, 1, 16, 9, 0, 0),
-                datetime(2024, 1, 16, 17, 0, 0)
+                datetime(2024, 1, 16, 17, 0, 0),
             ),
         ]
 
@@ -355,14 +381,16 @@ class TestCalculateEmployeeSummary:
         """Test calculating summary with multiple entries on same day."""
         entries = [
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 12, 0, 0)
+                datetime(2024, 1, 15, 12, 0, 0),
             ),
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime(2024, 1, 15, 13, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
         ]
 
@@ -376,16 +404,13 @@ class TestCalculateEmployeeSummary:
         entries = [
             # Complete entry
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime(2024, 1, 15, 9, 0, 0),
-                datetime(2024, 1, 15, 17, 0, 0)
+                datetime(2024, 1, 15, 17, 0, 0),
             ),
             # Incomplete entry (clocked in, not out)
-            create_mock_entry(
-                2, "123",
-                datetime(2024, 1, 16, 9, 0, 0),
-                None
-            ),
+            create_mock_entry(2, "123", datetime(2024, 1, 16, 9, 0, 0), None),
         ]
 
         summary = _calculate_employee_summary(entries, [])
@@ -402,15 +427,17 @@ class TestCalculateEmployeeSummary:
         entries = [
             # Sunday: 10 hours
             create_mock_entry(
-                1, "123",
+                1,
+                "123",
                 datetime.combine(sunday, time(9, 0)),
-                datetime.combine(sunday, time(19, 0))
+                datetime.combine(sunday, time(19, 0)),
             ),
             # Monday: 10 hours
             create_mock_entry(
-                2, "123",
+                2,
+                "123",
                 datetime.combine(monday, time(9, 0)),
-                datetime.combine(monday, time(19, 0))
+                datetime.combine(monday, time(19, 0)),
             ),
         ]
 
@@ -444,7 +471,9 @@ class TestGetHolidaysForEmployee:
         employee = Mock()
         employee.holiday_group_id = 1
 
-        mock_holiday = create_mock_holiday(date(2024, 1, 15), date(2024, 1, 15))
+        mock_holiday = create_mock_holiday(
+            date(2024, 1, 15), date(2024, 1, 15)
+        )
         db = MagicMock()
         db.scalars.return_value.all.return_value = [mock_holiday]
 

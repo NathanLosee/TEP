@@ -1,8 +1,8 @@
-# TEP (Timeclock and Employee Payroll) - Copilot Developer Guide
+# TAP (Timeclock and payroll) - Copilot Developer Guide
 
 ## Repository Overview
 
-**TEP** is a full-stack employee management system providing timeclock functionality, authentication/authorization, and payroll features. The application consists of a FastAPI Python backend with an Angular frontend, designed for managing employees, departments, schedules, and time tracking.
+**TAP** is a full-stack employee management system providing timeclock functionality, authentication/authorization, and payroll features. The application consists of a FastAPI Python backend with an Angular frontend, designed for managing employees, departments, schedules, and time tracking.
 
 **Key Statistics:**
 - **Type**: Full-stack web application (REST API + SPA)
@@ -87,9 +87,9 @@ npm run lint                  # ESLint checking
 ## Environment Configuration
 
 ### Database Behavior
-- **Development** (`ENVIRONMENT=development`): Uses `tep_dev.sqlite`, automatically generates dummy data
-- **Production** (`ENVIRONMENT=production`): Uses `tep_prod.sqlite`, no dummy data
-- **Test** (`ENVIRONMENT=test`): Uses `tep_test.sqlite` for testing
+- **Development** (`ENVIRONMENT=development`): Uses `tap_dev.sqlite`, automatically generates dummy data
+- **Production** (`ENVIRONMENT=production`): Uses `tap_prod.sqlite`, no dummy data
+- **Test** (`ENVIRONMENT=test`): Uses `tap_test.sqlite` for testing
 - **Custom**: Set `DATABASE_URL` directly to override
 
 ### Common Commands by Environment
@@ -144,7 +144,7 @@ frontend/
 - `requirements.txt` - Python dependencies (MISSING: alembic, bcrypt, pyjwt, flake8, pytest, pytest-cov)
 - `alembic.ini` - Database migration configuration
 - `alembic/env.py` - Migration environment setup
-- `.github/workflows/copilot-setup-steps.yml` - CI setup (uses Python 3.9 - OUTDATED)
+- `.github/workflows/copilot-setup-staps.yml` - CI setup (uses Python 3.9 - OUTDATED)
 
 ## Domain Model & Database
 

@@ -3,7 +3,7 @@
 DIGIT_REGEX = "[[:digit:]]"
 CAP_CHAR_REGEX = "[[:upper:]]"
 NAME_CHAR_REGEX = "[-'' [:alpha:]]"
-# Badge numbers: alphanumeric, may include dashes or underscores, 1-20 characters
+# Badge numbers: alphanumeric, dashes or underscores, 1-20 chars
 BADGE_NUMBER_REGEX = r"^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$"
 EXC_MSG_IDS_DO_NOT_MATCH = "Ids in body and path do not match."
 EXC_MSG_INVALID_BADGE_FORMAT = (
@@ -54,4 +54,5 @@ RESOURCE_SCOPES = {
     "user.update": "Update User",
     "user.update_self": "Update Own Password",
     "user.delete": "Delete User",
+    "system.update": "Manage System Updates",
 }

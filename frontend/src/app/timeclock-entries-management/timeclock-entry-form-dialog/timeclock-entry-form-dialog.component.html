@@ -33,7 +33,9 @@
               </span>
             </mat-option>
           </mat-autocomplete>
-          <mat-error *ngIf="entryForm.get('badge_number')?.hasError('required')">
+          <mat-error
+            *ngIf="entryForm.get('badge_number')?.hasError('required')"
+          >
             Employee is required
           </mat-error>
         </mat-form-field>
@@ -55,7 +57,9 @@
             [for]="clockInPicker"
           ></mat-datepicker-toggle>
           <mat-datepicker #clockInPicker></mat-datepicker>
-          <mat-error *ngIf="entryForm.get('clock_in_date')?.hasError('required')">
+          <mat-error
+            *ngIf="entryForm.get('clock_in_date')?.hasError('required')"
+          >
             Clock in date is required
           </mat-error>
         </mat-form-field>
@@ -68,7 +72,9 @@
             formControlName="clock_in_time"
             placeholder="HH:MM"
           />
-          <mat-error *ngIf="entryForm.get('clock_in_time')?.hasError('required')">
+          <mat-error
+            *ngIf="entryForm.get('clock_in_time')?.hasError('required')"
+          >
             Clock in time is required
           </mat-error>
         </mat-form-field>
@@ -124,6 +130,8 @@
       diameter="20"
       mode="indeterminate"
     ></mat-progress-spinner>
-    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Entry' }}</span>
+    <span *ngIf="!isLoading">{{
+      isEditMode ? "Save Changes" : "Create Entry"
+    }}</span>
   </button>
 </mat-dialog-actions>

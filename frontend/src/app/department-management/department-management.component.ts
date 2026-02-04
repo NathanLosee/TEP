@@ -20,7 +20,7 @@ import {
   Department,
   DepartmentService,
 } from '../../services/department.service';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { ErrorDialogComponent, extractErrorDetail } from '../error-dialog/error-dialog.component';
 import { GenericTableComponent } from '../shared/components/generic-table';
 import {
   TableAction,
@@ -286,7 +286,7 @@ export class DepartmentManagementComponent implements OnInit {
       data: {
         title: 'Error',
         message: `${message}. Please try again.`,
-        error: error?.error?.detail || error?.message || 'Unknown error',
+        error: extractErrorDetail(error),
       },
     });
   }

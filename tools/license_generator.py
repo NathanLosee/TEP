@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""License Key Generator for TEP.
+"""License Key Generator for TAP.
 
-This tool generates license keys for the TEP application using Ed25519
+This tool generates license keys for the TAP application using Ed25519
 cryptographic signatures. The private key must be kept secure and never
 distributed with the application.
 
@@ -15,16 +15,15 @@ import argparse
 import sys
 from pathlib import Path
 
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from cryptography.hazmat.primitives import serialization
-from cryptography.exceptions import InvalidSignature
-
 
 # Standard message that gets signed to create license keys
-LICENSE_MESSAGE = b"TEP-License-v1"
+LICENSE_MESSAGE = b"TAP-License-v1"
 
 
 def generate_key_pair(output_dir: Path = Path(".")):
@@ -45,7 +44,7 @@ def generate_key_pair(output_dir: Path = Path(".")):
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     )
 
     # Get public key
@@ -54,12 +53,12 @@ def generate_key_pair(output_dir: Path = Path(".")):
     # Serialize public key
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
     # Save keys
-    private_key_path = output_dir / "tep_private_key.pem"
-    public_key_path = output_dir / "tep_public_key.pem"
+    private_key_path = output_dir / "tap_private_key.pem"
+    public_key_path = output_dir / "tap_public_key.pem"
 
     private_key_path.write_bytes(private_pem)
     public_key_path.write_bytes(public_pem)
@@ -67,17 +66,20 @@ def generate_key_pair(output_dir: Path = Path(".")):
     # Set restrictive permissions on private key (Unix-like systems)
     try:
         import os
+
         os.chmod(private_key_path, 0o600)
     except (ImportError, OSError):
         pass
 
-    print(f"✓ Private key saved to: {private_key_path}")
-    print(f"✓ Public key saved to: {public_key_path}")
+    print(f"[OK] Private key saved to: {private_key_path}")
+    print(f"[OK] Public key saved to: {public_key_path}")
     print()
     print("SECURITY WARNING:")
     print("  - Keep the private key SECURE and NEVER distribute it")
     print("  - The public key should be embedded in the application")
-    print(f"  - Update src/license/key_generator.py with the public key from {public_key_path}")
+    print(
+        f"  - Update src/license/key_generator.py with the public key from {public_key_path}"
+    )
     print()
 
     return private_key_path, public_key_path
@@ -97,7 +99,9 @@ def generate_license_key(private_key_path: Path) -> str:
 
     # Load private key
     private_key_pem = private_key_path.read_bytes()
-    private_key = serialization.load_pem_private_key(private_key_pem, password=None)
+    private_key = serialization.load_pem_private_key(
+        private_key_pem, password=None
+    )
 
     if not isinstance(private_key, Ed25519PrivateKey):
         raise ValueError("Invalid private key type - must be Ed25519")
@@ -124,13 +128,15 @@ def verify_license_key(license_key: str, public_key_path: Path) -> bool:
 
     # Validate format
     if len(license_key) != 128:
-        print(f"✗ Invalid format: License key must be 128 characters (got {len(license_key)})")
+        print(
+            f"[FAIL] Invalid format: License key must be 128 characters (got {len(license_key)})"
+        )
         return False
 
     try:
         bytes.fromhex(license_key)
     except ValueError:
-        print("✗ Invalid format: License key must be valid hexadecimal")
+        print("[FAIL] Invalid format: License key must be valid hexadecimal")
         return False
 
     # Load public key
@@ -149,14 +155,14 @@ def verify_license_key(license_key: str, public_key_path: Path) -> bool:
         return True
 
     except (InvalidSignature, ValueError) as e:
-        print(f"✗ Verification failed: {e}")
+        print(f"[FAIL] Verification failed: {e}")
         return False
 
 
 def main():
     """Main entry point for the license generator tool."""
     parser = argparse.ArgumentParser(
-        description="TEP License Key Generator",
+        description="TAP License Key Generator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -164,47 +170,47 @@ Examples:
   python license_generator.py --generate-keypair
 
   # Generate a single license key
-  python license_generator.py --generate-license --private-key tep_private_key.pem
+  python license_generator.py --generate-license --private-key tap_private_key.pem
 
   # Generate multiple license keys
-  python license_generator.py --generate-license --private-key tep_private_key.pem --count 10
+  python license_generator.py --generate-license --private-key tap_private_key.pem --count 10
 
   # Verify a license key
-  python license_generator.py --verify-license <key> --public-key tep_public_key.pem
-        """
+  python license_generator.py --verify-license <key> --public-key tap_public_key.pem
+        """,
     )
 
     parser.add_argument(
         "--generate-keypair",
         action="store_true",
-        help="Generate a new Ed25519 key pair"
+        help="Generate a new Ed25519 key pair",
     )
 
     parser.add_argument(
         "--generate-license",
         action="store_true",
-        help="Generate license key(s)"
+        help="Generate license key(s)",
     )
 
     parser.add_argument(
         "--verify-license",
         type=str,
         metavar="KEY",
-        help="Verify a license key"
+        help="Verify a license key",
     )
 
     parser.add_argument(
         "--private-key",
         type=Path,
         metavar="FILE",
-        help="Path to private key PEM file"
+        help="Path to private key PEM file",
     )
 
     parser.add_argument(
         "--public-key",
         type=Path,
         metavar="FILE",
-        help="Path to public key PEM file"
+        help="Path to public key PEM file",
     )
 
     parser.add_argument(
@@ -212,7 +218,7 @@ Examples:
         type=int,
         default=1,
         metavar="N",
-        help="Number of license keys to generate (default: 1)"
+        help="Number of license keys to generate (default: 1)",
     )
 
     parser.add_argument(
@@ -220,13 +226,15 @@ Examples:
         type=Path,
         default=Path("."),
         metavar="DIR",
-        help="Output directory for generated keys (default: current directory)"
+        help="Output directory for generated keys (default: current directory)",
     )
 
     args = parser.parse_args()
 
     # Validate arguments
-    if not any([args.generate_keypair, args.generate_license, args.verify_license]):
+    if not any(
+        [args.generate_keypair, args.generate_license, args.verify_license]
+    ):
         parser.print_help()
         sys.exit(1)
 
@@ -240,7 +248,9 @@ Examples:
         # Generate license key(s)
         if args.generate_license:
             if not args.private_key:
-                print("Error: --private-key is required for license generation")
+                print(
+                    "Error: --private-key is required for license generation"
+                )
                 return 1
 
             print(f"Generating {args.count} license key(s)...")
@@ -252,23 +262,25 @@ Examples:
                 print(f"  {license_key}")
                 print()
 
-            print(f"✓ Generated {args.count} license key(s) successfully")
+            print(f"[OK] Generated {args.count} license key(s) successfully")
             return 0
 
         # Verify license key
         if args.verify_license:
             if not args.public_key:
-                print("Error: --public-key is required for license verification")
+                print(
+                    "Error: --public-key is required for license verification"
+                )
                 return 1
 
             print(f"Verifying license key: {args.verify_license}")
             print()
 
             if verify_license_key(args.verify_license, args.public_key):
-                print("✓ License key is VALID")
+                print("[OK] License key is VALID")
                 return 0
             else:
-                print("✗ License key is INVALID")
+                print("[FAIL] License key is INVALID")
                 return 1
 
     except Exception as e:

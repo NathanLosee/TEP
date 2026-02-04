@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TEP License Server - CLI tool for license management.
+"""TAP License Server - CLI tool for license management.
 
 This standalone CLI tool allows administrators to:
 - Generate new Ed25519 key pairs
@@ -55,7 +55,7 @@ def cmd_generate_keys(args: argparse.Namespace) -> None:
     print("-" * 60)
     print("\nCopy this public key to:")
     print("  1. license_server/key_generator.py (PUBLIC_KEY_PEM)")
-    print("  2. src/license/key_generator.py in the main TEP application")
+    print("  2. src/license/key_generator.py in the main TAP application")
 
 
 def cmd_create_license(args: argparse.Namespace) -> None:
@@ -83,18 +83,25 @@ def cmd_create_license(args: argparse.Namespace) -> None:
         hex_key = words_to_hex(license_key)
         print(f"\nHex format: {hex_key}")
 
-    print("\nNote: This license key needs to be added to the license server database")
+    print(
+        "\nNote: This license key needs to be added to the license server database"
+    )
     print("      before it can be activated by clients.")
     print("\nTo add via API (when server is running):")
-    print(f'  curl -X POST http://localhost:8001/api/licenses -H "Content-Type: application/json" \\')
-    print(f'       -d \'{{"customer_name": "{args.customer or "Customer"}"}}\'')
+    print(
+        f'  curl -X POST http://localhost:8001/api/licenses -H "Content-Type: application/json" \\'
+    )
+    print(
+        f'       -d \'{{"customer_name": "{args.customer or "Customer"}"}}\''
+    )
 
 
 def cmd_list_licenses(args: argparse.Namespace) -> None:
     """List all licenses (requires database access)."""
     try:
-        from database import SessionLocal
         from models import Activation, License
+
+        from database import SessionLocal
     except ImportError:
         print("Error: Could not import database modules.")
         print("Make sure you're running from the license_server directory.")
@@ -112,10 +119,14 @@ def cmd_list_licenses(args: argparse.Namespace) -> None:
         print("-" * 80)
 
         for lic in licenses:
-            activations = db.query(Activation).filter(
-                Activation.license_id == lic.id,
-                Activation.is_active == True
-            ).count()
+            activations = (
+                db.query(Activation)
+                .filter(
+                    Activation.license_id == lic.id,
+                    Activation.is_active == True,
+                )
+                .count()
+            )
 
             status = "ACTIVE" if lic.is_active else "REVOKED"
             print(f"ID: {lic.id}")
@@ -137,7 +148,9 @@ def cmd_convert(args: argparse.Namespace) -> None:
     license_key = args.license_key.strip()
 
     # Detect format and convert
-    if len(license_key) == 128 and all(c in "0123456789abcdefABCDEF" for c in license_key):
+    if len(license_key) == 128 and all(
+        c in "0123456789abcdefABCDEF" for c in license_key
+    ):
         # Hex format -> word format
         print("Converting from hex to word format:")
         print()
@@ -157,6 +170,7 @@ def cmd_init_db(args: argparse.Namespace) -> None:
     """Initialize the database."""
     try:
         from database import init_db
+
         init_db()
         print("Database initialized successfully.")
     except Exception as e:
@@ -167,7 +181,7 @@ def cmd_init_db(args: argparse.Namespace) -> None:
 def main() -> None:
     """Main entry point for the license tool."""
     parser = argparse.ArgumentParser(
-        description="TEP License Server - License Management Tool",
+        description="TAP License Server - License Management Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

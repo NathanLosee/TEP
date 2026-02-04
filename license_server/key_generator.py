@@ -36,7 +36,7 @@ MCowBQYDK2VwAyEApSp2CAkKgzPYlRKbrf5Kg5V8f8yEQVzmues2M2zq4NQ=
 -----END PUBLIC KEY-----"""
 
 # Message prefix for activation key signatures
-ACTIVATION_MESSAGE_PREFIX = b"TEP-Activation-v2:"
+ACTIVATION_MESSAGE_PREFIX = b"TAP-Activation-v2:"
 
 
 def get_activation_message(license_key: str, machine_id: str) -> bytes:
@@ -52,7 +52,9 @@ def get_activation_message(license_key: str, machine_id: str) -> bytes:
     Returns:
         bytes: The message to sign for activation.
     """
-    return ACTIVATION_MESSAGE_PREFIX + f"{license_key}:{machine_id}".encode("utf-8")
+    return ACTIVATION_MESSAGE_PREFIX + f"{license_key}:{machine_id}".encode(
+        "utf-8"
+    )
 
 
 def generate_unique_license_key(word_format: bool = True) -> str:
@@ -91,7 +93,9 @@ def _load_word_list() -> List[str]:
 # Load word list - we need exactly 256 words for 1-byte-per-word encoding
 # If we have more, we'll use the first 256
 _FULL_WORD_LIST = _load_word_list()
-WORD_LIST = _FULL_WORD_LIST[:256] if len(_FULL_WORD_LIST) >= 256 else _FULL_WORD_LIST
+WORD_LIST = (
+    _FULL_WORD_LIST[:256] if len(_FULL_WORD_LIST) >= 256 else _FULL_WORD_LIST
+)
 
 # Create reverse lookup
 WORD_TO_INDEX = {word: i for i, word in enumerate(WORD_LIST)}
@@ -157,7 +161,9 @@ def words_to_hex(word_key: str) -> str:
     words = [w for w in words if w]
 
     if len(words) != 64:
-        raise ValueError(f"Word key must contain exactly 64 words, got {len(words)}")
+        raise ValueError(
+            f"Word key must contain exactly 64 words, got {len(words)}"
+        )
 
     # Convert words back to bytes
     key_bytes = bytearray()
@@ -237,7 +243,9 @@ def generate_activation_key(
         The private key must never be in the client application.
     """
     # Load private key
-    private_key = serialization.load_pem_private_key(private_key_pem, password=None)
+    private_key = serialization.load_pem_private_key(
+        private_key_pem, password=None
+    )
     if not isinstance(private_key, Ed25519PrivateKey):
         raise ValueError("Invalid private key type")
 

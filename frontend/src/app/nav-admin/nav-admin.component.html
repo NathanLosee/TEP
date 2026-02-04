@@ -4,7 +4,7 @@
   </button>
   <div class="toolbar-title">
     <mat-icon class="app-icon">access_time</mat-icon>
-    <h1>TEP Admin</h1>
+    <h1>TAP Admin</h1>
   </div>
   <div class="toolbar-actions">
     <button
@@ -164,6 +164,19 @@
       >
         <mat-icon matListItemIcon>settings</mat-icon>
         <span matListItemTitle>Settings</span>
+      </a>
+      <a
+        *hasPermission="'system.update'"
+        mat-list-item
+        routerLink="/admin/updates"
+        routerLinkActive="active-link"
+        class="updates-link"
+      >
+        <mat-icon matListItemIcon>system_update</mat-icon>
+        <span matListItemTitle>Updates</span>
+        @if (updateAvailable) {
+          <span class="update-badge"></span>
+        }
       </a>
     </mat-nav-list>
   </mat-sidenav>

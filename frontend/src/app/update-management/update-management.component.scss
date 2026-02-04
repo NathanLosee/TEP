@@ -1,0 +1,174 @@
+.update-container {
+  padding: 1.5rem;
+  max-width: 800px;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .page-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      color: var(--sys-primary);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.update-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.update-card {
+  background-color: var(--sys-surface-container);
+
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.1rem;
+
+      mat-icon {
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+  }
+
+  mat-card-actions {
+    padding: 0.5rem 1rem 1rem;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  &.update-available mat-card-header mat-icon {
+    color: var(--sys-primary);
+  }
+
+  &.ready mat-card-header mat-icon {
+    color: #4caf50;
+  }
+
+  &.error-card mat-card-header mat-icon {
+    color: var(--sys-error);
+  }
+
+  &.rollback-card mat-card-header mat-icon {
+    color: var(--sys-on-surface-variant);
+  }
+}
+
+.version-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.version-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  .label {
+    color: var(--sys-on-surface-variant);
+    font-size: 0.875rem;
+    min-width: 120px;
+  }
+
+  .value {
+    font-size: 0.875rem;
+
+    &.version-number {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--sys-primary);
+    }
+  }
+}
+
+.release-notes {
+  margin-top: 0.5rem;
+
+  .label {
+    display: block;
+    color: var(--sys-on-surface-variant);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .notes-content {
+    padding: 0.75rem;
+    background-color: var(--sys-surface-container-high);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+}
+
+.download-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+
+  mat-progress-bar {
+    border-radius: 4px;
+  }
+
+  .progress-text {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--sys-on-surface-variant);
+  }
+}
+
+.apply-warning {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--sys-on-surface-variant);
+  font-style: italic;
+}
+
+.error-message {
+  color: var(--sys-error);
+  font-size: 0.875rem;
+}
+
+.rollback-info {
+  font-size: 0.875rem;
+  color: var(--sys-on-surface-variant);
+}

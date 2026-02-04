@@ -42,8 +42,6 @@ verifying_bytes: bytes = None
 is_license_activated: bool = False
 
 algorithm = "RS256"
-access_exp_time = 15
-refresh_exp_time = 60 * 24  # 1 day
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{USER_URL}/login", scopes=RESOURCE_SCOPES
 )
@@ -53,6 +51,8 @@ def validate(
     condition: bool,
     exc_msg: str,
     status_code: int = status.HTTP_400_BAD_REQUEST,
+    field: str = None,
+    constraint: str = None,
 ) -> bool:
     """Return whether the provided condition is met.
 
@@ -60,6 +60,9 @@ def validate(
         condition (bool): The condition to validate.
         exc_msg (str): The exception message to raise.
         status_code (int): The HTTP status code to raise.
+        field (str): Optional field name related to the error.
+        constraint (str): Optional constraint type
+            (e.g., "unique", "foreign_key").
 
     Raises:
         HTTPException: If the provided condition is not met.
@@ -69,6 +72,13 @@ def validate(
 
     """
     if not condition:
+        if field or constraint:
+            detail = {"message": exc_msg}
+            if field:
+                detail["field"] = field
+            if constraint:
+                detail["constraint"] = constraint
+            raise HTTPException(status_code=status_code, detail=detail)
         raise HTTPException(status_code=status_code, detail=exc_msg)
     return True
 
@@ -125,8 +135,10 @@ def create_root_user_if_not_exists():
             # In production, require ROOT_PASSWORD to be set
             if settings.ENVIRONMENT.lower() == "production":
                 raise RuntimeError(
-                    "ROOT_PASSWORD environment variable must be set in production. "
-                    "Generate a secure password and set it before starting the application."
+                    "ROOT_PASSWORD environment variable "
+                    "must be set in production. "
+                    "Generate a secure password and set it "
+                    "before starting the application."
                 )
 
             # In development/test, generate a random secure password
@@ -134,7 +146,9 @@ def create_root_user_if_not_exists():
             import string
 
             alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-            root_password = "".join(secrets.choice(alphabet) for _ in range(16))
+            root_password = "".join(
+                secrets.choice(alphabet) for _ in range(16)
+            )
 
             print("=" * 70)
             print("IMPORTANT: Root user password has been auto-generated")
@@ -143,7 +157,10 @@ def create_root_user_if_not_exists():
             print(f"Password: {root_password}")
             print("=" * 70)
             print("SAVE THIS PASSWORD! You will need it to log in.")
-            print("Set ROOT_PASSWORD environment variable to customize this password.")
+            print(
+                "Set ROOT_PASSWORD environment variable "
+                "to customize this password."
+            )
             print("=" * 70)
 
         root_user = User(
@@ -189,7 +206,9 @@ def load_keys():
 
     # Determine encryption algorithm
     if encryption_password:
-        encryption_algo = serialization.BestAvailableEncryption(encryption_password)
+        encryption_algo = serialization.BestAvailableEncryption(
+            encryption_password,
+        )
     else:
         encryption_algo = serialization.NoEncryption()
         print(
@@ -270,8 +289,10 @@ def generate_access_token(user: User) -> str:
         str: The generated access token.
 
     """
+    from src.main import settings
+
     expiration = datetime.now(timezone.utc) + timedelta(
-        minutes=access_exp_time
+        minutes=settings.ACCESS_TOKEN_EXPIRY_MINUTES
     )
     payload = {
         "badge_number": user.badge_number,
@@ -292,8 +313,10 @@ def generate_refresh_token(user: User) -> str:
         str: The generated refresh token.
 
     """
+    from src.main import settings
+
     expiration = datetime.now(timezone.utc) + timedelta(
-        minutes=refresh_exp_time
+        minutes=settings.REFRESH_TOKEN_EXPIRY_MINUTES
     )
     payload = {
         "badge_number": user.badge_number,
@@ -315,7 +338,8 @@ def decode_jwt_token(token: str) -> dict:
 
     """
     payload = jwt.decode(token, verifying_bytes, algorithms=[algorithm])
-    # Add 'sub' field for compatibility with tests expecting standard JWT claims
+    # Add 'sub' field for compatibility with tests
+    # expecting standard JWT claims
     if "badge_number" in payload and "sub" not in payload:
         payload["sub"] = payload["badge_number"]
     return payload
@@ -527,7 +551,8 @@ def validate_license_on_startup() -> bool:
         if not license_obj.activation_key:
             print(
                 "License: Found license but no activation key. "
-                "License needs to be re-activated with the new activation flow."
+                "License needs to be re-activated "
+                "with the new activation flow."
             )
             is_license_activated = False
             return False
@@ -591,8 +616,9 @@ def clear_database():
     db = SessionLocal()
 
     try:
-        # Delete in reverse order of dependencies to avoid foreign key constraints
-        # NOTE: Preserve root records (id=0) for OrgUnit, Employee, User, and AuthRole
+        # Delete in reverse dependency order to avoid FK errors
+        # NOTE: Preserve root records (id=0) for
+        # OrgUnit, Employee, User, and AuthRole
 
         # Level 1: Most dependent tables (no other tables depend on these)
         db.query(TimeclockEntry).delete()  # depends on Employee
@@ -820,17 +846,27 @@ def generate_dummy_data():
             # (badge, first, last, payroll_type, org_unit, mgr, hg_id)
             # Badge numbers are 6-digit strings
             ("100001", "John", "Doe", "salary", "Engineering", None, hg_us.id),
-            ("100002", "Jane", "Smith", "hourly", "Engineering", "100001", hg_us.id),
-            ("100003", "Bob", "Johnson", "hourly", "Engineering", "100001", hg_us.id),
-            ("100004", "Alice", "Williams", "salary", "Engineering", None, hg_us.id),
-            ("100005", "Charlie", "Brown", "hourly", "Sales", "100004", hg_us.id),
-            ("100006", "Diana", "Davis", "hourly", "Sales", "100004", hg_us.id),
+            ("100002", "Jane", "Smith", "hourly",
+             "Engineering", "100001", hg_us.id),
+            ("100003", "Bob", "Johnson", "hourly",
+             "Engineering", "100001", hg_us.id),
+            ("100004", "Alice", "Williams", "salary",
+             "Engineering", None, hg_us.id),
+            ("100005", "Charlie", "Brown", "hourly",
+             "Sales", "100004", hg_us.id),
+            ("100006", "Diana", "Davis", "hourly",
+             "Sales", "100004", hg_us.id),
             ("100007", "Eve", "Miller", "salary", "Marketing", None, hg_us.id),
-            ("100008", "Frank", "Wilson", "hourly", "Marketing", "100007", hg_us.id),
-            ("100009", "Grace", "Moore", "hourly", "Operations", "100007", hg_intl.id),
-            ("100010", "Henry", "Taylor", "hourly", "Operations", "100007", hg_intl.id),
-            ("100011", "Ivy", "Anderson", "salary", "Customer Support", None, hg_us.id),
-            ("100012", "Jack", "Thomas", "hourly", "Customer Support", "100011", hg_us.id),
+            ("100008", "Frank", "Wilson", "hourly",
+             "Marketing", "100007", hg_us.id),
+            ("100009", "Grace", "Moore", "hourly",
+             "Operations", "100007", hg_intl.id),
+            ("100010", "Henry", "Taylor", "hourly",
+             "Operations", "100007", hg_intl.id),
+            ("100011", "Ivy", "Anderson", "salary",
+             "Customer Support", None, hg_us.id),
+            ("100012", "Jack", "Thomas", "hourly",
+             "Customer Support", "100011", hg_us.id),
         ]
 
         # Define which employees have external clock permissions
@@ -857,7 +893,9 @@ def generate_dummy_data():
                     workweek_type="standard",
                     time_type=True,
                     allow_clocking=True,
-                    external_clock_allowed=badge in external_clock_allowed_badges,
+                    external_clock_allowed=(
+                        badge in external_clock_allowed_badges
+                    ),
                     allow_delete=True,
                     org_unit_id=org_units[org_name].id,
                     manager_id=None,
@@ -867,8 +905,15 @@ def generate_dummy_data():
                 "0",
             )
             employees[badge] = emp
-            external_status = "external allowed" if badge in external_clock_allowed_badges else "office only"
-            print(f"  [OK] Created employee: {badge} ({first} {last}) - {external_status}")
+            is_external = badge in external_clock_allowed_badges
+            external_status = (
+                "external allowed" if is_external
+                else "office only"
+            )
+            print(
+                f"  [OK] Created employee: {badge} "
+                f"({first} {last}) - {external_status}"
+            )
 
         # Second pass: update manager relationships
         for badge, _, _, _, _, manager_badge, _ in employees_data:
@@ -1013,7 +1058,10 @@ def generate_dummy_data():
                 emp = employees[badge]
                 dept.employees.append(emp)
             db.commit()
-            print(f"  [OK] Assigned {len(emp_badges)} employees to {dept_name}")
+            print(
+                f"  [OK] Assigned {len(emp_badges)} "
+                f"employees to {dept_name}"
+            )
 
         print("\n[7/7] Creating timeclock entries...")
         now = datetime.now(timezone.utc)
@@ -1046,7 +1094,10 @@ def generate_dummy_data():
                 # Some employees might still be clocked in on most recent day
                 # Use the registered browser UUID so all employees can clock in
                 if day_offset == 1 and random.random() < 0.3:
-                    timeclock_routes.timeclock(badge, db, x_device_uuid=test_browser.browser_uuid)
+                    timeclock_routes.timeclock(
+                        badge, db,
+                        x_device_uuid=test_browser.browser_uuid,
+                    )
                 else:
                     entry = TimeclockEntry(
                         badge_number=badge,

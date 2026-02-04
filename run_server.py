@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Entry point for running TEP backend server.
+"""Entry point for running TAP backend server.
 
 This script serves as the entry point for the PyInstaller-bundled executable.
 It starts the FastAPI application using uvicorn.
@@ -7,7 +7,7 @@ It starts the FastAPI application using uvicorn.
 Usage:
     python run_server.py
     # Or after PyInstaller build:
-    ./tep.exe
+    ./tap.exe
 """
 
 import os
@@ -96,7 +96,7 @@ def init_database():
 
 
 def main():
-    """Main entry point for the TEP server."""
+    """Main entry point for the TAP server."""
     import uvicorn
     from src.config import Settings
 
@@ -107,7 +107,7 @@ def main():
     host = os.environ.get('BACKEND_HOST', '0.0.0.0')
 
     print("=" * 60)
-    print("TEP - Timeclock and Employee Payroll")
+    print("TAP - Timeclock and Payroll")
     print("=" * 60)
     print(f"Environment: {settings.ENVIRONMENT}")
     print(f"Starting server on {host}:{port}")

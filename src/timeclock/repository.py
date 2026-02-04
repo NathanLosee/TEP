@@ -15,28 +15,39 @@ from src.timeclock.schemas import (
 )
 
 
-def timeclock(badge_number: str, db: Session) -> bool:
+def timeclock(
+    badge_number: str,
+    db: Session,
+    client_timestamp: datetime = None,
+) -> bool:
     """Clock in/out an employee.
 
     Args:
         badge_number (str): Employee's badge number.
         db (Session): Database session for the current request.
+        client_timestamp (datetime, optional): Client-provided timestamp
+            for offline sync. Uses server time when None.
 
     Returns:
         bool: True if clocked in, False if clocked out.
 
     """
-    timeclock = db.scalars(
+    timestamp = client_timestamp or datetime.now(timezone.utc)
+
+    entry = db.scalars(
         select(TimeclockEntry)
         .where(TimeclockEntry.badge_number == badge_number)
         .order_by(TimeclockEntry.id.desc())
     ).first()
-    if timeclock and not timeclock.clock_out:
-        timeclock.clock_out = datetime.now(timezone.utc)
+    if entry and not entry.clock_out:
+        entry.clock_out = timestamp
         db.commit()
         return False
     else:
-        new_timeclock = TimeclockEntry(badge_number=badge_number)
+        new_timeclock = TimeclockEntry(
+            badge_number=badge_number,
+            clock_in=timestamp,
+        )
         db.add(new_timeclock)
         db.commit()
         return True

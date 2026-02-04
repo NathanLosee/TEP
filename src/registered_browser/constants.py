@@ -12,5 +12,8 @@ BASE_URL = f"/{IDENTIFIER}"
 RESOURCE_NAME = "registered_browser"
 EXC_MSG_BROWSER_NOT_FOUND = "Registered browser not found"
 EXC_MSG_BROWSER_ALREADY_REGISTERED = "Browser already registered"
-EXC_MSG_BROWSER_NAME_ALREADY_EXISTS = "Browser name already exists. Please choose a different name."
+EXC_MSG_BROWSER_NAME_ALREADY_EXISTS = (
+    "Browser name already exists. "
+    "Please choose a different name."
+)
 EXC_MSG_BROWSER_UUID_REQUIRED = "Browser UUID is required"

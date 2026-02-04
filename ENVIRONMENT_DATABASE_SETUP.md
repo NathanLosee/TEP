@@ -1,6 +1,6 @@
 # Environment-Based Database Configuration
 
-This document describes the environment-based database configuration and dummy data generation functionality implemented for the TEP (Timeclock and Employee Payroll) application.
+This document describes the environment-based database configuration and dummy data generation functionality implemented for the TAP (Timeclock and payroll) application.
 
 ## Overview
 
@@ -9,8 +9,8 @@ The application now automatically detects whether it's running in a development 
 ## Features
 
 ### 🗄️ Environment-Aware Database Configuration
-- **Development**: Uses `tep_dev.sqlite`
-- **Production**: Uses `tep_prod.sqlite` 
+- **Development**: Uses `tap_dev.sqlite`
+- **Production**: Uses `tap_prod.sqlite` 
 - **Custom**: Support for custom database URLs via environment variable
 
 ### 🧪 Automatic Dummy Data Generation
@@ -70,9 +70,9 @@ python -m uvicorn src.main:app
 
 ### Database Files
 
-- `tep_dev.sqlite` - Development database with dummy data
-- `tep_prod.sqlite` - Production database (clean)
-- `tep.sqlite` - Legacy database (if exists)
+- `tap_dev.sqlite` - Development database with dummy data
+- `tap_prod.sqlite` - Production database (clean)
+- `tap.sqlite` - Legacy database (if exists)
 
 ## Dummy Data Generated
 
@@ -174,19 +174,19 @@ DATABASE_URL=sqlite:///test.sqlite python generate_dummy_data.py
 ls -la *.sqlite
 
 # Verify table structure
-sqlite3 tep_dev.sqlite ".tables"
+sqlite3 tap_dev.sqlite ".tables"
 
 # Count records in development database
-sqlite3 tep_dev.sqlite "SELECT COUNT(*) FROM employees WHERE id > 0;"
+sqlite3 tap_dev.sqlite "SELECT COUNT(*) FROM employees WHERE id > 0;"
 ```
 
 ## Migration from Legacy Setup
 
 If migrating from the previous single-database setup:
 
-1. **Backup existing data**: `cp tep.sqlite tep_backup.sqlite`
-2. **Run migrations**: `alembic upgrade head` (creates `tep_dev.sqlite`)
-3. **Migrate data**: Copy important data from `tep.sqlite` to appropriate environment database
+1. **Backup existing data**: `cp tap.sqlite tap_backup.sqlite`
+2. **Run migrations**: `alembic upgrade head` (creates `tap_dev.sqlite`)
+3. **Migrate data**: Copy important data from `tap.sqlite` to appropriate environment database
 4. **Test thoroughly**: Verify application works with new configuration
 
 ## Security Considerations

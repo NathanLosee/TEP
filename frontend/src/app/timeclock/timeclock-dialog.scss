@@ -26,6 +26,23 @@ h2[mat-dialog-title] {
     color: var(--sys-on-primary-container);
     font-weight: 500;
   }
+
+  .offline-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--sys-on-primary-container);
+    opacity: 0.8;
+
+    mat-icon {
+      font-size: 1.125rem;
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
 }
 
 ::ng-deep .mat-mdc-dialog-surface {

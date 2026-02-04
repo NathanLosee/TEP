@@ -40,7 +40,7 @@ def test_create_department_409_name_already_exists(
     response = test_client.post(BASE_URL, json=department_data)
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_NAME_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
 def test_add_employee_to_department_201(
@@ -94,7 +94,7 @@ def test_add_employee_to_department_409_employee_already_member(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_EMPLOYEE_IS_MEMBER
+    assert response.json()["detail"]["message"] == EXC_MSG_EMPLOYEE_IS_MEMBER
 
 
 def test_get_departments_200(
@@ -232,7 +232,7 @@ def test_update_department_by_id_409_name_already_exists(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_NAME_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
 def test_delete_department_by_id_204(
@@ -272,7 +272,7 @@ def test_delete_department_by_id_409_employees_assigned(
     response = test_client.delete(f"{BASE_URL}/{department["id"]}")
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_EMPLOYEES_ASSIGNED
+    assert response.json()["detail"]["message"] == EXC_MSG_EMPLOYEES_ASSIGNED
 
 
 def test_remove_employee_from_department_200(

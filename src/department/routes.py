@@ -27,9 +27,14 @@ from src.department.repository import (
 )
 from src.department.schemas import DepartmentBase, DepartmentExtended
 from src.employee.constants import EXC_MSG_EMPLOYEE_NOT_FOUND
-from src.employee.repository import get_employee_by_id as get_employee_by_id_from_db
+from src.employee.repository import (
+    get_employee_by_id as get_employee_by_id_from_db,
+)
 from src.employee.schemas import EmployeeExtended
-from src.services import create_event_log, requires_license, requires_permission, validate
+from src.services import (
+    create_event_log, requires_license,
+    requires_permission, validate,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["department"])
 
@@ -62,6 +67,8 @@ def create_department(
         duplicate_department is None,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     department = create_department_in_db(request, db)
@@ -113,6 +120,8 @@ def create_department_membership(
         employee not in department.employees,
         EXC_MSG_EMPLOYEE_IS_MEMBER,
         status.HTTP_409_CONFLICT,
+        field="employee_id",
+        constraint="membership",
     )
 
     department = create_membership(department_id, employee_id, db)
@@ -257,6 +266,8 @@ def update_department(
         duplicate_department is None or duplicate_department.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     department = update_department_in_db(department, request, db)
@@ -294,6 +305,7 @@ def delete_department(
         len(department.employees) == 0,
         EXC_MSG_EMPLOYEES_ASSIGNED,
         status.HTTP_409_CONFLICT,
+        constraint="foreign_key",
     )
 
     delete_department_from_db(department, db)

@@ -35,7 +35,7 @@ MCowBQYDK2VwAyEAG+75HW6g1TbJNZQDMR26D/vWszI9aYF/QUQHr+6tg4s=
 -----END PUBLIC KEY-----"""
 
 # Message prefix for activation key signatures (must match license server)
-ACTIVATION_MESSAGE_PREFIX = b"TEP-Activation-v2:"
+ACTIVATION_MESSAGE_PREFIX = b"TAP-Activation-v2:"
 
 
 def get_machine_id() -> str:
@@ -47,7 +47,7 @@ def get_machine_id() -> str:
     Returns:
         str: The machine's unique ID (hashed for privacy).
     """
-    return machineid.hashed_id("TEP-License")
+    return machineid.hashed_id("TAP-License")
 
 
 def get_activation_message(license_key: str, machine_id: str) -> bytes:
@@ -60,7 +60,9 @@ def get_activation_message(license_key: str, machine_id: str) -> bytes:
     Returns:
         bytes: The message that should have been signed.
     """
-    return ACTIVATION_MESSAGE_PREFIX + f"{license_key}:{machine_id}".encode("utf-8")
+    return ACTIVATION_MESSAGE_PREFIX + f"{license_key}:{machine_id}".encode(
+        "utf-8"
+    )
 
 
 def _load_word_list() -> List[str]:
@@ -70,7 +72,7 @@ def _load_word_list() -> List[str]:
         list[str]: List of uppercase words
     """
     # Handle PyInstaller bundled environment
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running as PyInstaller bundle - words.txt is in the bundle root
         base_path = Path(sys._MEIPASS)
     else:
@@ -84,7 +86,9 @@ def _load_word_list() -> List[str]:
 
 # Load word list - we need exactly 256 words for 1-byte-per-word encoding
 _FULL_WORD_LIST = _load_word_list()
-WORD_LIST = _FULL_WORD_LIST[:256] if len(_FULL_WORD_LIST) >= 256 else _FULL_WORD_LIST
+WORD_LIST = (
+    _FULL_WORD_LIST[:256] if len(_FULL_WORD_LIST) >= 256 else _FULL_WORD_LIST
+)
 
 # Create reverse lookup
 WORD_TO_INDEX = {word: i for i, word in enumerate(WORD_LIST)}
@@ -100,7 +104,8 @@ def hex_to_words(hex_key: str) -> str:
         hex_key: 128-character hex string
 
     Returns:
-        str: Word-based key in format "WORD-WORD-WORD-WORD WORD-WORD-WORD-WORD ..."
+        str: Word-based key in format
+            "WORD-WORD-WORD-WORD WORD-WORD-WORD-WORD ..."
     """
     if len(hex_key) != 128:
         raise ValueError("Hex key must be 128 characters")
@@ -141,7 +146,9 @@ def words_to_hex(word_key: str) -> str:
     words = [w for w in words if w]
 
     if len(words) != 64:
-        raise ValueError(f"Word key must contain exactly 64 words, got {len(words)}")
+        raise ValueError(
+            f"Word key must contain exactly 64 words, got {len(words)}"
+        )
 
     key_bytes = bytearray()
     for word in words:
@@ -225,8 +232,10 @@ def verify_activation_key(
 
     Args:
         license_key: The license key (word or hex format).
-        activation_key: The activation key from the license server (hex format).
-        machine_id: The machine ID to verify against. If None, uses current machine.
+        activation_key: The activation key from the
+            license server (hex format).
+        machine_id: The machine ID to verify against.
+            If None, uses current machine.
 
     Returns:
         bool: True if the activation is valid for this license and machine.

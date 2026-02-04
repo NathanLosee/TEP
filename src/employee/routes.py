@@ -24,7 +24,10 @@ from src.employee.repository import (
     update_employee_by_id as update_employee_by_id_in_db,
 )
 from src.employee.schemas import EmployeeBase, EmployeeExtended, EmployeeUpdate
-from src.services import create_event_log, requires_license, requires_permission, validate
+from src.services import (
+    create_event_log, requires_license,
+    requires_permission, validate,
+)
 from src.user.repository import invalidate_token
 
 router = APIRouter(prefix=BASE_URL, tags=["employee"])
@@ -53,11 +56,15 @@ def create_employee(
         EmployeeExtended: The created employee.
 
     """
-    duplicate_employee = get_employee_by_badge_number_from_db(request.badge_number, db)
+    duplicate_employee = get_employee_by_badge_number_from_db(
+        request.badge_number, db,
+    )
     validate(
         duplicate_employee is None,
         EXC_MSG_BADGE_NUMBER_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="badge_number",
+        constraint="unique",
     )
 
     employee = create_employee_in_db(request, db)
@@ -414,6 +421,8 @@ def update_employee_badge_number(
         duplicate_employee is None,
         EXC_MSG_BADGE_NUMBER_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="badge_number",
+        constraint="unique",
     )
 
     # If user is updating their own badge number, invalidate their tokens

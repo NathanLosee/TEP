@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
-    Install TEP as a Windows service using NSSM.
+    Install TAP as a Windows service using NSSM.
 
 .DESCRIPTION
-    This script downloads NSSM (if needed) and installs TEP as a Windows service
+    This script downloads NSSM (if needed) and installs TAP as a Windows service
     that starts automatically on boot.
 
 .PARAMETER InstallDir
-    TEP installation directory. Default: C:\Program Files\TEP
+    TAP installation directory. Default: C:\Program Files\TAP
 
 .PARAMETER ServiceName
-    Name for the Windows service. Default: TEPService
+    Name for the Windows service. Default: TAPService
 
 .PARAMETER Port
     Backend server port. Default: 8000
@@ -22,15 +22,15 @@
     .\install-service.ps1
 
 .EXAMPLE
-    .\install-service.ps1 -InstallDir "D:\TEP" -Port 8080
+    .\install-service.ps1 -InstallDir "D:\TAP" -Port 8080
 
 .EXAMPLE
     .\install-service.ps1 -Uninstall
 #>
 
 param(
-    [string]$InstallDir = "C:\Program Files\TEP",
-    [string]$ServiceName = "TEPService",
+    [string]$InstallDir = "C:\Program Files\TAP",
+    [string]$ServiceName = "TAPService",
     [int]$Port = 8000,
     [switch]$Uninstall
 )
@@ -45,7 +45,7 @@ $NssmExe = Join-Path $NssmDir "win64\nssm.exe"
 
 function Write-Status {
     param([string]$Message, [string]$Color = "White")
-    Write-Host "[TEP] " -ForegroundColor Cyan -NoNewline
+    Write-Host "[TAP] " -ForegroundColor Cyan -NoNewline
     Write-Host $Message -ForegroundColor $Color
 }
 
@@ -118,16 +118,16 @@ function Get-Nssm {
     }
 }
 
-function Install-TepService {
+function Install-TapService {
     $backendDir = Join-Path $InstallDir "backend"
-    $executable = Join-Path $backendDir "tep.exe"
+    $executable = Join-Path $backendDir "tap.exe"
     $envFile = Join-Path $backendDir ".env"
     $logDir = Join-Path $InstallDir "logs"
 
     # Validate installation
     if (-not (Test-Path $executable)) {
-        Write-Error "TEP executable not found at $executable"
-        Write-Error "Please ensure TEP is properly installed."
+        Write-Error "TAP executable not found at $executable"
+        Write-Error "Please ensure TAP is properly installed."
         exit 1
     }
 
@@ -145,7 +145,7 @@ function Install-TepService {
         Start-Sleep -Seconds 2
     }
 
-    Write-Status "Installing TEP as Windows service '$ServiceName'..."
+    Write-Status "Installing TAP as Windows service '$ServiceName'..."
 
     # Install service
     & $NssmExe install $ServiceName $executable
@@ -161,8 +161,8 @@ function Install-TepService {
     & $NssmExe set $ServiceName AppDirectory $backendDir
 
     # Set display name and description
-    & $NssmExe set $ServiceName DisplayName "TEP - Timeclock and Employee Payroll"
-    & $NssmExe set $ServiceName Description "TEP backend server for timeclock and employee payroll management"
+    & $NssmExe set $ServiceName DisplayName "TAP - Timeclock and payroll"
+    & $NssmExe set $ServiceName Description "TAP backend server for timeclock and payroll management"
 
     # Set startup type to automatic
     & $NssmExe set $ServiceName Start SERVICE_AUTO_START
@@ -189,7 +189,7 @@ ENVIRONMENT=production
 LOG_LEVEL=INFO
 BACKEND_PORT=$Port
 ROOT_PASSWORD=ChangeThisPassword123!
-DATABASE_URL=sqlite:///$InstallDir\data\tep.sqlite
+DATABASE_URL=sqlite:///$InstallDir\data\tap.sqlite
 "@
         $envContent | Out-File -FilePath $envFile -Encoding UTF8
         Write-Warning "Default .env created. IMPORTANT: Change ROOT_PASSWORD before starting!"
@@ -210,8 +210,8 @@ DATABASE_URL=sqlite:///$InstallDir\data\tep.sqlite
     Write-Status "Logs are written to: $logDir"
 }
 
-function Uninstall-TepService {
-    Write-Status "Removing TEP service..."
+function Uninstall-TapService {
+    Write-Status "Removing TAP service..."
 
     # Check if NSSM exists
     if (-not (Test-Path $NssmExe)) {
@@ -255,7 +255,7 @@ function Uninstall-TepService {
 # Main execution
 Write-Host ""
 Write-Host "======================================" -ForegroundColor Cyan
-Write-Host "  TEP Service Management Script" -ForegroundColor Cyan
+Write-Host "  TAP Service Management Script" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -267,7 +267,7 @@ if (-not (Test-Administrator)) {
 }
 
 if ($Uninstall) {
-    Uninstall-TepService
+    Uninstall-TapService
 } else {
     # Download/verify NSSM
     if (-not (Get-Nssm)) {
@@ -275,7 +275,7 @@ if ($Uninstall) {
         exit 1
     }
 
-    Install-TepService
+    Install-TapService
 
     # Prompt to start service
     Write-Host ""
@@ -288,7 +288,7 @@ if ($Uninstall) {
         $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
         if ($service -and $service.Status -eq "Running") {
             Write-Success "Service is running!"
-            Write-Status "Access TEP at: http://localhost:$Port"
+            Write-Status "Access TAP at: http://localhost:$Port"
         } else {
             Write-Warning "Service may not have started. Check logs at $InstallDir\logs"
         }

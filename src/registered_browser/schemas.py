@@ -33,17 +33,30 @@ class RegisteredBrowserCreate(RegisteredBrowserBase):
     """Schema for creating a new browser registration.
 
     Attributes:
-        browser_uuid (Optional[str]): Browser's unique UUID (auto-generated if not provided).
+        browser_uuid (Optional[str]): Browser's unique UUID
+            (auto-generated if not provided).
         fingerprint_hash (str): Hash of browser fingerprint.
         user_agent (str): Browser user agent string.
         ip_address (str): IP address at registration time.
 
     """
 
-    browser_uuid: Optional[str] = None  # Make UUID optional for auto-generation
+    browser_uuid: Optional[str] = None  # Optional, auto-gen
     fingerprint_hash: Optional[str] = None
     user_agent: Optional[str] = None
     ip_address: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "browser_name": "Front Desk Kiosk",
+                "browser_uuid": None,
+                "fingerprint_hash": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "ip_address": "192.168.1.100",
+            }
+        }
+    }
 
 
 class RegisteredBrowserExtended(RegisteredBrowserBase):
@@ -83,6 +96,15 @@ class RegisteredBrowserVerify(BaseModel):
     fingerprint_hash: str
     browser_uuid: Optional[str] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "fingerprint_hash": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+                "browser_uuid": "550e8400-e29b-41d4-a716-446655440000",
+            }
+        }
+    }
+
 
 class RegisteredBrowserRecover(BaseModel):
     """Schema for recovering browser registration with recovery code.
@@ -96,4 +118,13 @@ class RegisteredBrowserRecover(BaseModel):
     recovery_code: str
     fingerprint_hash: str
 
-    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_min_length=1,
+        json_schema_extra={
+            "example": {
+                "recovery_code": "550e8400-e29b-41d4-a716-446655440000",
+                "fingerprint_hash": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+            }
+        },
+    )

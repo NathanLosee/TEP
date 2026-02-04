@@ -27,6 +27,19 @@ class ReportRequest(BaseModel):
     org_unit_id: Union[int, None] = None
     detail_level: str = "summary"
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "start_date": "2025-01-01",
+                "end_date": "2025-01-31",
+                "employee_id": None,
+                "department_id": 1,
+                "org_unit_id": None,
+                "detail_level": "summary",
+            }
+        }
+    }
+
 
 class TimePeriod(BaseModel):
     """Schema for individual time clock period.
@@ -51,7 +64,8 @@ class DayDetail(BaseModel):
     Attributes:
         date (date): The date.
         total_hours (float): Total hours worked on this day.
-        periods (list[TimePeriod]): Individual clock-in/out periods for the day.
+        periods (list[TimePeriod]): Individual clock-in/out
+            periods for the day.
 
     """
 
@@ -124,7 +138,8 @@ class ReportResponse(BaseModel):
         start_date (date): Report period start date.
         end_date (date): Report period end date.
         report_type (str): Type of report (employee, department, org_unit).
-        filter_name (str): Name of the filter entity (department/org unit name).
+        filter_name (str): Name of the filter entity
+            (department/org unit name).
         generated_at (datetime): When the report was generated.
         employees (list[EmployeeReportData]): Employee data in the report.
 

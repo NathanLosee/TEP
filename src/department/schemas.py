@@ -22,7 +22,10 @@ class DepartmentBase(BaseModel):
     name: str = Field(pattern=NAME_REGEX, max_length=NAME_MAX_LENGTH)
 
     model_config = ConfigDict(
-        str_strip_whitespace=True, str_min_length=1, populate_by_name=True
+        str_strip_whitespace=True,
+        str_min_length=1,
+        populate_by_name=True,
+        json_schema_extra={"example": {"name": "Engineering"}},
     )
 
 

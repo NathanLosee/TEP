@@ -30,7 +30,8 @@ class EmployeeBase(BaseModel):
         time_type (bool): Employee's time type.
             (True for full-time, False for part-time)
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
-        external_clock_allowed (bool): Whether the employee can clock in/out from external devices.
+        external_clock_allowed (bool): Whether the employee can clock
+            in/out from external devices.
         allow_delete (bool): Whether the employee is allowed to be deleted.
         org_unit_id (int): Org unit's unique identifier.
         manager_id (int): Manager's unique identifier.
@@ -52,7 +53,27 @@ class EmployeeBase(BaseModel):
     org_unit_id: int
     holiday_group_id: Optional[int] = Field(default=None)
 
-    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_min_length=1,
+        json_schema_extra={
+            "example": {
+                "badge_number": "EMP001",
+                "first_name": "Jane",
+                "last_name": "Smith",
+                "payroll_type": "salary",
+                "payroll_sync": "2025-01-01",
+                "workweek_type": "standard",
+                "time_type": True,
+                "allow_clocking": True,
+                "external_clock_allowed": False,
+                "allow_delete": True,
+                "manager_id": None,
+                "org_unit_id": 1,
+                "holiday_group_id": 1,
+            }
+        },
+    )
 
 
 class EmployeeExtended(EmployeeBase):
@@ -84,7 +105,8 @@ class EmployeeUpdate(BaseModel):
         time_type (bool): Employee's time type.
             (True for full-time, False for part-time)
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
-        external_clock_allowed (bool): Whether the employee can clock in/out from external devices.
+        external_clock_allowed (bool): Whether the employee can clock
+            in/out from external devices.
         allow_delete (bool): Whether the employee is allowed to be deleted.
         org_unit_id (int): Org unit's unique identifier.
         manager_id (int): Manager's unique identifier.

@@ -1,4 +1,4 @@
-# TEP License Server Dependencies
+# TAP License Server Dependencies
 cryptography>=41.0.0
 fastapi>=0.100.0
 uvicorn>=0.23.0

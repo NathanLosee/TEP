@@ -134,7 +134,10 @@
           <mat-form-field appearance="outline" class="form-field">
             <mat-label>Detail Level (PDF Export)</mat-label>
             <mat-select formControlName="detailLevel">
-              <mat-option *ngFor="let level of detailLevels" [value]="level.value">
+              <mat-option
+                *ngFor="let level of detailLevels"
+                [value]="level.value"
+              >
                 {{ level.label }}
               </mat-option>
             </mat-select>
@@ -163,7 +166,9 @@
         <div class="stat-item">
           <mat-icon class="stat-icon">schedule</mat-icon>
           <div class="stat-content">
-            <div class="stat-value">{{ getTotalHours() | number: "1.2-2" }}h</div>
+            <div class="stat-value">
+              {{ getTotalHours() | number: "1.2-2" }}h
+            </div>
             <div class="stat-label">Total Hours</div>
           </div>
         </div>
@@ -203,10 +208,17 @@
           class="employee-panel"
           *ngFor="let employee of reportData.employees"
         >
-          <div class="employee-header" (click)="toggleEmployee(employee.employee_id)">
+          <div
+            class="employee-header"
+            (click)="toggleEmployee(employee.employee_id)"
+          >
             <div class="employee-info">
               <mat-icon class="expand-icon">
-                {{ isEmployeeExpanded(employee.employee_id) ? 'expand_more' : 'chevron_right' }}
+                {{
+                  isEmployeeExpanded(employee.employee_id)
+                    ? "expand_more"
+                    : "chevron_right"
+                }}
               </mat-icon>
               <div class="employee-details">
                 <span class="employee-name">
@@ -218,26 +230,45 @@
             <div class="employee-summary-stats">
               <div class="stat">
                 <span class="stat-label">Total:</span>
-                <span class="stat-value">{{ employee.summary.total_hours | number: "1.2-2" }}h</span>
+                <span class="stat-value"
+                  >{{ employee.summary.total_hours | number: "1.2-2" }}h</span
+                >
               </div>
               <div class="stat">
                 <span class="stat-label">Regular:</span>
-                <span class="stat-value">{{ employee.summary.regular_hours | number: "1.2-2" }}h</span>
+                <span class="stat-value"
+                  >{{ employee.summary.regular_hours | number: "1.2-2" }}h</span
+                >
               </div>
-              <div class="stat overtime" *ngIf="employee.summary.overtime_hours > 0">
+              <div
+                class="stat overtime"
+                *ngIf="employee.summary.overtime_hours > 0"
+              >
                 <span class="stat-label">Overtime:</span>
-                <span class="stat-value">{{ employee.summary.overtime_hours | number: "1.2-2" }}h</span>
+                <span class="stat-value"
+                  >{{
+                    employee.summary.overtime_hours | number: "1.2-2"
+                  }}h</span
+                >
               </div>
               <div class="stat" *ngIf="employee.summary.holiday_hours > 0">
                 <span class="stat-label">Holiday:</span>
-                <span class="stat-value">{{ employee.summary.holiday_hours | number: "1.2-2" }}h</span>
+                <span class="stat-value"
+                  >{{ employee.summary.holiday_hours | number: "1.2-2" }}h</span
+                >
               </div>
             </div>
           </div>
 
           <!-- Employee Calendar View -->
-          <div class="employee-content" *ngIf="isEmployeeExpanded(employee.employee_id)">
-            <div class="calendar-container" *ngIf="getEmployeeCalendar(employee.employee_id) as calendar">
+          <div
+            class="employee-content"
+            *ngIf="isEmployeeExpanded(employee.employee_id)"
+          >
+            <div
+              class="calendar-container"
+              *ngIf="getEmployeeCalendar(employee.employee_id) as calendar"
+            >
               <!-- Calendar Header with Navigation -->
               <div class="calendar-header">
                 <button
@@ -249,7 +280,7 @@
                   <mat-icon>chevron_left</mat-icon>
                 </button>
                 <div class="month-year-display">
-                  {{ calendar.currentMonth | date: 'MMMM yyyy' }}
+                  {{ calendar.currentMonth | date: "MMMM yyyy" }}
                 </div>
                 <button
                   mat-icon-button
@@ -288,16 +319,33 @@
                         <div class="day-entries">
                           <div class="day-total">
                             <mat-icon class="time-icon">schedule</mat-icon>
-                            <span class="hours-text">{{ day.dayDetail.total_hours | number: "1.2-2" }}h</span>
+                            <span class="hours-text"
+                              >{{
+                                day.dayDetail.total_hours | number: "1.2-2"
+                              }}h</span
+                            >
                           </div>
                           <div class="periods-list">
-                            @for (period of day.dayDetail.periods; track period.id) {
+                            @for (
+                              period of day.dayDetail.periods;
+                              track period.id
+                            ) {
                               <div class="period-item">
                                 <div class="period-time">
-                                  <span class="time-in">{{ period.clock_in | date: 'HH:mm' : userTimezone }}</span>
-                                  <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                                  <span class="time-in">{{
+                                    period.clock_in
+                                      | date: "HH:mm" : userTimezone
+                                  }}</span>
+                                  <mat-icon class="arrow-icon"
+                                    >arrow_forward</mat-icon
+                                  >
                                   <span class="time-out">
-                                    {{ period.clock_out ? (period.clock_out | date: 'HH:mm' : userTimezone) : '--:--' }}
+                                    {{
+                                      period.clock_out
+                                        ? (period.clock_out
+                                          | date: "HH:mm" : userTimezone)
+                                        : "--:--"
+                                    }}
                                   </span>
                                 </div>
                                 <div class="period-hours">
@@ -344,7 +392,10 @@
       <div class="no-report-state">
         <mat-icon class="placeholder-icon">assessment</mat-icon>
         <h3>No Report Generated</h3>
-        <p>Configure your report parameters above and click "Generate Report" to view timeclock data.</p>
+        <p>
+          Configure your report parameters above and click "Generate Report" to
+          view timeclock data.
+        </p>
       </div>
     </mat-card-content>
   </mat-card>

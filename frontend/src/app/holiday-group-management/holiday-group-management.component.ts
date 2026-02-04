@@ -22,7 +22,7 @@ import {
   HolidayGroupService,
 } from '../../services/holiday-group.service';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { ErrorDialogComponent, extractErrorDetail } from '../error-dialog/error-dialog.component';
 import {
   GenericTableComponent,
   TableCellDirective,
@@ -326,7 +326,7 @@ export class HolidayGroupManagementComponent implements OnInit {
       data: {
         title: 'Error',
         message: `${message}. Please try again.`,
-        error: error?.error?.detail || error?.message || 'Unknown error',
+        error: extractErrorDetail(error),
       },
     });
   }

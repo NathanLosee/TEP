@@ -4,14 +4,17 @@ from calendar import monthrange
 from datetime import date, timedelta
 
 
-def get_nth_weekday_of_month(year: int, month: int, weekday: int, n: int) -> date:
+def get_nth_weekday_of_month(
+    year: int, month: int, weekday: int, n: int,
+) -> date:
     """Get the nth occurrence of a weekday in a month.
 
     Args:
         year (int): Year.
         month (int): Month (1-12).
         weekday (int): Day of week (0=Monday, 6=Sunday).
-        n (int): Which occurrence (1=First, 2=Second, 3=Third, 4=Fourth, 5=Last).
+        n (int): Which occurrence
+            (1=First, 2=Second, 3=Third, 4=Fourth, 5=Last).
 
     Returns:
         date: The date of the nth occurrence of the weekday.
@@ -91,7 +94,8 @@ def get_holidays_for_year(holidays: list, year: int) -> list[dict]:
         year (int): Year to generate holidays for.
 
     Returns:
-        list[dict]: List of holiday dictionaries with name, start_date, end_date.
+        list[dict]: List of holiday dicts with
+            name, start_date, end_date.
 
     """
     result = []

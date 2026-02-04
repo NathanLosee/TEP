@@ -1,4 +1,4 @@
-"""TEP License Server - FastAPI application for license management.
+"""TAP License Server - FastAPI application for license management.
 
 This server handles:
 - Creating new licenses
@@ -7,7 +7,6 @@ This server handles:
 - Deactivating licenses
 """
 
-import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -15,9 +14,6 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-
-from database import get_db, init_db
 from key_generator import (
     generate_activation_key,
     generate_unique_license_key,
@@ -36,6 +32,9 @@ from schemas import (
     ValidationRequest,
     ValidationResponse,
 )
+from sqlalchemy.orm import Session
+
+from database import get_db, init_db
 
 # Load private key for signing activations
 PRIVATE_KEY_PATH = Path(__file__).parent / "private_key.pem"
@@ -60,8 +59,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="TEP License Server",
-    description="License management server for TEP Time Entry Portal",
+    title="TAP License Server",
+    description="License management server for TAP Time Entry Portal",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -185,7 +184,7 @@ def revoke_license(
 
 
 # ============================================================================
-# Client Endpoints (called by the main TEP application)
+# Client Endpoints (called by the main TAP application)
 # ============================================================================
 
 
@@ -202,7 +201,8 @@ def activate_license(
     """Activate a license for a specific machine.
 
     Called by the client application when a user enters a license key.
-    Returns an activation_key that proves the license is valid for this machine.
+    Returns an activation_key that proves the license is valid for this
+    machine.
     """
     private_key = load_private_key()
     if not private_key:
@@ -222,9 +222,9 @@ def activate_license(
     normalized_key = normalize_license_key(request.license_key)
 
     # Find the license
-    license_obj = db.query(License).filter(
-        License.license_key == normalized_key
-    ).first()
+    license_obj = (
+        db.query(License).filter(License.license_key == normalized_key).first()
+    )
 
     if not license_obj:
         raise HTTPException(
@@ -239,11 +239,15 @@ def activate_license(
         )
 
     # Check if this machine is already activated for this license
-    existing_activation = db.query(Activation).filter(
-        Activation.license_id == license_obj.id,
-        Activation.machine_id == request.machine_id,
-        Activation.is_active == True,
-    ).first()
+    existing_activation = (
+        db.query(Activation)
+        .filter(
+            Activation.license_id == license_obj.id,
+            Activation.machine_id == request.machine_id,
+            Activation.is_active == True,
+        )
+        .first()
+    )
 
     if existing_activation:
         # Return existing activation
@@ -302,9 +306,9 @@ def validate_activation(
         )
 
     # Check if the license exists and is active
-    license_obj = db.query(License).filter(
-        License.license_key == normalized_key
-    ).first()
+    license_obj = (
+        db.query(License).filter(License.license_key == normalized_key).first()
+    )
 
     if not license_obj:
         return ValidationResponse(
@@ -319,11 +323,15 @@ def validate_activation(
         )
 
     # Check if the activation exists and is active
-    activation = db.query(Activation).filter(
-        Activation.license_id == license_obj.id,
-        Activation.machine_id == request.machine_id,
-        Activation.is_active == True,
-    ).first()
+    activation = (
+        db.query(Activation)
+        .filter(
+            Activation.license_id == license_obj.id,
+            Activation.machine_id == request.machine_id,
+            Activation.is_active == True,
+        )
+        .first()
+    )
 
     if not activation:
         return ValidationResponse(
@@ -374,9 +382,9 @@ def deactivate_machine(
         )
 
     # Find the license
-    license_obj = db.query(License).filter(
-        License.license_key == normalized_key
-    ).first()
+    license_obj = (
+        db.query(License).filter(License.license_key == normalized_key).first()
+    )
 
     if not license_obj:
         raise HTTPException(
@@ -385,11 +393,15 @@ def deactivate_machine(
         )
 
     # Find and deactivate the activation
-    activation = db.query(Activation).filter(
-        Activation.license_id == license_obj.id,
-        Activation.machine_id == request.machine_id,
-        Activation.is_active == True,
-    ).first()
+    activation = (
+        db.query(Activation)
+        .filter(
+            Activation.license_id == license_obj.id,
+            Activation.machine_id == request.machine_id,
+            Activation.is_active == True,
+        )
+        .first()
+    )
 
     if not activation:
         raise HTTPException(
@@ -430,9 +442,9 @@ def check_license_status(
         )
 
     # Check if the license exists and is active
-    license_obj = db.query(License).filter(
-        License.license_key == normalized_key
-    ).first()
+    license_obj = (
+        db.query(License).filter(License.license_key == normalized_key).first()
+    )
 
     if not license_obj or not license_obj.is_active:
         return LicenseStatusResponse(
@@ -441,11 +453,15 @@ def check_license_status(
         )
 
     # Check for active activation
-    activation = db.query(Activation).filter(
-        Activation.license_id == license_obj.id,
-        Activation.machine_id == machine_id,
-        Activation.is_active == True,
-    ).first()
+    activation = (
+        db.query(Activation)
+        .filter(
+            Activation.license_id == license_obj.id,
+            Activation.machine_id == machine_id,
+            Activation.is_active == True,
+        )
+        .first()
+    )
 
     if activation:
         return LicenseStatusResponse(

@@ -1,6 +1,6 @@
-# TEP Deployment Guide
+# TAP Deployment Guide
 
-Complete guide for deploying TEP (Timeclock and Employee Payroll) in production environments.
+Complete guide for deploying TAP (Timeclock and payroll) in production environments.
 
 ---
 
@@ -41,7 +41,7 @@ Complete guide for deploying TEP (Timeclock and Employee Payroll) in production 
 ## Pre-Installation Checklist
 
 - [ ] Review system requirements
-- [ ] Plan installation directory (e.g., `C:\Program Files\TEP`)
+- [ ] Plan installation directory (e.g., `C:\Program Files\TAP`)
 - [ ] Determine network configuration (ports, firewall rules)
 - [ ] Plan backup strategy
 - [ ] Obtain license key (if required for immediate use)
@@ -57,14 +57,14 @@ Complete guide for deploying TEP (Timeclock and Employee Payroll) in production 
 **For production deployments using pre-built installer.**
 
 1. **Run Installer**
-   - Double-click `TEP-Setup-x.x.x.exe`
+   - Double-click `TAP-Setup-x.x.x.exe`
    - Accept User Account Control prompt
 
 2. **Installation Wizard**
-   - Choose installation directory (default: `C:\Program Files\TEP`)
+   - Choose installation directory (default: `C:\Program Files\TAP`)
    - Select components:
-     - [x] TEP Backend Service (required)
-     - [x] TEP Frontend (required)
+     - [x] TAP Backend Service (required)
+     - [x] TAP Frontend (required)
      - [x] Desktop Shortcut
      - [x] Start Menu Entries
      - [ ] Development Tools (optional)
@@ -80,8 +80,8 @@ Complete guide for deploying TEP (Timeclock and Employee Payroll) in production 
    - Root administrator password is stored in `.env` file
 
 5. **Service Installation**
-   - Installer registers TEP as Windows service
-   - Service name: `TEPService`
+   - Installer registers TAP as Windows service
+   - Service name: `TAPService`
    - Set to start automatically on boot
 
 6. **Database Initialization**
@@ -90,7 +90,7 @@ Complete guide for deploying TEP (Timeclock and Employee Payroll) in production 
    - Creates root user
 
 7. **Complete Installation**
-   - Launch TEP application
+   - Launch TAP application
    - Access via desktop shortcut or `http://localhost:8000`
    - In single-server mode, both API and frontend are served on port 8000
 
@@ -102,25 +102,25 @@ The build script can create a standalone Windows executable that bundles Python 
 
 1. **Build the Executable**
    ```cmd
-   cd TEP
+   cd TAP
    python scripts/build_release.py --version 1.0.0 --executable
    ```
 
 2. **Locate Output**
-   - Build output: `build/TEP-1.0.0/`
-   - Backend executable: `build/TEP-1.0.0/backend/tep.exe`
-   - Frontend files: `build/TEP-1.0.0/frontend/`
-   - Release archive: `releases/TEP-1.0.0.zip`
+   - Build output: `build/TAP-1.0.0/`
+   - Backend executable: `build/TAP-1.0.0/backend/tap.exe`
+   - Frontend files: `build/TAP-1.0.0/frontend/`
+   - Release archive: `releases/TAP-1.0.0.zip`
 
 3. **Deploy to Target Machine**
-   - Extract `TEP-1.0.0.zip` to installation directory (e.g., `C:\Program Files\TEP`)
+   - Extract `TAP-1.0.0.zip` to installation directory (e.g., `C:\Program Files\TAP`)
    - No Python installation required
    - All dependencies bundled (~65 MB total)
    - Directory structure should be:
      ```
-     C:\Program Files\TEP\
+     C:\Program Files\TAP\
      ├── backend\
-     │   ├── tep.exe
+     │   ├── tap.exe
      │   ├── _internal\
      │   └── .env           # Create this file
      └── frontend\
@@ -131,7 +131,7 @@ The build script can create a standalone Windows executable that bundles Python 
      ```
 
 4. **Configure Environment**
-   Create a `.env` file in the **backend directory** (next to `tep.exe`):
+   Create a `.env` file in the **backend directory** (next to `tap.exe`):
    ```env
    # Required settings
    ENVIRONMENT=production
@@ -140,27 +140,27 @@ The build script can create a standalone Windows executable that bundles Python 
    # Optional settings
    LOG_LEVEL=INFO
    BACKEND_PORT=8000
-   DATABASE_URL=sqlite:///tep_prod.sqlite
+   DATABASE_URL=sqlite:///tap_prod.sqlite
    ```
 
 5. **Start Server**
    ```cmd
-   cd "C:\Program Files\TEP\backend"
-   tep.exe
+   cd "C:\Program Files\TAP\backend"
+   tap.exe
    ```
 
    **Expected Output:**
    ```
-   Loaded environment from: C:\Program Files\TEP\backend\.env
+   Loaded environment from: C:\Program Files\TAP\backend\.env
    ============================================================
-   TEP - Timeclock and Employee Payroll
+   TAP - Timeclock and payroll
    ============================================================
    Environment: production
    Starting server on 0.0.0.0:8000
    ============================================================
    Initializing database...
    Database initialized successfully.
-   INFO:     Serving frontend from: C:\Program Files\TEP\frontend
+   INFO:     Serving frontend from: C:\Program Files\TAP\frontend
    INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
    ```
 
@@ -184,7 +184,7 @@ See [README.md](README.md) for development setup instructions.
 
 ### Environment Variables
 
-TEP uses environment variables for configuration. Create a `.env` file in the backend directory or set system environment variables.
+TAP uses environment variables for configuration. Create a `.env` file in the backend directory or set system environment variables.
 
 **Required Variables:**
 
@@ -198,7 +198,7 @@ TEP uses environment variables for configuration. Create a `.env` file in the ba
 | Variable | Description | Default | Example |
 |----------|-------------|---------|---------|
 | `LOG_LEVEL` | Logging verbosity | `INFO` | `DEBUG`, `WARNING`, `ERROR` |
-| `DATABASE_URL` | SQLite database path | Auto-generated | `sqlite:///data/tep.sqlite` |
+| `DATABASE_URL` | SQLite database path | Auto-generated | `sqlite:///data/tap.sqlite` |
 | `CORS_ORIGINS` | Allowed CORS origins | `http://localhost:4200` | `https://myapp.com` |
 | `BACKEND_PORT` | Server port | `8000` | `8080` |
 | `BACKEND_HOST` | Server bind address | `0.0.0.0` | `127.0.0.1` |
@@ -207,7 +207,7 @@ TEP uses environment variables for configuration. Create a `.env` file in the ba
 **Example `.env` File:**
 
 ```env
-# TEP Configuration
+# TAP Configuration
 ENVIRONMENT=production
 LOG_LEVEL=INFO
 
@@ -215,7 +215,7 @@ LOG_LEVEL=INFO
 ROOT_PASSWORD=ChangeThisSecurePassword123!
 
 # Database
-DATABASE_URL=sqlite:///tep_prod.sqlite
+DATABASE_URL=sqlite:///tap_prod.sqlite
 
 # CORS - Set to your frontend domain (in single-server mode, this may not be needed)
 CORS_ORIGINS=https://timeclock.yourcompany.com
@@ -234,8 +234,8 @@ The database location is determined by:
 
 1. `DATABASE_URL` environment variable (if set)
 2. Automatic based on `ENVIRONMENT`:
-   - Production: `sqlite:///tep_prod.sqlite`
-   - Development: `sqlite:///tep_dev.sqlite`
+   - Production: `sqlite:///tap_prod.sqlite`
+   - Development: `sqlite:///tap_dev.sqlite`
 
 **Important:** The database file is created relative to the working directory. When running as a service, ensure the working directory is set correctly.
 
@@ -245,7 +245,7 @@ The database location is determined by:
 
 ```cmd
 # Navigate to project directory
-cd "C:\Program Files\TEP\backend"
+cd "C:\Program Files\TAP\backend"
 
 # Run all migrations
 alembic upgrade head
@@ -254,11 +254,11 @@ alembic upgrade head
 **Method 2: Using Init Script**
 
 ```cmd
-cd "C:\Program Files\TEP"
+cd "C:\Program Files\TAP"
 python scripts/init_database.py
 
 # With custom path
-python scripts/init_database.py --db-path "C:\Data\tep.sqlite"
+python scripts/init_database.py --db-path "C:\Data\tap.sqlite"
 
 # Force reinitialize (WARNING: deletes existing data)
 python scripts/init_database.py --force
@@ -270,12 +270,12 @@ For standalone executable deployments, you can copy a pre-initialized database:
 
 ```cmd
 # From development environment
-copy "tep_dev.sqlite" "C:\Program Files\TEP\backend\tep_prod.sqlite"
+copy "tap_dev.sqlite" "C:\Program Files\TAP\backend\tap_prod.sqlite"
 ```
 
 ### First Startup Behavior
 
-On first startup, TEP automatically:
+On first startup, TAP automatically:
 
 1. **Checks Database** - Verifies database exists and has correct schema
 2. **Creates Root User** - If no root user exists:
@@ -336,7 +336,7 @@ On first startup, TEP automatically:
    ```
 
 2. **Review CORS Settings**
-   - Edit configuration file: `C:\Program Files\TEP\config\.env`
+   - Edit configuration file: `C:\Program Files\TAP\config\.env`
    - Set `CORS_ORIGINS` to your domain
    - Example: `CORS_ORIGINS=https://yourdomain.com`
 
@@ -372,12 +372,12 @@ On first startup, TEP automatically:
 
 **To Change Port:**
 
-1. Stop TEP service
+1. Stop TAP service
 2. Edit `.env` file:
    ```env
    BACKEND_PORT=8080
    ```
-3. Restart TEP service
+3. Restart TAP service
 
 ### Firewall Rules
 
@@ -386,10 +386,10 @@ On first startup, TEP automatically:
 Allow inbound connections:
 ```powershell
 # Backend API
-netsh advfirewall firewall add rule name="TEP Backend" dir=in action=allow protocol=TCP localport=8000
+netsh advfirewall firewall add rule name="TAP Backend" dir=in action=allow protocol=TCP localport=8000
 
 # Frontend (if serving separately)
-netsh advfirewall firewall add rule name="TEP Frontend" dir=in action=allow protocol=TCP localport=4200
+netsh advfirewall firewall add rule name="TAP Frontend" dir=in action=allow protocol=TCP localport=4200
 ```
 
 **Internal Network Only:**
@@ -406,18 +406,18 @@ The database location depends on configuration:
 
 | Environment | Default Location |
 |-------------|------------------|
-| Production | `tep_prod.sqlite` (in working directory) |
-| Development | `tep_dev.sqlite` (in working directory) |
+| Production | `tap_prod.sqlite` (in working directory) |
+| Development | `tap_dev.sqlite` (in working directory) |
 | Custom | Set via `DATABASE_URL` environment variable |
 
 **Recommended Production Location:**
 ```
-C:\Program Files\TEP\data\tep_prod.sqlite
+C:\Program Files\TAP\data\tap_prod.sqlite
 ```
 
 To use a custom location, set the environment variable:
 ```cmd
-set DATABASE_URL=sqlite:///C:/ProgramData/TEP/tep.sqlite
+set DATABASE_URL=sqlite:///C:/ProgramData/TAP/tap.sqlite
 ```
 
 ### Backup Database
@@ -434,39 +434,39 @@ python scripts/backup_database.py
 python scripts/backup_database.py --compress
 
 # Custom paths
-python scripts/backup_database.py --db-path "C:\Data\tep.sqlite" --output-dir "D:\Backups"
+python scripts/backup_database.py --db-path "C:\Data\tap.sqlite" --output-dir "D:\Backups"
 
 # Cleanup old backups (keep 30 most recent)
 python scripts/backup_database.py --cleanup --keep 30
 ```
 
 **Backup Output:**
-- Uncompressed: `backups/tep_YYYYMMDD_HHMMSS.sqlite`
-- Compressed: `backups/tep_YYYYMMDD_HHMMSS.sqlite.gz`
+- Uncompressed: `backups/tap_YYYYMMDD_HHMMSS.sqlite`
+- Compressed: `backups/tap_YYYYMMDD_HHMMSS.sqlite.gz`
 
 **Manual Backup:**
 
 ```cmd
 # Stop service first (recommended but not required for SQLite)
-net stop TEPService
+net stop TAPService
 
 # Copy database
-copy "C:\Program Files\TEP\data\tep_prod.sqlite" "C:\Backups\tep_backup.sqlite"
+copy "C:\Program Files\TAP\data\tap_prod.sqlite" "C:\Backups\tap_backup.sqlite"
 
 # Restart service
-net start TEPService
+net start TAPService
 ```
 
 **Automated Backup (Task Scheduler):**
 
 1. Open Task Scheduler
 2. Create Basic Task
-3. Name: "TEP Daily Backup"
+3. Name: "TAP Daily Backup"
 4. Trigger: Daily at 2:00 AM
 5. Action: Start a program
    - Program: `python`
    - Arguments: `scripts/backup_database.py --compress --cleanup`
-   - Start in: `C:\Program Files\TEP`
+   - Start in: `C:\Program Files\TAP`
 
 ### Restore Database
 
@@ -474,32 +474,32 @@ net start TEPService
 
 ```cmd
 # Restore from backup (creates safety backup first)
-python scripts/restore_database.py backups/tep_20260113_120000.sqlite
+python scripts/restore_database.py backups/tap_20260113_120000.sqlite
 
 # Restore compressed backup (auto-detected)
-python scripts/restore_database.py backups/tep_20260113_120000.sqlite.gz
+python scripts/restore_database.py backups/tap_20260113_120000.sqlite.gz
 
 # Restore with verification
-python scripts/restore_database.py backups/tep_backup.sqlite --verify
+python scripts/restore_database.py backups/tap_backup.sqlite --verify
 
 # Skip confirmation prompt
-python scripts/restore_database.py backups/tep_backup.sqlite --force
+python scripts/restore_database.py backups/tap_backup.sqlite --force
 ```
 
 **Manual Restore:**
 
 ```cmd
 # Stop service
-net stop TEPService
+net stop TAPService
 
 # Backup current database (safety)
-copy "C:\Program Files\TEP\data\tep_prod.sqlite" "C:\Program Files\TEP\data\tep_before_restore.sqlite"
+copy "C:\Program Files\TAP\data\tap_prod.sqlite" "C:\Program Files\TAP\data\tap_before_restore.sqlite"
 
 # Restore backup
-copy "C:\Backups\tep_backup.sqlite" "C:\Program Files\TEP\data\tep_prod.sqlite"
+copy "C:\Backups\tap_backup.sqlite" "C:\Program Files\TAP\data\tap_prod.sqlite"
 
 # Restart service
-net start TEPService
+net start TAPService
 ```
 
 ### Database Initialization
@@ -511,7 +511,7 @@ net start TEPService
 python scripts/init_database.py
 
 # Custom database path
-python scripts/init_database.py --db-path "C:\Data\tep.sqlite"
+python scripts/init_database.py --db-path "C:\Data\tap.sqlite"
 
 # Initialize and verify schema
 python scripts/init_database.py --verify
@@ -538,17 +538,17 @@ python scripts/init_database.py --force
 
 **Check Integrity:**
 ```cmd
-sqlite3 "tep_prod.sqlite" "PRAGMA integrity_check;"
+sqlite3 "tap_prod.sqlite" "PRAGMA integrity_check;"
 ```
 
 **Optimize Database (Monthly):**
 ```cmd
-sqlite3 "tep_prod.sqlite" "VACUUM;"
+sqlite3 "tap_prod.sqlite" "VACUUM;"
 ```
 
 **Analyze for Query Optimization:**
 ```cmd
-sqlite3 "tep_prod.sqlite" "ANALYZE;"
+sqlite3 "tap_prod.sqlite" "ANALYZE;"
 ```
 
 ---
@@ -612,21 +612,21 @@ Response:
 
 ```cmd
 # Navigate to backend directory
-cd "C:\Program Files\TEP\backend"
+cd "C:\Program Files\TAP\backend"
 
 # Set required environment variables
 set ENVIRONMENT=production
 set ROOT_PASSWORD=YourSecurePassword123!
-set DATABASE_URL=sqlite:///tep_prod.sqlite
+set DATABASE_URL=sqlite:///tap_prod.sqlite
 
 # Run the server
-tep.exe
+tap.exe
 ```
 
 **Expected Output:**
 ```
 ============================================================
-TEP - Timeclock and Employee Payroll
+TAP - Timeclock and payroll
 ============================================================
 Environment: production
 Starting server on 0.0.0.0:8000
@@ -639,31 +639,31 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 **Running in Background (PowerShell):**
 ```powershell
-Start-Process -FilePath "C:\Program Files\TEP\backend\tep.exe" -WindowStyle Hidden
+Start-Process -FilePath "C:\Program Files\TAP\backend\tap.exe" -WindowStyle Hidden
 ```
 
-### TEP Windows Service
+### TAP Windows Service
 
-**Service Name:** `TEPService`
+**Service Name:** `TAPService`
 
 **Start Service:**
 ```cmd
-net start TEPService
+net start TAPService
 ```
 
 **Stop Service:**
 ```cmd
-net stop TEPService
+net stop TAPService
 ```
 
 **Restart Service:**
 ```cmd
-net stop TEPService && net start TEPService
+net stop TAPService && net start TAPService
 ```
 
 **Check Service Status:**
 ```cmd
-sc query TEPService
+sc query TAPService
 ```
 
 **Installing as Windows Service (using NSSM):**
@@ -672,13 +672,13 @@ If you want to run the standalone executable as a Windows service, use the inclu
 
 ```powershell
 # Run as Administrator
-cd "C:\Program Files\TEP"
+cd "C:\Program Files\TAP"
 
 # Install service (downloads NSSM automatically if needed)
-.\scripts\install-service.ps1 -InstallDir "C:\Program Files\TEP" -Port 8000
+.\scripts\install-service.ps1 -InstallDir "C:\Program Files\TAP" -Port 8000
 
 # Or with custom service name
-.\scripts\install-service.ps1 -InstallDir "C:\Program Files\TEP" -ServiceName "TEPService" -Port 8000
+.\scripts\install-service.ps1 -InstallDir "C:\Program Files\TAP" -ServiceName "TAPService" -Port 8000
 
 # Uninstall service
 .\scripts\install-service.ps1 -Uninstall
@@ -696,16 +696,16 @@ The script will:
 ```cmd
 # Download NSSM from https://nssm.cc/
 # Install service
-nssm install TEPService "C:\Program Files\TEP\backend\tep.exe"
+nssm install TAPService "C:\Program Files\TAP\backend\tap.exe"
 
 # Set working directory
-nssm set TEPService AppDirectory "C:\Program Files\TEP\backend"
+nssm set TAPService AppDirectory "C:\Program Files\TAP\backend"
 
 # Configure startup
-nssm set TEPService Start SERVICE_AUTO_START
+nssm set TAPService Start SERVICE_AUTO_START
 
 # Start service
-nssm start TEPService
+nssm start TAPService
 ```
 
 Note: Environment variables are read from the `.env` file in the backend directory, so you don't need to set them via NSSM.
@@ -714,31 +714,31 @@ Note: Environment variables are read from the `.env` file in the backend directo
 
 **Automatic Startup:**
 ```cmd
-sc config TEPService start=auto
+sc config TAPService start=auto
 ```
 
 **Manual Startup:**
 ```cmd
-sc config TEPService start=demand
+sc config TAPService start=demand
 ```
 
 **Service Recovery:**
 ```cmd
 # Restart on failure
-sc failure TEPService reset=86400 actions=restart/60000/restart/60000/restart/60000
+sc failure TAPService reset=86400 actions=restart/60000/restart/60000/restart/60000
 ```
 
 ### Logs
 
 **Service Logs Location:**
 ```
-C:\Program Files\TEP\logs\service.log
-C:\Program Files\TEP\logs\application.log
+C:\Program Files\TAP\logs\service.log
+C:\Program Files\TAP\logs\application.log
 ```
 
 **View Recent Logs:**
 ```cmd
-type "C:\Program Files\TEP\logs\application.log" | more
+type "C:\Program Files\TAP\logs\application.log" | more
 ```
 
 ---
@@ -762,16 +762,16 @@ type "C:\Program Files\TEP\logs\application.log" | more
    scripts\backup_database.exe
 
    # Backup configuration
-   copy "C:\Program Files\TEP\config\.env" "C:\Backups\tep_config_backup.env"
+   copy "C:\Program Files\TAP\config\.env" "C:\Backups\tap_config_backup.env"
    ```
 
 2. **Stop Service**
    ```cmd
-   net stop TEPService
+   net stop TAPService
    ```
 
 3. **Run Update Installer**
-   - Execute: `TEP-Update-x.x.x.exe`
+   - Execute: `TAP-Update-x.x.x.exe`
    - Follow upgrade wizard
    - Installer preserves database and configuration
 
@@ -782,7 +782,7 @@ type "C:\Program Files\TEP\logs\application.log" | more
 
 5. **Run Database Migrations** (if needed)
    ```cmd
-   cd "C:\Program Files\TEP"
+   cd "C:\Program Files\TAP"
    scripts\migrate_database.exe
    ```
 
@@ -805,7 +805,7 @@ type "C:\Program Files\TEP\logs\application.log" | more
 **Check Windows Event Viewer:**
 ```
 Event Viewer → Windows Logs → Application
-Look for errors from "TEPService"
+Look for errors from "TAPService"
 ```
 
 **Common Causes:**
@@ -820,22 +820,22 @@ Look for errors from "TEPService"
 netstat -ano | findstr :8000
 
 # Verify database integrity
-sqlite3 "C:\Program Files\TEP\data\tep.sqlite" "PRAGMA integrity_check;"
+sqlite3 "C:\Program Files\TAP\data\tap.sqlite" "PRAGMA integrity_check;"
 
 # Check file permissions
-icacls "C:\Program Files\TEP"
+icacls "C:\Program Files\TAP"
 ```
 
 ### Cannot Connect to Application
 
 **Verify Service is Running:**
 ```cmd
-sc query TEPService
+sc query TAPService
 ```
 
 **Check Firewall:**
 ```cmd
-netsh advfirewall firewall show rule name="TEP Backend"
+netsh advfirewall firewall show rule name="TAP Backend"
 ```
 
 **Test Backend API:**
@@ -843,7 +843,7 @@ netsh advfirewall firewall show rule name="TEP Backend"
 curl http://localhost:8000
 ```
 
-Expected response: `{"message": "Welcome to Timeclock and Employee Payroll!"}`
+Expected response: `{"message": "Welcome to Timeclock and payroll!"}`
 
 **Check Frontend:**
 - Navigate to: `http://localhost:4200`
@@ -903,7 +903,7 @@ Expected response: `{"message": "Welcome to Timeclock and Employee Payroll!"}`
 
 2. **Regular Vacuuming:**
    ```cmd
-   sqlite3 "C:\Program Files\TEP\data\tep.sqlite" "VACUUM;"
+   sqlite3 "C:\Program Files\TAP\data\tap.sqlite" "VACUUM;"
    ```
 
 ### Application Performance
@@ -936,9 +936,9 @@ Expected response: `{"message": "Welcome to Timeclock and Employee Payroll!"}`
 1. **File System Permissions:**
    ```cmd
    # Only allow SYSTEM and Administrators
-   icacls "C:\Program Files\TEP\data" /inheritance:r
-   icacls "C:\Program Files\TEP\data" /grant:r SYSTEM:(OI)(CI)F
-   icacls "C:\Program Files\TEP\data" /grant:r Administrators:(OI)(CI)F
+   icacls "C:\Program Files\TAP\data" /inheritance:r
+   icacls "C:\Program Files\TAP\data" /grant:r SYSTEM:(OI)(CI)F
+   icacls "C:\Program Files\TAP\data" /grant:r Administrators:(OI)(CI)F
    ```
 
 2. **Encrypt Backups:**
@@ -962,12 +962,12 @@ Expected response: `{"message": "Welcome to Timeclock and Employee Payroll!"}`
 1. **Backup Data First**
    ```cmd
    scripts\backup_database.exe
-   copy "C:\Program Files\TEP\config\.env" "C:\Backups\tep_config.env"
+   copy "C:\Program Files\TAP\config\.env" "C:\Backups\tap_config.env"
    ```
 
 2. **Run Uninstaller**
    - Control Panel → Programs → Uninstall a Program
-   - Select "TEP - Timeclock and Employee Payroll"
+   - Select "TAP - Timeclock and payroll"
    - Click Uninstall
    - Follow prompts
 
@@ -979,18 +979,18 @@ Expected response: `{"message": "Welcome to Timeclock and Employee Payroll!"}`
 
 1. Stop and remove service:
    ```cmd
-   net stop TEPService
-   sc delete TEPService
+   net stop TAPService
+   sc delete TAPService
    ```
 
 2. Remove program files:
    ```cmd
-   rmdir /s "C:\Program Files\TEP"
+   rmdir /s "C:\Program Files\TAP"
    ```
 
 3. Remove start menu shortcuts:
    ```cmd
-   del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\TEP"
+   del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\TAP"
    ```
 
 4. Remove desktop shortcut (if exists)
@@ -1011,17 +1011,17 @@ Expected response: `{"message": "Welcome to Timeclock and Employee Payroll!"}`
 - Shows: Application version, database version, license status
 
 **Log Files:**
-- Application logs: `C:\Program Files\TEP\logs\application.log`
-- Service logs: `C:\Program Files\TEP\logs\service.log`
-- Error logs: `C:\Program Files\TEP\logs\error.log`
+- Application logs: `C:\Program Files\TAP\logs\application.log`
+- Service logs: `C:\Program Files\TAP\logs\service.log`
+- Error logs: `C:\Program Files\TAP\logs\error.log`
 
 ### Contact Support
 
 When contacting support, provide:
-- TEP version number
+- TAP version number
 - Operating system version
 - Error messages (from logs)
-- Steps to reproduce issue
+- Staps to reproduce issue
 - License key (if applicable)
 
 ---
@@ -1051,9 +1051,9 @@ python scripts/build_release.py --version 1.0.0 --output-dir ./my-build
 
 **Output Structure:**
 ```
-build/TEP-1.0.0/
+build/TAP-1.0.0/
 ├── backend/           # Backend executable or source
-│   ├── tep.exe        # (executable mode)
+│   ├── tap.exe        # (executable mode)
 │   ├── _internal/     # (executable mode) bundled dependencies
 │   └── ...
 ├── frontend/          # Angular production build
@@ -1086,10 +1086,10 @@ build/TEP-1.0.0/
 
 | Script | Description |
 |--------|-------------|
-| `scripts/install-service.ps1` | Install/uninstall TEP as Windows service using NSSM |
+| `scripts/install-service.ps1` | Install/uninstall TAP as Windows service using NSSM |
 
 ---
 
 **Document Version:** 1.2
 **Last Updated:** 2026-01-27
-**Compatible with:** TEP v1.0.0+
+**Compatible with:** TAP v1.0.0+

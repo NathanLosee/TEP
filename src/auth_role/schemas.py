@@ -56,7 +56,19 @@ class AuthRoleBase(BaseModel):
     permissions: list[PermissionBase]
 
     model_config = ConfigDict(
-        str_strip_whitespace=True, str_min_length=1, populate_by_name=True
+        str_strip_whitespace=True,
+        str_min_length=1,
+        populate_by_name=True,
+        json_schema_extra={
+            "example": {
+                "name": "Manager",
+                "permissions": [
+                    {"resource": "employee.read"},
+                    {"resource": "employee.create"},
+                    {"resource": "timeclock.read"},
+                ],
+            }
+        },
     )
 
 

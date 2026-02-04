@@ -61,7 +61,8 @@ async def periodic_cleanup(interval_minutes: int = 5) -> None:
 
     """
     logger.info(
-        f"Starting periodic browser session cleanup (every {interval_minutes} minutes)"
+        "Starting periodic browser session cleanup "
+        f"(every {interval_minutes} minutes)"
     )
 
     while True:
@@ -75,6 +76,41 @@ async def periodic_cleanup(interval_minutes: int = 5) -> None:
             break
         except Exception as e:
             logger.error(f"Error during periodic cleanup: {e}")
+
+
+async def periodic_update_check() -> None:
+    """Periodically check GitHub for new TAP versions.
+
+    Only runs when GITHUB_REPO is configured and AUTO_CHECK_UPDATES is True.
+    """
+    from src.config import Settings
+    from src.updater.service import check_for_update
+
+    settings = Settings()
+    if not settings.GITHUB_REPO or not settings.AUTO_CHECK_UPDATES:
+        logger.info(
+            "Auto-update checking disabled or GITHUB_REPO not configured"
+        )
+        return
+
+    interval_hours = settings.UPDATE_CHECK_INTERVAL_HOURS
+    logger.info(
+        f"Starting periodic update check (every {interval_hours} hours)"
+    )
+
+    while True:
+        try:
+            await asyncio.sleep(interval_hours * 3600)
+            release = check_for_update(settings)
+            if release:
+                logger.info(
+                    f"New version available: {release.version}"
+                )
+        except asyncio.CancelledError:
+            logger.info("Periodic update check cancelled")
+            break
+        except Exception as e:
+            logger.error(f"Error during update check: {e}")
 
 
 def start_scheduler() -> None:

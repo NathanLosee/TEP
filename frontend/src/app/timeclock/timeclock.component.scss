@@ -217,6 +217,57 @@ input {
   }
 }
 
+// Offline status card
+.offline-status-card {
+  background-color: var(--sys-surface-container);
+
+  .offline-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+
+      &.offline-icon {
+        color: var(--sys-error);
+      }
+
+      &.syncing-icon {
+        color: var(--sys-primary);
+        animation: spin 1.5s linear infinite;
+      }
+    }
+
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      strong {
+        font-size: 1rem;
+      }
+
+      .offline-details,
+      .sync-details {
+        font-size: 0.875rem;
+        color: var(--sys-on-surface-variant);
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 // Responsive Design
 @media (max-width: 900px) {
   .timeclock-layout {

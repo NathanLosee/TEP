@@ -81,7 +81,7 @@ def test_create_holiday_group_409_name_already_exists(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS
 
 
 def test_get_holiday_groups_200(
@@ -311,7 +311,7 @@ def test_update_holiday_group_by_id_409_name_already_exists(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS
 
 
 def test_delete_holiday_group_by_id_204(

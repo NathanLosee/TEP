@@ -68,7 +68,7 @@
                 "
                 [showCreateOnEmpty]="!searchForm.get('name')?.value"
                 createButtonText="Create Auth Role"
-                createPermission="auth_role.create"
+                creatapermission="auth_role.create"
                 (actionClick)="onTableAction($event)"
                 (createClick)="addAuthRole()"
               >
@@ -81,7 +81,9 @@
                     <div class="permission-preview">
                       <mat-chip-set>
                         <mat-chip
-                          *ngFor="let permission of role.permissions.slice(0, 3)"
+                          *ngFor="
+                            let permission of role.permissions.slice(0, 3)
+                          "
                         >
                           {{ permission.resource }}
                         </mat-chip>

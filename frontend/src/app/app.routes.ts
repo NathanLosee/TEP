@@ -1,28 +1,29 @@
 import { Routes } from '@angular/router';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
-import { NavFrontpageComponent } from './nav-frontpage/nav-frontpage.component';
-import { NavAdminComponent } from './nav-admin/nav-admin.component';
-import { EmployeeManagementComponent } from './employee-management/employee-management.component';
-import { TimeclockEntriesManagementComponent } from './timeclock-entries-management/timeclock-entries-management.component';
-import { DepartmentManagementComponent } from './department-management/department-management.component';
-import { OrgUnitManagementComponent } from './org-unit-management/org-unit-management.component';
-import { HolidayGroupManagementComponent } from './holiday-group-management/holiday-group-management.component';
-import { ReportsComponent } from './reports/reports.component';
-import { UserManagementComponent } from './user-management/user-management.component';
 import { AuthRoleManagementComponent } from './auth-role-management/auth-role-management.component';
+import { DepartmentManagementComponent } from './department-management/department-management.component';
+import { EmployeeManagementComponent } from './employee-management/employee-management.component';
 import { EventLogManagementComponent } from './event-log-management/event-log-management.component';
-import { RegisteredBrowserManagementComponent } from './registered-browser-management/registered-browser-management.component';
+import { HolidayGroupManagementComponent } from './holiday-group-management/holiday-group-management.component';
 import { LicenseManagementComponent } from './license-management/license-management.component';
+import { NavAdminComponent } from './nav-admin/nav-admin.component';
+import { NavFrontpageComponent } from './nav-frontpage/nav-frontpage.component';
+import { OrgUnitManagementComponent } from './org-unit-management/org-unit-management.component';
+import { RegisteredBrowserManagementComponent } from './registered-browser-management/registered-browser-management.component';
+import { ReportsComponent } from './reports/reports.component';
 import { SystemSettingsComponent } from './system-settings/system-settings.component';
+import { TimeclockEntriesManagementComponent } from './timeclock-entries-management/timeclock-entries-management.component';
+import { UpdateManagementComponent } from './update-management/update-management.component';
+import { UserManagementComponent } from './user-management/user-management.component';
 
 export const routes: Routes = [
   {
-    title: 'TEP Timeclock - Dashboard',
+    title: 'TAP Timeclock - Dashboard',
     path: '',
     component: NavFrontpageComponent,
   },
   {
-    title: 'TEP Admin',
+    title: 'TAP Admin',
     path: 'admin',
     component: NavAdminComponent,
     children: [
@@ -96,6 +97,11 @@ export const routes: Routes = [
         title: 'System Settings',
         path: 'settings',
         component: SystemSettingsComponent,
+      },
+      {
+        title: 'System Updates',
+        path: 'updates',
+        component: UpdateManagementComponent,
       },
     ],
   },

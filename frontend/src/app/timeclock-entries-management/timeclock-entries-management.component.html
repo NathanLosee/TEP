@@ -32,88 +32,92 @@
           <!-- Filters -->
           <div class="filter-section">
             <mat-card class="filter-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filter-form">
-        <div class="filter-row">
-          <div class="date-range-section" formGroupName="dateRange">
-            <mat-form-field appearance="outline" class="date-field">
-              <mat-label>Start Date</mat-label>
-              <input
-                matInput
-                [matDatepicker]="startPicker"
-                formControlName="start"
-              />
-              <mat-datepicker-toggle
-                matSuffix
-                [for]="startPicker"
-              ></mat-datepicker-toggle>
-              <mat-datepicker #startPicker></mat-datepicker>
-            </mat-form-field>
+              <mat-card-content>
+                <form [formGroup]="filterForm" class="filter-form">
+                  <div class="filter-row">
+                    <div class="date-range-section" formGroupName="dateRange">
+                      <mat-form-field appearance="outline" class="date-field">
+                        <mat-label>Start Date</mat-label>
+                        <input
+                          matInput
+                          [matDatepicker]="startPicker"
+                          formControlName="start"
+                        />
+                        <mat-datepicker-toggle
+                          matSuffix
+                          [for]="startPicker"
+                        ></mat-datepicker-toggle>
+                        <mat-datepicker #startPicker></mat-datepicker>
+                      </mat-form-field>
 
-            <mat-form-field appearance="outline" class="date-field">
-              <mat-label>End Date</mat-label>
-              <input
-                matInput
-                [matDatepicker]="endPicker"
-                formControlName="end"
-              />
-              <mat-datepicker-toggle
-                matSuffix
-                [for]="endPicker"
-              ></mat-datepicker-toggle>
-              <mat-datepicker #endPicker></mat-datepicker>
-            </mat-form-field>
-          </div>
+                      <mat-form-field appearance="outline" class="date-field">
+                        <mat-label>End Date</mat-label>
+                        <input
+                          matInput
+                          [matDatepicker]="endPicker"
+                          formControlName="end"
+                        />
+                        <mat-datepicker-toggle
+                          matSuffix
+                          [for]="endPicker"
+                        ></mat-datepicker-toggle>
+                        <mat-datepicker #endPicker></mat-datepicker>
+                      </mat-form-field>
+                    </div>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="">All Status</mat-option>
-              <mat-option value="clocked_in">Currently Clocked In</mat-option>
-              <mat-option value="clocked_out">Completed</mat-option>
-              <mat-option value="incomplete">Incomplete</mat-option>
-            </mat-select>
-          </mat-form-field>
+                    <mat-form-field appearance="outline" class="filter-field">
+                      <mat-label>Status</mat-label>
+                      <mat-select formControlName="status">
+                        <mat-option value="">All Status</mat-option>
+                        <mat-option value="clocked_in"
+                          >Currently Clocked In</mat-option
+                        >
+                        <mat-option value="clocked_out">Completed</mat-option>
+                        <mat-option value="incomplete">Incomplete</mat-option>
+                      </mat-select>
+                    </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Badge Number</mat-label>
-            <input
-              matInput
-              formControlName="badge_number"
-              placeholder="Search by badge"
-            />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
+                    <mat-form-field appearance="outline" class="filter-field">
+                      <mat-label>Badge Number</mat-label>
+                      <input
+                        matInput
+                        formControlName="badge_number"
+                        placeholder="Search by badge"
+                      />
+                      <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>First Name</mat-label>
-            <input
-              matInput
-              formControlName="first_name"
-              placeholder="Search by first name"
-            />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
+                    <mat-form-field appearance="outline" class="filter-field">
+                      <mat-label>First Name</mat-label>
+                      <input
+                        matInput
+                        formControlName="first_name"
+                        placeholder="Search by first name"
+                      />
+                      <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>
 
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Last Name</mat-label>
-            <input
-              matInput
-              formControlName="last_name"
-              placeholder="Search by last name"
-            />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+                    <mat-form-field appearance="outline" class="filter-field">
+                      <mat-label>Last Name</mat-label>
+                      <input
+                        matInput
+                        formControlName="last_name"
+                        placeholder="Search by last name"
+                      />
+                      <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
           </div>
 
           <!-- Time Entries Table -->
           <mat-card class="table-card">
             <mat-card-header>
-              <mat-card-title>Time Entries ({{ dataSource.data.length }})</mat-card-title>
+              <mat-card-title
+                >Time Entries ({{ dataSource.data.length }})</mat-card-title
+              >
             </mat-card-header>
 
             <mat-card-content>
@@ -128,7 +132,7 @@
                 emptyMessage="Try adjusting your date range or search criteria."
                 [showCreateOnEmpty]="true"
                 createButtonText="Add Manual Entry"
-                createPermission="timeclock.create"
+                creatapermission="timeclock.create"
                 (actionClick)="onTableAction($event)"
                 (createClick)="addManualEntry()"
               >
@@ -144,10 +148,10 @@
                 <ng-template appTableCell="clock_in" let-row>
                   <div class="time-cell">
                     <div class="time-date">
-                      {{ row.clock_in | date : "MMM d, y" : userTimezone }}
+                      {{ row.clock_in | date: "MMM d, y" : userTimezone }}
                     </div>
                     <div class="time-value">
-                      {{ row.clock_in | date : "HH:mm" : userTimezone }}
+                      {{ row.clock_in | date: "HH:mm" : userTimezone }}
                     </div>
                   </div>
                 </ng-template>
@@ -156,10 +160,10 @@
                 <ng-template appTableCell="clock_out" let-row>
                   <div class="time-cell" *ngIf="row.clock_out; else noClockOut">
                     <div class="time-date">
-                      {{ row.clock_out | date : "MMM d, y" : userTimezone }}
+                      {{ row.clock_out | date: "MMM d, y" : userTimezone }}
                     </div>
                     <div class="time-value">
-                      {{ row.clock_out | date : "HH:mm" : userTimezone }}
+                      {{ row.clock_out | date: "HH:mm" : userTimezone }}
                     </div>
                   </div>
                   <ng-template #noClockOut>
@@ -174,7 +178,9 @@
                 <ng-template appTableCell="total_hours" let-row>
                   <div class="hours-cell">
                     <mat-icon class="hours-icon">timer</mat-icon>
-                    <span class="hours-value">{{ row.total_hours || 0 | number : "1.2-2" }}h</span>
+                    <span class="hours-value"
+                      >{{ row.total_hours || 0 | number: "1.2-2" }}h</span
+                    >
                   </div>
                 </ng-template>
 
@@ -182,9 +188,21 @@
                 <ng-template appTableCell="status" let-row>
                   <mat-chip [class]="getStatusClass(row.status)">
                     <mat-icon matChipAvatar>
-                      {{ row.status === "clocked_in" ? "play_circle" : row.status === "clocked_out" ? "check_circle" : "warning" }}
+                      {{
+                        row.status === "clocked_in"
+                          ? "play_circle"
+                          : row.status === "clocked_out"
+                            ? "check_circle"
+                            : "warning"
+                      }}
                     </mat-icon>
-                    {{ row.status === "clocked_in" ? "Active" : row.status === "clocked_out" ? "Complete" : "Incomplete" }}
+                    {{
+                      row.status === "clocked_in"
+                        ? "Active"
+                        : row.status === "clocked_out"
+                          ? "Complete"
+                          : "Incomplete"
+                    }}
                   </mat-chip>
                 </ng-template>
               </app-generic-table>

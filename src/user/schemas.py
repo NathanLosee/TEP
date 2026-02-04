@@ -23,6 +23,12 @@ class UserBase(BaseModel):
     badge_number: str = Field(pattern=BADGE_NUMBER_REGEX)
     password: str
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {"badge_number": "EMP001", "password": "securePass123"}
+        }
+    }
+
 
 class UserPasswordChange(UserBase):
     """Pydantic schema for user password change.
@@ -34,6 +40,16 @@ class UserPasswordChange(UserBase):
     """
 
     new_password: str
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "badge_number": "EMP001",
+                "password": "currentPass123",
+                "new_password": "newSecurePass456",
+            }
+        }
+    }
 
 
 class UserResponse(BaseModel):

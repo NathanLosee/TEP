@@ -113,7 +113,9 @@ def _get_employees_for_report(
         # Department report
         department = db.get(Department, department_id)
         # Filter out root employee (id=0)
-        return [e for e in department.employees if e.id != 0] if department else []
+        if department:
+            return [e for e in department.employees if e.id != 0]
+        return []
 
     elif org_unit_id:
         # Org unit report

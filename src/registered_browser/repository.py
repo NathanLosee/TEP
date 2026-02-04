@@ -1,4 +1,4 @@
-"""Module providing database interactivity for registered browser operations."""
+"""Database interactivity for registered browser operations."""
 
 from datetime import datetime
 from typing import Union
@@ -81,7 +81,8 @@ def get_registered_browser_by_name(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[RegisteredBrowser, None]: The retrieved browser or None if not found.
+        Union[RegisteredBrowser, None]: The retrieved browser
+            or None if not found.
 
     """
     return db.scalars(
@@ -101,7 +102,8 @@ def get_registered_browser_by_fingerprint(
         db (Session): Database session for the current request.
 
     Returns:
-        Union[RegisteredBrowser, None]: The retrieved browser or None if not found.
+        Union[RegisteredBrowser, None]: The retrieved browser
+            or None if not found.
 
     """
     return db.scalars(

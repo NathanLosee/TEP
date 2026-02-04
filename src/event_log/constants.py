@@ -16,6 +16,7 @@ from src.registered_browser.constants import (
     IDENTIFIER as REGISTERED_BROWSER_IDENTIFIER,
 )
 from src.timeclock.constants import IDENTIFIER as TIMECLOCK_IDENTIFIER
+from src.updater.constants import IDENTIFIER as UPDATER_IDENTIFIER
 from src.user.constants import IDENTIFIER as USER_IDENTIFIER
 
 IDENTIFIER = "event_log"
@@ -59,7 +60,23 @@ EVENT_LOG_MSGS = {
     },
     LICENSE_IDENTIFIER: {
         "ACTIVATE": "License {license_key} activated",
+        "REACTIVATE": (
+            "License {license_key} reactivated "
+            "(previously deactivated)"
+        ),
+        "ACTIVATE_REPLACE": (
+            "License {license_key} activated, "
+            "replacing previous license {previous_key}"
+        ),
         "DEACTIVATE": "License {license_key} deactivated",
+        "DEACTIVATE_OFFLINE": (
+            "License {license_key} deactivated "
+            "locally (license server unreachable)"
+        ),
+        "ACTIVATE_FAILED": "License activation failed: {reason}",
+        "ACTIVATE_SERVER_ERROR": (
+            "License activation failed: license server unreachable"
+        ),
     },
     ORG_UNIT_IDENTIFIER: {
         "CREATE": "Org unit {org_unit_name} created",
@@ -74,14 +91,31 @@ EVENT_LOG_MSGS = {
     TIMECLOCK_IDENTIFIER: {
         "CLOCK_IN": "Employee {badge_number} clocked in",
         "CLOCK_OUT": "Employee {badge_number} clocked out",
+        "CLOCK_IN_OFFLINE": (
+            "Employee {badge_number} clocked in"
+            " (offline sync, original: {client_timestamp})"
+        ),
+        "CLOCK_OUT_OFFLINE": (
+            "Employee {badge_number} clocked out"
+            " (offline sync, original: {client_timestamp})"
+        ),
         "UPDATE": "Timeclock entry {timeclock_entry_id} updated",
         "DELETE": "Timeclock entry {timeclock_entry_id} deleted",
+    },
+    UPDATER_IDENTIFIER: {
+        "CHECK": "Update check performed (latest: {version})",
+        "DOWNLOAD": "Update {version} downloaded",
+        "APPLY": "Update {version} apply initiated",
+        "ROLLBACK": "Rollback initiated",
     },
     USER_IDENTIFIER: {
         "LOGIN": "User {badge_number} logged in",
         "CREATE": "User account for {badge_number} created",
         "UPDATE": "User account for {badge_number} updated",
-        "UPDATE_PASSWORD": "Password updated for {badge_number} by {changed_by}",
+        "UPDATE_PASSWORD": (
+            "Password updated for {badge_number} "
+            "by {changed_by}"
+        ),
         "DELETE": "User account for {badge_number} deleted",
     },
 }

@@ -23,7 +23,10 @@ from src.holiday_group.repository import (
 )
 from src.holiday_group.schemas import HolidayGroupBase, HolidayGroupExtended
 from src.holiday_group.utils import get_holidays_for_year
-from src.services import create_event_log, requires_license, requires_permission, validate
+from src.services import (
+    create_event_log, requires_license,
+    requires_permission, validate,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["holiday_group"])
 
@@ -56,6 +59,8 @@ def create_holiday_group(
         duplicate_holiday_group is None,
         EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     holiday_group = create_holiday_group_in_db(request, db)
@@ -227,9 +232,13 @@ def update_holiday_group(
         duplicate_holiday_group is None or duplicate_holiday_group.id == id,
         EXC_MSG_HOLIDAY_GROUP_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
-    holiday_group = update_holiday_group_by_id_in_db(holiday_group, request, db)
+    holiday_group = update_holiday_group_by_id_in_db(
+        holiday_group, request, db,
+    )
     log_args = {"holiday_group_name": holiday_group.name}
     create_event_log(IDENTIFIER, "UPDATE", log_args, caller_badge, db)
     return holiday_group
@@ -264,6 +273,7 @@ def delete_holiday_group(
         len(holiday_group.employees) == 0,
         EXC_MSG_EMPLOYEES_ASSIGNED,
         status.HTTP_409_CONFLICT,
+        constraint="foreign_key",
     )
 
     delete_holiday_group_from_db(holiday_group, db)

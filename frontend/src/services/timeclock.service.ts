@@ -41,6 +41,20 @@ export class TimeclockService {
   }
 
   /**
+   * Clock in/out with an optional client timestamp (for offline sync)
+   * @param badgeNumber The employee badge number
+   * @param clientTimestamp ISO 8601 timestamp from when the punch originally occurred
+   * @returns Whether the ID was clocked in or out
+   */
+  timeclockWithTimestamp(
+    badgeNumber: string,
+    clientTimestamp?: string
+  ): Observable<Timeclock> {
+    const body = clientTimestamp ? { client_timestamp: clientTimestamp } : null;
+    return this.http.post<Timeclock>(`${this.baseUrl}/${badgeNumber}`, body);
+  }
+
+  /**
    * Check the status of an employee (clocked in or out)
    * @param employee_id The employee ID to check the status of
    * @returns The status of the employee (clocked in or out)

@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -25,11 +26,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSelectModule } from '@angular/material/select';
 import { HolidayGroup } from '../../../services/holiday-group.service';
 
 export interface HolidayFormDialogData {
@@ -75,7 +75,15 @@ export class HolidayFormDialogComponent {
   isLoading = false;
 
   // Constants for recurring holiday options
-  readonly weekdayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  readonly weekdayNames = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
   readonly weekNumbers = [
     { value: 1, label: 'First' },
     { value: 2, label: 'Second' },
@@ -84,8 +92,18 @@ export class HolidayFormDialogComponent {
     { value: 5, label: 'Last' },
   ];
   readonly monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   constructor() {
@@ -109,8 +127,14 @@ export class HolidayFormDialogComponent {
   private createHolidayFormGroup(holiday?: any): FormGroup {
     return this.formBuilder.group({
       name: [holiday?.name || '', Validators.required],
-      start_date: [holiday?.start_date ? new Date(holiday.start_date) : '', Validators.required],
-      end_date: [holiday?.end_date ? new Date(holiday.end_date) : '', Validators.required],
+      start_date: [
+        holiday?.start_date ? new Date(holiday.start_date) : '',
+        Validators.required,
+      ],
+      end_date: [
+        holiday?.end_date ? new Date(holiday.end_date) : '',
+        Validators.required,
+      ],
       is_recurring: [holiday?.is_recurring || false],
       recurrence_type: [holiday?.recurrence_type || null],
       recurrence_month: [holiday?.recurrence_month || null],
@@ -134,7 +158,7 @@ export class HolidayFormDialogComponent {
 
   getFormData(): HolidayGroup {
     const holidays = this.getHolidays().controls.map(
-      (control) => control.value
+      (control) => control.value,
     );
     holidays.forEach((holiday: any) => {
       // Convert to Date only strings

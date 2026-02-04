@@ -80,10 +80,7 @@
                 <mat-label>Org Unit</mat-label>
                 <mat-select formControlName="org_unit">
                   <mat-option value="">All Units</mat-option>
-                  <mat-option
-                    *ngFor="let unit of orgUnits"
-                    [value]="unit.name"
-                  >
+                  <mat-option *ngFor="let unit of orgUnits" [value]="unit.name">
                     {{ unit.name }}
                   </mat-option>
                 </mat-select>
@@ -120,7 +117,7 @@
                 emptyMessage="Try adjusting your search criteria or add a new employee."
                 [showCreateOnEmpty]="true"
                 createButtonText="Add First Employee"
-                createPermission="employee.create"
+                creatapermission="employee.create"
                 (actionClick)="onTableAction($event)"
                 (createClick)="addEmployee()"
               >

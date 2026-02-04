@@ -6,13 +6,29 @@ Classes:
 """
 
 from datetime import datetime
-from typing import Union
+from typing import Optional, Union
 
 from fastapi import status
 from pydantic import BaseModel, Field, model_validator
 
 from src.services import validate
 from src.timeclock.constants import EXC_MSG_CLOCK_OUT_BEFORE_CLOCK_IN
+
+
+class TimeclockPunchRequest(BaseModel):
+    """Optional request body for clock in/out punches.
+
+    When provided, client_timestamp is used instead of server time.
+    This supports offline punch sync where the original punch time
+    must be preserved.
+
+    Attributes:
+        client_timestamp (Optional[datetime]): Original
+            punch timestamp from client.
+
+    """
+
+    client_timestamp: Optional[datetime] = Field(default=None)
 
 
 class TimeclockEntryCreate(BaseModel):
@@ -28,6 +44,16 @@ class TimeclockEntryCreate(BaseModel):
     badge_number: str
     clock_in: datetime
     clock_out: Union[datetime, None] = Field(default=None)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "badge_number": "EMP001",
+                "clock_in": "2025-01-15T08:00:00",
+                "clock_out": "2025-01-15T17:00:00",
+            }
+        }
+    }
 
     @model_validator(mode="after")
     def check_datetimes(self):

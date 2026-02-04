@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -14,14 +16,16 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { interval, Subscription } from 'rxjs';
-import { TimeclockService, TimeclockEntry } from '../../services/timeclock.service';
 import { BrowserUuidService } from '../../services/browser-uuid.service';
+import { OfflineQueueService } from '../../services/offline-queue.service';
 import { RegisteredBrowserService } from '../../services/registered-browser.service';
+import {
+  TimeclockEntry,
+  TimeclockService,
+} from '../../services/timeclock.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 interface CalendarDay {
@@ -52,6 +56,7 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   private timeclockService = inject(TimeclockService);
   private browserUuidService = inject(BrowserUuidService);
   private registeredBrowserService = inject(RegisteredBrowserService);
+  private offlineQueueService = inject(OfflineQueueService);
   private clockSubscription?: Subscription;
   readonly dialog = inject(MatDialog);
   readonly errorDialog = inject(ErrorDialogComponent);
@@ -60,6 +65,8 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   badgeNumber: string;
   isBrowserRegistered = false;
   browserName: string | null = null;
+  pendingCount = 0;
+  isOffline = false;
 
   // Recovery form state
   showRecoveryForm = false;
@@ -77,6 +84,14 @@ export class TimeclockComponent implements OnInit, OnDestroy {
     this.clockSubscription = timer.subscribe(() => {
       this.currentDateAndTime = Date.now();
     });
+
+    // Subscribe to offline queue state
+    this.offlineQueueService.pendingCount$.subscribe(
+      (count) => (this.pendingCount = count),
+    );
+    this.offlineQueueService.isOffline$.subscribe(
+      (offline) => (this.isOffline = offline),
+    );
 
     // Check browser registration status
     await this.checkBrowserRegistration();
@@ -101,7 +116,7 @@ export class TimeclockComponent implements OnInit, OnDestroy {
             if (response.restored && response.browser_uuid) {
               this.browserUuidService.setBrowserUuid(
                 response.browser_uuid,
-                response.browser_name
+                response.browser_name,
               );
             }
           },
@@ -126,19 +141,45 @@ export class TimeclockComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Clock in/out for the employee ID
+   * Clock in/out for the employee ID, with offline fallback
    */
   clockInOut() {
+    if (this.isOffline) {
+      this.queueOfflinePunch();
+      return;
+    }
+
     this.timeclockService.timeclock(this.badgeNumber).subscribe({
       next: (response) => {
-        console.log(response);
         this.openTimeclockDialog(this.badgeNumber, response.message);
         this.badgeNumber = '';
       },
       error: (error) => {
-        this.errorDialog.openErrorDialog('Failed to clock in/out', error);
+        if (this.isNetworkError(error)) {
+          this.queueOfflinePunch();
+        } else {
+          this.errorDialog.openErrorDialog('Failed to clock in/out', error);
+        }
       },
     });
+  }
+
+  private queueOfflinePunch() {
+    this.offlineQueueService.enqueue(this.badgeNumber).then(() => {
+      this.openTimeclockDialog(
+        this.badgeNumber,
+        'Punch queued (offline)',
+      );
+      this.badgeNumber = '';
+    });
+  }
+
+  private isNetworkError(error: unknown): boolean {
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = (error as { status: number }).status;
+      return status === 0 || status === undefined;
+    }
+    return error instanceof TypeError;
   }
 
   /**
@@ -181,7 +222,8 @@ export class TimeclockComponent implements OnInit, OnDestroy {
 
       // Check if this UUID conflicts with current session
       if (this.browserUuidService.isUuidInActiveSession(formattedCode)) {
-        this.recoveryError = 'This browser ID is already in use in another browser session on this device.';
+        this.recoveryError =
+          'This browser ID is already in use in another browser session on this device.';
         this.isRecovering = false;
         return;
       }
@@ -200,7 +242,7 @@ export class TimeclockComponent implements OnInit, OnDestroy {
             // Save recovered UUID to localStorage and sessionStorage
             this.browserUuidService.setBrowserUuid(
               response.browser_uuid,
-              response.browser_name
+              response.browser_name,
             );
 
             // Update UI state
@@ -212,7 +254,9 @@ export class TimeclockComponent implements OnInit, OnDestroy {
             this.recoveryError = null;
 
             // Show success message
-            alert(`Browser registration recovered successfully!\nBrowser: ${response.browser_name}`);
+            alert(
+              `Browser registration recovered successfully!\nBrowser: ${response.browser_name}`,
+            );
           },
           error: (error) => {
             console.error('Recovery failed:', error);
@@ -220,11 +264,14 @@ export class TimeclockComponent implements OnInit, OnDestroy {
 
             // Display user-friendly error message
             if (error.status === 404) {
-              this.recoveryError = 'Browser ID not found or browser is inactive.';
+              this.recoveryError =
+                'Browser ID not found or browser is inactive.';
             } else if (error.status === 400) {
-              this.recoveryError = 'Invalid browser ID format. Expected: WORD-WORD-WORD-NUMBER';
+              this.recoveryError =
+                'Invalid browser ID format. Expected: WORD-WORD-WORD-NUMBER';
             } else {
-              this.recoveryError = 'Recovery failed. Please check your browser ID and try again.';
+              this.recoveryError =
+                'Recovery failed. Please check your browser ID and try again.';
             }
           },
         });
@@ -355,7 +402,11 @@ export class TimeclockHistoryDialog implements OnInit {
               const entryDate = new Date(entry.clock_in);
               return entryDate < min ? entryDate : min;
             }, new Date(entries[0].clock_in));
-            this.earliestEntry = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
+            this.earliestEntry = new Date(
+              earliest.getFullYear(),
+              earliest.getMonth(),
+              1,
+            );
           }
 
           this.generateCalendar();
@@ -365,7 +416,7 @@ export class TimeclockHistoryDialog implements OnInit {
         error: (error) => {
           this.errorDialog.openErrorDialog(
             'Failed to load timeclock history',
-            error
+            error,
           );
           this.isLoading = false;
         },
@@ -393,7 +444,8 @@ export class TimeclockHistoryDialog implements OnInit {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    for (let i = 0; i < 42; i++) { // 6 weeks max
+    for (let i = 0; i < 42; i++) {
+      // 6 weeks max
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
 
@@ -401,7 +453,7 @@ export class TimeclockHistoryDialog implements OnInit {
       const isToday = currentDate.getTime() === today.getTime();
 
       // Find entries for this day
-      const dayEntries = this.allEntries.filter(entry => {
+      const dayEntries = this.allEntries.filter((entry) => {
         const entryDate = new Date(entry.clock_in);
         entryDate.setHours(0, 0, 0, 0);
         return entryDate.getTime() === currentDate.getTime();
@@ -420,7 +472,7 @@ export class TimeclockHistoryDialog implements OnInit {
     this.currentMonth = new Date(
       this.currentMonth.getFullYear(),
       this.currentMonth.getMonth() - 1,
-      1
+      1,
     );
     this.generateCalendar();
     this.updateNavigationState();
@@ -430,7 +482,7 @@ export class TimeclockHistoryDialog implements OnInit {
     this.currentMonth = new Date(
       this.currentMonth.getFullYear(),
       this.currentMonth.getMonth() + 1,
-      1
+      1,
     );
     this.generateCalendar();
     this.updateNavigationState();
@@ -462,7 +514,7 @@ export class TimeclockHistoryDialog implements OnInit {
       this.currentMonth = new Date(
         selectedDate.getFullYear(),
         selectedDate.getMonth(),
-        1
+        1,
       );
       this.generateCalendar();
       this.updateNavigationState();

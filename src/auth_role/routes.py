@@ -67,6 +67,8 @@ def create_auth_role(
         duplicate_auth_role is None,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     auth_role = create_auth_role_in_db(request, db)
@@ -117,6 +119,8 @@ def create_auth_role_membership(
         user not in auth_role.users,
         EXC_MSG_USER_IS_MEMBER,
         status.HTTP_409_CONFLICT,
+        field="user_id",
+        constraint="membership",
     )
 
     auth_role = create_membership(auth_role_id, user_id, db)
@@ -255,6 +259,8 @@ def update_auth_role(
         duplicate_auth_role is None or duplicate_auth_role.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     auth_role = update_auth_role_in_db(auth_role, request, db)
@@ -289,6 +295,7 @@ def delete_auth_role(
         len(auth_role.users) == 0,
         EXC_MSG_USERS_ASSIGNED,
         status.HTTP_409_CONFLICT,
+        constraint="foreign_key",
     )
 
     delete_auth_role_from_db(auth_role, db)

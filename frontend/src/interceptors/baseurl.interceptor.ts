@@ -2,7 +2,7 @@ import { HttpEvent, HttpHandlerFn, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
-const BROWSER_UUID_KEY = 'tep_browser_uuid';
+const BROWSER_UUID_KEY = 'tap_browser_uuid';
 
 export function baseUrlInterceptor(
   req: HttpRequest<unknown>,

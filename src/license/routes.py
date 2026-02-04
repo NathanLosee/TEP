@@ -2,6 +2,7 @@
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Security, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.database import get_db
@@ -71,7 +72,8 @@ def activate_license(
     request: LicenseActivate,
     db: Session = Depends(get_db),
     caller_badge: str = Security(
-        requires_permission, scopes=["auth_role.create"]  # Only admins can activate
+        requires_permission,
+        scopes=["auth_role.create"],  # Only admins
     ),
 ):
     """Activate a new license.
@@ -113,8 +115,10 @@ def activate_license(
     # Get machine ID for activation
     machine_id = get_machine_id()
 
-    # Track if we're reactivating an existing license
+    # Track previous state for audit trail
     is_reactivation = existing_license is not None
+    previous_license = get_active_license(db)
+    previous_key = previous_license.license_key if previous_license else None
 
     # Contact the license server to activate
     try:
@@ -127,6 +131,10 @@ def activate_license(
                 },
             )
     except httpx.RequestError:
+        # Log the server communication failure
+        create_event_log(
+            IDENTIFIER, "ACTIVATE_SERVER_ERROR", {}, caller_badge, db
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=EXC_MSG_LICENSE_SERVER_ERROR,
@@ -141,6 +149,14 @@ def activate_license(
                 error_detail = error_data["detail"]
         except Exception:
             pass
+        # Log the failed activation attempt
+        create_event_log(
+            IDENTIFIER,
+            "ACTIVATE_FAILED",
+            {"reason": error_detail},
+            caller_badge,
+            db,
+        )
         raise HTTPException(
             status_code=response.status_code,
             detail=error_detail,
@@ -154,23 +170,60 @@ def activate_license(
     deactivate_all_licenses(db)
 
     # Create or reactivate license locally with the activation key
-    if is_reactivation:
-        # Reactivate existing license record
-        license_obj = reactivate_license_in_db(
-            existing_license, activation_key, db
+    try:
+        if is_reactivation:
+            # Reactivate existing license record
+            license_obj = reactivate_license_in_db(
+                existing_license, activation_key, db
+            )
+        else:
+            # Create new license record
+            license_obj = create_license_in_db(
+                normalized_key, activation_key, db
+            )
+    except IntegrityError:
+        # Another concurrent request already created this license
+        db.rollback()
+        existing = get_license_by_key(normalized_key, db)
+        if existing and existing.is_active:
+            set_license_activated(True)
+            return existing
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="License activation conflict",
         )
-    else:
-        # Create new license record
-        license_obj = create_license_in_db(normalized_key, activation_key, db)
 
     # Update global activation state
     set_license_activated(True)
 
-    # Log the activation
-    log_args = {
-        "license_key": license_obj.license_key,
-    }
-    create_event_log(IDENTIFIER, "ACTIVATE", log_args, caller_badge, db)
+    # Log with appropriate detail based on context
+    if is_reactivation:
+        create_event_log(
+            IDENTIFIER,
+            "REACTIVATE",
+            {"license_key": license_obj.license_key},
+            caller_badge,
+            db,
+        )
+    elif previous_key and previous_key != license_obj.license_key:
+        create_event_log(
+            IDENTIFIER,
+            "ACTIVATE_REPLACE",
+            {
+                "license_key": license_obj.license_key,
+                "previous_key": previous_key,
+            },
+            caller_badge,
+            db,
+        )
+    else:
+        create_event_log(
+            IDENTIFIER,
+            "ACTIVATE",
+            {"license_key": license_obj.license_key},
+            caller_badge,
+            db,
+        )
 
     return license_obj
 
@@ -182,7 +235,8 @@ def activate_license(
 def deactivate_current_license(
     db: Session = Depends(get_db),
     caller_badge: str = Security(
-        requires_permission, scopes=["auth_role.delete"]  # Only admins can deactivate
+        requires_permission,
+        scopes=["auth_role.delete"],  # Only admins
     ),
 ):
     """Deactivate the current license.
@@ -207,6 +261,7 @@ def deactivate_current_license(
 
     # Try to deactivate on license server (best effort)
     machine_id = get_machine_id()
+    server_notified = True
     try:
         with httpx.Client(timeout=10.0) as client:
             client.post(
@@ -218,7 +273,7 @@ def deactivate_current_license(
             )
     except httpx.RequestError:
         # License server unreachable, continue with local deactivation
-        pass
+        server_notified = False
 
     # Deactivate the license locally
     deactivate_license_in_db(license_obj, db)
@@ -226,8 +281,11 @@ def deactivate_current_license(
     # Update global activation state
     set_license_activated(False)
 
-    # Log the deactivation
-    log_args = {
-        "license_key": license_obj.license_key,
-    }
-    create_event_log(IDENTIFIER, "DEACTIVATE", log_args, caller_badge, db)
+    # Log with context about whether server was notified
+    log_args = {"license_key": license_obj.license_key}
+    if server_notified:
+        create_event_log(IDENTIFIER, "DEACTIVATE", log_args, caller_badge, db)
+    else:
+        create_event_log(
+            IDENTIFIER, "DEACTIVATE_OFFLINE", log_args, caller_badge, db
+        )

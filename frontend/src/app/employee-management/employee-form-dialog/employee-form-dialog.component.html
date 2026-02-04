@@ -15,7 +15,9 @@
             formControlName="badge_number"
             placeholder="Enter badge number"
           />
-          <mat-error *ngIf="employeeForm.get('badge_number')?.hasError('required')">
+          <mat-error
+            *ngIf="employeeForm.get('badge_number')?.hasError('required')"
+          >
             Badge number is required
           </mat-error>
         </mat-form-field>
@@ -27,7 +29,9 @@
             formControlName="first_name"
             placeholder="Enter first name"
           />
-          <mat-error *ngIf="employeeForm.get('first_name')?.hasError('required')">
+          <mat-error
+            *ngIf="employeeForm.get('first_name')?.hasError('required')"
+          >
             First name is required
           </mat-error>
         </mat-form-field>
@@ -39,7 +43,9 @@
             formControlName="last_name"
             placeholder="Enter last name"
           />
-          <mat-error *ngIf="employeeForm.get('last_name')?.hasError('required')">
+          <mat-error
+            *ngIf="employeeForm.get('last_name')?.hasError('required')"
+          >
             Last name is required
           </mat-error>
         </mat-form-field>
@@ -55,7 +61,9 @@
             <mat-option value="hourly">Hourly</mat-option>
             <mat-option value="salary">Salary</mat-option>
           </mat-select>
-          <mat-error *ngIf="employeeForm.get('payroll_type')?.hasError('required')">
+          <mat-error
+            *ngIf="employeeForm.get('payroll_type')?.hasError('required')"
+          >
             Payroll type is required
           </mat-error>
         </mat-form-field>
@@ -66,7 +74,9 @@
             <mat-option value="standard">Standard</mat-option>
             <mat-option value="flexible">Flexible</mat-option>
           </mat-select>
-          <mat-error *ngIf="employeeForm.get('workweek_type')?.hasError('required')">
+          <mat-error
+            *ngIf="employeeForm.get('workweek_type')?.hasError('required')"
+          >
             Workweek type is required
           </mat-error>
         </mat-form-field>
@@ -94,7 +104,9 @@
               {{ orgUnit.name }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="employeeForm.get('org_unit_id')?.hasError('required')">
+          <mat-error
+            *ngIf="employeeForm.get('org_unit_id')?.hasError('required')"
+          >
             Organization unit is required
           </mat-error>
         </mat-form-field>
@@ -117,7 +129,9 @@
               <span class="manager-name">
                 {{ selectedManager.first_name }} {{ selectedManager.last_name }}
               </span>
-              <span class="manager-badge">#{{ selectedManager.badge_number }}</span>
+              <span class="manager-badge"
+                >#{{ selectedManager.badge_number }}</span
+              >
               <button
                 mat-icon-button
                 (click)="clearManager(); $event.stopPropagation()"
@@ -172,6 +186,8 @@
       diameter="20"
       mode="indeterminate"
     ></mat-progress-spinner>
-    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Employee' }}</span>
+    <span *ngIf="!isLoading">{{
+      isEditMode ? "Save Changes" : "Create Employee"
+    }}</span>
   </button>
 </mat-dialog-actions>

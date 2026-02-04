@@ -1,4 +1,4 @@
-# TEP - Timeclock and Employee Payroll
+# TAP - Timeclock and payroll
 
 REST API and web application for employee timeclock management and payroll processing. Supports employee clocking in/out, report generation, organizational structure management, and comprehensive administrative features.
 
@@ -171,7 +171,7 @@ npm test -- --watch=false --browsers=ChromeHeadless
 ## Project Structure
 
 ```
-TEP/
+TAP/
 ├── src/                          # Backend source code
 │   ├── auth_role/               # Role-based access control
 │   ├── department/              # Department management
@@ -206,11 +206,11 @@ TEP/
 ├── tools/                       # Development/admin tools
 │   └── license_generator.py    # License key generation
 ├── installer/                   # NSIS Windows installer
-│   ├── tep-installer.nsi       # NSIS installer script
+│   ├── tap-installer.nsi       # NSIS installer script
 │   └── favicon.ico             # Installer icon
 ├── alembic/                    # Database migrations
 ├── run_server.py               # Server entry point (for PyInstaller)
-├── tep.spec                    # PyInstaller build specification
+├── tap.spec                    # PyInstaller build specification
 ├── pyproject.toml              # Poetry dependencies
 ├── .env.example                # Environment configuration template
 ├── README.md                   # This file
@@ -292,9 +292,9 @@ python scripts/build_release.py --version 1.0.0 --executable --skip-tests
 ### Build Output
 
 The build creates:
-- `build/TEP-{version}/` - Complete release package
-- `releases/TEP-{version}.zip` - Distribution archive
-- `releases/TEP-Setup-{version}.exe` - Windows installer (with `--installer` flag)
+- `build/TAP-{version}/` - Complete release package
+- `releases/TAP-{version}.zip` - Distribution archive
+- `releases/TAP-Setup-{version}.exe` - Windows installer (with `--installer` flag)
 
 Package contents:
 - `backend/` - Backend executable or source code
@@ -307,14 +307,14 @@ Package contents:
 
 ```bash
 # Navigate to backend directory
-cd build/TEP-1.0.0/backend
+cd build/TAP-1.0.0/backend
 
 # Set environment (Windows)
 set ENVIRONMENT=production
 set ROOT_PASSWORD=YourSecurePassword123
 
 # Run server
-tep.exe
+tap.exe
 ```
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -356,7 +356,7 @@ The project uses:
 | `ENVIRONMENT` | `development` | Environment mode (development, production, test) |
 | `CORS_ORIGINS` | `http://localhost:4200` | Allowed CORS origins (comma-separated) |
 | `ROOT_PASSWORD` | *(required in production)* | Root user password (auto-generated in dev if not set) |
-| `DATABASE_URL` | `sqlite:///tep.sqlite` | Database connection string |
+| `DATABASE_URL` | `sqlite:///tap.sqlite` | Database connection string |
 | `JWT_KEY_PASSWORD` | *(optional)* | Password to encrypt JWT RSA private key |
 | `BACKEND_PORT` | `8000` | Backend server port |
 

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
-const BROWSER_UUID_KEY = 'tep_browser_uuid';
-const BROWSER_NAME_KEY = 'tep_browser_name';
-const SESSION_UUID_KEY = 'tep_session_uuid'; // For duplicate detection
+const BROWSER_UUID_KEY = 'tap_browser_uuid';
+const BROWSER_NAME_KEY = 'tap_browser_name';
+const SESSION_UUID_KEY = 'tap_session_uuid'; // For duplicate detection
 
 /**
  * Service for managing browser UUID, name, and fingerprint

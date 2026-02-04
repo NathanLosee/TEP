@@ -5,5 +5,11 @@
 <mat-dialog-content>
   <div class="timeclock-content">
     <p>{{ data.timeclockStatus }}</p>
+    @if (data.timeclockStatus === 'Punch queued (offline)') {
+      <div class="offline-note">
+        <mat-icon>cloud_off</mat-icon>
+        <span>Will sync when connection returns</span>
+      </div>
+    }
   </div>
 </mat-dialog-content>

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "tep-frontend": {
+    "tap-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -39,7 +39,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/tep-frontend",
+            "outputPath": "dist/tap-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -92,10 +92,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "tep-frontend:build:production"
+              "buildTarget": "tap-frontend:build:production"
             },
             "development": {
-              "buildTarget": "tep-frontend:build:development"
+              "buildTarget": "tap-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -127,11 +127,11 @@
         "e2e": {
           "builder": "playwright-ng-schematics:playwright",
           "options": {
-            "devServerTarget": "tep-frontend:serve"
+            "devServerTarget": "tap-frontend:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "tep-frontend:serve:production"
+              "devServerTarget": "tap-frontend:serve:production"
             }
           }
         }

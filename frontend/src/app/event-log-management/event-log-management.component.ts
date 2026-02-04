@@ -150,13 +150,13 @@ export class EventLogManagementComponent implements OnInit {
         startTimestamp,
         endTimestamp,
         formValue.badgeNumber || undefined,
-        formValue.logFilter || undefined
+        formValue.logFilter || undefined,
       )
       .subscribe({
         next: (logs) => {
           this.eventLogs = logs.sort(
             (a, b) =>
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
           );
           this.filteredEventLogs = this.eventLogs;
           this.isLoading = false;

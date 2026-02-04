@@ -112,5 +112,9 @@ def get_logo(db: Session) -> Optional[Tuple[bytes, str, str]]:
     """
     settings = get_settings(db)
     if settings.logo_data:
-        return (settings.logo_data, settings.logo_mime_type, settings.logo_filename)
+        return (
+            settings.logo_data,
+            settings.logo_mime_type,
+            settings.logo_filename,
+        )
     return None

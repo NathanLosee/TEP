@@ -6,11 +6,19 @@
 
   <mat-dialog-content>
     <div class="calendar-header">
-      <button mat-icon-button (click)="previousMonth()" [disabled]="!canGoPrevious">
+      <button
+        mat-icon-button
+        (click)="previousMonth()"
+        [disabled]="!canGoPrevious"
+      >
         <mat-icon>chevron_left</mat-icon>
       </button>
 
-      <button mat-button (click)="openMonthYearPicker()" class="month-year-selector">
+      <button
+        mat-button
+        (click)="openMonthYearPicker()"
+        class="month-year-selector"
+      >
         <span>{{ currentMonth | date: 'MMMM yyyy' }}</span>
         <mat-icon>arrow_drop_down</mat-icon>
       </button>
@@ -22,25 +30,25 @@
 
     <!-- Month/Year Picker (hidden by default) -->
     @if (showMonthYearPicker) {
-      <div class="month-year-picker">
-        <mat-form-field appearance="outline">
-          <mat-label>Select Month and Year</mat-label>
-          <input
-            matInput
-            [matDatepicker]="picker"
-            [(ngModel)]="selectedMonthYear"
-            (dateChange)="onMonthYearSelected($event)"
-            readonly
-          />
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker
-            #picker
-            startView="year"
-            (monthSelected)="onMonthYearSelected($event)"
-            panelClass="month-picker"
-          ></mat-datepicker>
-        </mat-form-field>
-      </div>
+    <div class="month-year-picker">
+      <mat-form-field appearance="outline">
+        <mat-label>Select Month and Year</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [(ngModel)]="selectedMonthYear"
+          (dateChange)="onMonthYearSelected($event)"
+          readonly
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker
+          #picker
+          startView="year"
+          (monthSelected)="onMonthYearSelected($event)"
+          panelClass="month-picker"
+        ></mat-datepicker>
+      </mat-form-field>
+    </div>
     }
 
     <!-- Calendar Grid -->
@@ -59,49 +67,52 @@
       <!-- Calendar Days -->
       <div class="calendar-days">
         @for (day of calendarDays; track day.date.getTime()) {
-          <div
-            class="calendar-day"
-            [class.other-month]="!day.isCurrentMonth"
-            [class.today]="day.isToday"
-            [class.has-entries]="day.entries.length > 0"
-          >
-            <div class="day-number">{{ day.date.getDate() }}</div>
+        <div
+          class="calendar-day"
+          [class.other-month]="!day.isCurrentMonth"
+          [class.today]="day.isToday"
+          [class.has-entries]="day.entries.length > 0"
+        >
+          <div class="day-number">{{ day.date.getDate() }}</div>
 
-            @if (day.entries.length > 0) {
-              <div class="day-entries">
-                @for (entry of day.entries; track entry.id) {
-                  <div class="entry-summary" [class.active]="!entry.clock_out">
-                    <div class="entry-time">
-                      <mat-icon class="time-icon">login</mat-icon>
-                      <span>{{ entry.clock_in | date: 'HH:mm' }}</span>
-                    </div>
-                    @if (entry.clock_out) {
-                      <div class="entry-time">
-                        <mat-icon class="time-icon">logout</mat-icon>
-                        <span>{{ entry.clock_out | date: 'HH:mm' }}</span>
-                      </div>
-                      <div class="entry-duration">
-                        {{ calculateDuration(entry.clock_in, entry.clock_out) }}
-                      </div>
-                    } @else {
-                      <div class="entry-active">
-                        <mat-icon>schedule</mat-icon>
-                        <span>Active</span>
-                      </div>
-                    }
-                  </div>
-                }
+          @if (day.entries.length > 0) {
+          <div class="day-entries">
+            @for (entry of day.entries; track entry.id) {
+            <div class="entry-summary" [class.active]="!entry.clock_out">
+              <div class="entry-time">
+                <mat-icon class="time-icon">login</mat-icon>
+                <span>{{ entry.clock_in | date: 'HH:mm' }}</span>
               </div>
+              @if (entry.clock_out) {
+              <div class="entry-time">
+                <mat-icon class="time-icon">logout</mat-icon>
+                <span>{{ entry.clock_out | date: 'HH:mm' }}</span>
+              </div>
+              <div class="entry-duration">
+                {{ calculateDuration(entry.clock_in, entry.clock_out) }}
+              </div>
+              } @else {
+              <div class="entry-active">
+                <mat-icon>schedule</mat-icon>
+                <span>Active</span>
+              </div>
+              }
+            </div>
             }
           </div>
+          }
+        </div>
         }
       </div>
     </div>
 
     @if (isLoading) {
-      <div class="loading-overlay">
-        <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
-      </div>
+    <div class="loading-overlay">
+      <mat-progress-spinner
+        mode="indeterminate"
+        diameter="50"
+      ></mat-progress-spinner>
+    </div>
     }
   </mat-dialog-content>
 

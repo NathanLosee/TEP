@@ -32,7 +32,7 @@ def generate_pdf_report(
     report: ReportResponse,
     detail_level: str = DETAIL_LEVEL_SUMMARY,
     logo_data: Optional[Tuple[bytes, str, str]] = None,
-    company_name: str = "TEP Timeclock",
+    company_name: str = "TAP Timeclock",
 ) -> BytesIO:
     """Generate a PDF report from report data.
 
@@ -100,7 +100,9 @@ def generate_pdf_report(
         )
     elif report.report_type == REPORT_TYPE_ORG_UNIT and report.filter_name:
         elements.append(
-            Paragraph(f"Organizational Unit: {report.filter_name}", subtitle_style)
+            Paragraph(
+                f"Organizational Unit: {report.filter_name}", subtitle_style
+            )
         )
 
     # Report metadata
@@ -147,7 +149,8 @@ def generate_pdf_report(
                 )
 
             # For single employee, no page break needed before content
-            # For multiple employees, add page break before each employee section
+            # For multiple employees, add page break before
+            # each employee section
             if not is_single_employee:
                 elements.append(PageBreak())
 
@@ -181,7 +184,7 @@ def generate_pdf_report(
                     width=watermark_size,
                     height=watermark_size,
                     preserveAspectRatio=True,
-                    mask='auto',
+                    mask="auto",
                 )
             except Exception:
                 pass  # Skip watermark if image fails
@@ -206,14 +209,23 @@ def _add_summary_section(elements, report: ReportResponse, styles):
     """
     elements.append(
         Paragraph(
-            "Summary", ParagraphStyle("SectionTitle", parent=styles["Heading2"])
+            "Summary",
+            ParagraphStyle("SectionTitle", parent=styles["Heading2"]),
         )
     )
     elements.append(Spacer(1, 0.2 * inch))
 
     # Summary table data
     summary_data = [
-        ["Employee", "Badge #", "Total Hours", "Regular", "Overtime", "Holiday", "Days Worked"]
+        [
+            "Employee",
+            "Badge #",
+            "Total Hours",
+            "Regular",
+            "Overtime",
+            "Holiday",
+            "Days Worked",
+        ]
     ]
 
     # Handle empty employee list
@@ -254,7 +266,18 @@ def _add_summary_section(elements, report: ReportResponse, styles):
     )
 
     # Create table
-    table = Table(summary_data, colWidths=[1.5 * inch, 0.9 * inch, 0.9 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch, 1 * inch])
+    table = Table(
+        summary_data,
+        colWidths=[
+            1.5 * inch,
+            0.9 * inch,
+            0.9 * inch,
+            0.8 * inch,
+            0.8 * inch,
+            0.8 * inch,
+            1 * inch,
+        ],
+    )
     table.setStyle(
         TableStyle(
             [
@@ -287,11 +310,15 @@ def _add_employee_summary_section(
 
     """
     section_title = ParagraphStyle(
-        "EmployeeSection", parent=styles["Heading2"], textColor=colors.HexColor("#1976d2")
+        "EmployeeSection",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#1976d2"),
     )
     elements.append(
         Paragraph(
-            f"Employee: {employee_data.first_name} {employee_data.last_name} ({employee_data.badge_number})",
+            f"Employee: {employee_data.first_name} "
+            f"{employee_data.last_name} "
+            f"({employee_data.badge_number})",
             section_title,
         )
     )
@@ -341,7 +368,9 @@ def _add_employee_detailed_section(
 
     """
     section_title = ParagraphStyle(
-        "DetailedSection", parent=styles["Heading3"], textColor=colors.HexColor("#424242")
+        "DetailedSection",
+        parent=styles["Heading3"],
+        textColor=colors.HexColor("#424242"),
     )
     elements.append(
         Paragraph(
@@ -362,7 +391,8 @@ def _add_employee_detailed_section(
         )
         elements.append(
             Paragraph(
-                f"{month.year}-{month.month:02d} (Total: {month.total_hours:.2f} hours)",
+                f"{month.year}-{month.month:02d} "
+                f"(Total: {month.total_hours:.2f} hours)",
                 month_title,
             )
         )
@@ -389,12 +419,18 @@ def _add_employee_detailed_section(
                 )
 
         month_table = Table(
-            month_data, colWidths=[1.2 * inch, 1.8 * inch, 1.8 * inch, 0.8 * inch]
+            month_data,
+            colWidths=[1.2 * inch, 1.8 * inch, 1.8 * inch, 0.8 * inch],
         )
         month_table.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#64b5f6")),
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#64b5f6"),
+                    ),
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),

@@ -3,12 +3,12 @@ import { BrowserUuidService } from './browser-uuid.service';
 
 describe('BrowserUuidService', () => {
   let service: BrowserUuidService;
-  const BROWSER_UUID_KEY = 'tep_browser_uuid';
-  const BROWSER_NAME_KEY = 'tep_browser_name';
+  const BROWSER_UUID_KEY = 'tap_browser_uuid';
+  const BROWSER_NAME_KEY = 'tap_browser_name';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [BrowserUuidService]
+      providers: [BrowserUuidService],
     });
     service = TestBed.inject(BrowserUuidService);
 
@@ -57,7 +57,7 @@ describe('BrowserUuidService', () => {
     });
 
     it('should handle browser names with special characters', () => {
-      const browserName = 'Firefox - John\'s Laptop (2024)';
+      const browserName = "Firefox - John's Laptop (2024)";
       localStorage.setItem(BROWSER_NAME_KEY, browserName);
 
       expect(service.getBrowserName()).toBe(browserName);

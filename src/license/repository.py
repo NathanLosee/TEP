@@ -113,7 +113,9 @@ def deactivate_all_licenses(db: Session) -> None:
         db (Session): Database session for the current request.
 
     """
-    licenses = db.scalars(select(License).where(License.is_active == True)).all()
+    licenses = db.scalars(
+        select(License).where(License.is_active == True)
+    ).all()
     for license_obj in licenses:
         license_obj.is_active = False
         db.add(license_obj)

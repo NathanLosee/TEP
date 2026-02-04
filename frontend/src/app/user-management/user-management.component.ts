@@ -18,6 +18,7 @@ import {
   UserService,
 } from '../../services/user.service';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import { extractErrorDetail } from '../error-dialog/error-dialog.component';
 import { PasswordChangeDialogComponent } from '../password-change-dialog/password-change-dialog.component';
 import { PermissionService } from '../../services/permission.service';
 import {
@@ -131,7 +132,7 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.showSnackBar(
-          'Failed to load users: ' + (error.error?.detail || error.message),
+          'Failed to load users: ' + extractErrorDetail(error),
           'error'
         );
         this.isLoading = false;
@@ -166,7 +167,7 @@ export class UserManagementComponent implements OnInit {
       error: (error) => {
         this.showSnackBar(
           'Failed to load auth roles: ' +
-            (error.error?.detail || error.message),
+            extractErrorDetail(error),
           'error'
         );
       },
@@ -274,7 +275,7 @@ export class UserManagementComponent implements OnInit {
         },
         error: (error) => {
           this.showSnackBar(
-            'Failed to delete user: ' + (error.error?.detail || error.message),
+            'Failed to delete user: ' + extractErrorDetail(error),
             'error'
           );
           this.isLoading = false;

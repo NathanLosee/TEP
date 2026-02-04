@@ -1,4 +1,4 @@
-"""Module for defining license Pydantic schemas for request/response validation."""
+"""License Pydantic schemas for request/response validation."""
 
 from datetime import datetime
 from typing import Optional
@@ -21,6 +21,14 @@ class LicenseActivate(BaseModel):
         ..., min_length=64, description="License key in word or hex format"
     )
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "license_key": "a1b2c3d4e5f6" * 11  # 132-char hex key
+            }
+        }
+    }
+
 
 class LicenseStatus(BaseModel):
     """Schema for license status response.
@@ -29,7 +37,8 @@ class LicenseStatus(BaseModel):
         is_active (bool): Whether a license is currently active.
         license_key (str): The active license key if one exists.
         activated_at (datetime): When the license was activated.
-        needs_reactivation (bool): True if a license exists but needs re-activation.
+        needs_reactivation (bool): True if a license exists
+            but needs re-activation.
 
     """
 

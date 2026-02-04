@@ -52,7 +52,7 @@ def test_create_auth_role_409_name_already_exists(
     response = test_client.post(url=BASE_URL, json=auth_role_data)
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_NAME_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
 def test_give_user_auth_role_201(
@@ -111,7 +111,7 @@ def test_give_user_auth_role_409_user_already_has_auth_role(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_USER_IS_MEMBER
+    assert response.json()["detail"]["message"] == EXC_MSG_USER_IS_MEMBER
 
 
 def test_get_auth_roles_200(
@@ -275,7 +275,7 @@ def test_update_auth_role_by_id_409_name_already_exists(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_NAME_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
 def test_delete_auth_role_by_id_204(
@@ -318,7 +318,7 @@ def test_delete_auth_role_by_id_409_users_assigned(
     response = test_client.delete(url=f"{BASE_URL}/{auth_role["id"]}")
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_USERS_ASSIGNED
+    assert response.json()["detail"]["message"] == EXC_MSG_USERS_ASSIGNED
 
 
 def test_remove_auth_role_from_user_200(

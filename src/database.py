@@ -40,7 +40,8 @@ def get_db():
         Session: A database session.
 
     Notes:
-        The session is properly closed even if an exception occurs during close().
+        The session is properly closed even if an exception
+        occurs during close().
         This prevents exception propagation from the finally block.
 
     """

@@ -20,6 +20,14 @@ export interface LicenseActivationResponse {
   is_active: boolean;
 }
 
+interface CachedLicenseStatus {
+  status: LicenseStatus;
+  timestamp: number;
+}
+
+const LICENSE_CACHE_KEY = 'tap_license_cache';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 @Injectable({
   providedIn: 'root'
 })
@@ -34,21 +42,41 @@ export class LicenseService {
    */
   getLicenseStatus(): Observable<LicenseStatus> {
     return this.http.get<LicenseStatus>(`${this.baseUrl}/status`).pipe(
-      tap(status => this.licenseStatus$.next(status))
+      tap(status => {
+        this.licenseStatus$.next(status);
+        this.saveToCache(status);
+      })
     );
   }
 
   /**
-   * Check license status and update internal state
+   * Check license status and update internal state.
+   * Uses localStorage cache to provide immediate state, then refreshes
+   * from the API in the background.
    */
   checkLicense(): void {
+    // Load from cache immediately for instant UI state
+    const cached = this.loadFromCache();
+    if (cached) {
+      this.licenseStatus$.next(cached);
+    }
+
+    // Always refresh from API in the background
     this.http.get<LicenseStatus>(`${this.baseUrl}/status`).subscribe({
       next: (status) => {
         this.licenseStatus$.next(status);
+        this.saveToCache(status);
       },
       error: (error) => {
         console.error('Failed to check license status:', error);
-        this.licenseStatus$.next({ is_active: false, license_key: null, activated_at: null });
+        // Only set inactive if we have no cached data
+        if (!cached) {
+          this.licenseStatus$.next({
+            is_active: false,
+            license_key: null,
+            activated_at: null,
+          });
+        }
       }
     });
   }
@@ -61,7 +89,7 @@ export class LicenseService {
       license_key: licenseKey,
     }).pipe(
       tap(() => {
-        // Refresh license status after activation
+        this.clearCache();
         this.checkLicense();
       })
     );
@@ -73,7 +101,7 @@ export class LicenseService {
   deactivateLicense(): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/deactivate`).pipe(
       tap(() => {
-        // Update local state
+        this.clearCache();
         this.licenseStatus$.next({
           is_active: false,
           license_key: null,
@@ -96,5 +124,43 @@ export class LicenseService {
    */
   isLicensed$(): Observable<boolean> {
     return this.licenseStatus$.pipe(map((status) => status?.is_active || false));
+  }
+
+  private saveToCache(status: LicenseStatus): void {
+    try {
+      const cached: CachedLicenseStatus = {
+        status,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify(cached));
+    } catch {
+      // localStorage may be unavailable or full - ignore
+    }
+  }
+
+  private loadFromCache(): LicenseStatus | null {
+    try {
+      const raw = localStorage.getItem(LICENSE_CACHE_KEY);
+      if (!raw) return null;
+
+      const cached: CachedLicenseStatus = JSON.parse(raw);
+      const age = Date.now() - cached.timestamp;
+      if (age > CACHE_TTL_MS) {
+        localStorage.removeItem(LICENSE_CACHE_KEY);
+        return null;
+      }
+      return cached.status;
+    } catch {
+      localStorage.removeItem(LICENSE_CACHE_KEY);
+      return null;
+    }
+  }
+
+  private clearCache(): void {
+    try {
+      localStorage.removeItem(LICENSE_CACHE_KEY);
+    } catch {
+      // ignore
+    }
   }
 }

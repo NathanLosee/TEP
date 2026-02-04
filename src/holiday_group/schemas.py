@@ -48,7 +48,21 @@ class HolidayBase(BaseModel):
     recurrence_week: Optional[int] = Field(None, ge=1, le=5)
     recurrence_weekday: Optional[int] = Field(None, ge=0, le=6)
 
-    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_min_length=1,
+        json_schema_extra={
+            "example": {
+                "name": "Christmas Day",
+                "start_date": "2025-12-25",
+                "end_date": "2025-12-25",
+                "is_recurring": True,
+                "recurrence_type": "fixed",
+                "recurrence_month": 12,
+                "recurrence_day": 25,
+            }
+        },
+    )
 
     @model_validator(mode="after")
     def check_values(self):
@@ -80,12 +94,14 @@ class HolidayBase(BaseModel):
             elif self.recurrence_type == "relative":
                 validate(
                     self.recurrence_week is not None,
-                    "Recurrence week is required for relative recurring holidays",
+                    "Recurrence week is required for "
+                    "relative recurring holidays",
                     status.HTTP_400_BAD_REQUEST,
                 )
                 validate(
                     self.recurrence_weekday is not None,
-                    "Recurrence weekday is required for relative recurring holidays",
+                    "Recurrence weekday is required "
+                    "for relative recurring holidays",
                     status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -103,7 +119,36 @@ class HolidayGroupBase(BaseModel):
     name: str = Field(pattern=NAME_REGEX, max_length=NAME_MAX_LENGTH)
     holidays: list[HolidayBase]
 
-    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_min_length=1,
+        json_schema_extra={
+            "example": {
+                "name": "US Federal Holidays",
+                "holidays": [
+                    {
+                        "name": "New Year's Day",
+                        "start_date": "2025-01-01",
+                        "end_date": "2025-01-01",
+                        "is_recurring": True,
+                        "recurrence_type": "fixed",
+                        "recurrence_month": 1,
+                        "recurrence_day": 1,
+                    },
+                    {
+                        "name": "Thanksgiving",
+                        "start_date": "2025-11-27",
+                        "end_date": "2025-11-27",
+                        "is_recurring": True,
+                        "recurrence_type": "relative",
+                        "recurrence_month": 11,
+                        "recurrence_week": 4,
+                        "recurrence_weekday": 3,
+                    },
+                ],
+            }
+        },
+    )
 
     @model_validator(mode="after")
     def check_values(self):

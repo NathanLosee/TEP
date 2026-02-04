@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Database Initialization Script for TEP.
+"""Database Initialization Script for TAP.
 
-Creates and initializes the TEP database with proper schema.
+Creates and initializes the TAP database with proper schema.
 
 Usage:
     python init_database.py
-    python init_database.py --db-path /path/to/tep.sqlite
+    python init_database.py --db-path /path/to/tap.sqlite
     python init_database.py --force
 """
 
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 
-DEFAULT_DB_PATH = Path("tep.sqlite")
+DEFAULT_DB_PATH = Path("tap.sqlite")
 
 
 def check_alembic_available() -> bool:
@@ -29,7 +29,7 @@ def check_alembic_available() -> bool:
             ["alembic", "--version"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -78,7 +78,7 @@ def init_database(db_path: Path, force: bool = False) -> bool:
             ["alembic", "upgrade", "head"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
         if result.stdout:
@@ -120,21 +120,21 @@ def verify_database(db_path: Path) -> bool:
         conn.close()
 
         expected_tables = [
-            'alembic_version',
-            'auth_roles',
-            'auth_role_permissions',
-            'auth_role_memberships',
-            'departments',
-            'department_memberships',
-            'employees',
-            'event_logs',
-            'holiday_groups',
-            'holidays',
-            'licenses',
-            'org_units',
-            'registered_browsers',
-            'timeclock_entries',
-            'users',
+            "alembic_version",
+            "auth_roles",
+            "auth_role_permissions",
+            "auth_role_memberships",
+            "departments",
+            "department_memberships",
+            "employees",
+            "event_logs",
+            "holiday_groups",
+            "holidays",
+            "licenses",
+            "org_units",
+            "registered_browsers",
+            "timeclock_entries",
+            "users",
         ]
 
         print(f"  Found {len(tables)} tables:")
@@ -158,10 +158,10 @@ def verify_database(db_path: Path) -> bool:
 def main():
     """Main entry point for the initialization script."""
     parser = argparse.ArgumentParser(
-        description="TEP Database Initialization Utility",
+        description="TAP Database Initialization Utility",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-This script initializes a new TEP database by running Alembic migrations
+This script initializes a new TAP database by running Alembic migrations
 to create the database schema.
 
 Examples:
@@ -169,7 +169,7 @@ Examples:
   python init_database.py
 
   # Initialize custom database location
-  python init_database.py --db-path /path/to/tep.sqlite
+  python init_database.py --db-path /path/to/tap.sqlite
 
   # Force reinitialize (deletes existing data)
   python init_database.py --force
@@ -181,26 +181,26 @@ Notes:
   - Requires Alembic to be installed
   - Creates root user automatically on first application start
   - Use --force carefully as it will delete existing data
-        """
+        """,
     )
 
     parser.add_argument(
         "--db-path",
         type=Path,
         default=DEFAULT_DB_PATH,
-        help=f"Path to database file (default: {DEFAULT_DB_PATH})"
+        help=f"Path to database file (default: {DEFAULT_DB_PATH})",
     )
 
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force initialization even if database exists (deletes existing data)"
+        help="Force initialization even if database exists (deletes existing data)",
     )
 
     parser.add_argument(
         "--verify",
         action="store_true",
-        help="Verify database structure after initialization"
+        help="Verify database structure after initialization",
     )
 
     args = parser.parse_args()
@@ -215,7 +215,7 @@ Notes:
             print("=" * 70)
 
             response = input("Continue? (yes/no): ").strip().lower()
-            if response not in ['yes', 'y']:
+            if response not in ["yes", "y"]:
                 print("Initialization cancelled.")
                 return 0
 
@@ -231,8 +231,8 @@ Notes:
             print()
             print("✓ Database initialization completed successfully")
             print()
-            print("Next steps:")
-            print("  1. Start the TEP application")
+            print("Next staps:")
+            print("  1. Start the TAP application")
             print("  2. Root user will be created automatically")
             print("  3. Login with username '0' and the displayed password")
             print("  4. Activate your license in the admin panel")
@@ -246,6 +246,7 @@ Notes:
     except Exception as e:
         print(f"✗ Error: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         return 1
 

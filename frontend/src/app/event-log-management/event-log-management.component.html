@@ -108,7 +108,14 @@
 
                 <!-- Custom template for log column (truncated) -->
                 <ng-template appTableCell="log" let-log>
-                  <span class="log-message-truncated" [matTooltip]="log.log.length > 80 ? 'Click view to see full message' : ''">
+                  <span
+                    class="log-message-truncated"
+                    [matTooltip]="
+                      log.log.length > 80
+                        ? 'Click view to see full message'
+                        : ''
+                    "
+                  >
                     {{ truncateLog(log.log) }}
                   </span>
                 </ng-template>

@@ -43,7 +43,8 @@ class Employee(Base):
         time_type (bool): Employee's time type.
             (True for full-time, False for part-time)
         allow_clocking (bool): Whether the employee is allowed to clock in/out.
-        external_clock_allowed (bool): Whether the employee can clock in/out from external devices.
+        external_clock_allowed (bool): Whether the employee can clock
+            in/out from external devices.
         allow_delete (bool): Whether the employee is allowed to be deleted.
         org_unit_id (int): Org unit's unique identifier.
         manager_id (int): Manager's unique identifier.
@@ -59,7 +60,9 @@ class Employee(Base):
     workweek_type: Mapped[str] = mapped_column(nullable=False)
     time_type: Mapped[bool] = mapped_column(nullable=False)
     allow_clocking: Mapped[bool] = mapped_column(nullable=False)
-    external_clock_allowed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    external_clock_allowed: Mapped[bool] = mapped_column(
+        nullable=False, default=False,
+    )
     allow_delete: Mapped[bool] = mapped_column(nullable=False)
     holiday_group_id: Mapped[int] = mapped_column(
         ForeignKey(HOLIDAY_GROUP_IDENTIFIER + ".id"),

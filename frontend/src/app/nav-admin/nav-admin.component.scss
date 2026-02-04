@@ -99,6 +99,7 @@
       border-radius: 8px;
       margin: 4px 0;
       transition: background-color 0.2s ease;
+      position: relative;
 
       &.active-link {
         background: var(--sys-primary-container);
@@ -116,6 +117,17 @@
 
       span {
         font-weight: 500;
+      }
+
+      .update-badge {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #4caf50;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
       }
     }
   }

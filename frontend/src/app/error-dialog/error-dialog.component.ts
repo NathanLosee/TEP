@@ -11,11 +11,29 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 
 export interface ErrorDetail {
-  detail?: string;
+  detail?: string | StructuredError;
   message?: string;
 }
 
+export interface StructuredError {
+  message: string;
+  field?: string;
+  constraint?: string;
+}
+
 export type AppError = string | HttpErrorResponse | { error: ErrorDetail } | Error;
+
+/**
+ * Extract a human-readable message from an error's detail field.
+ * Handles both plain string details and structured error objects.
+ */
+export function extractErrorDetail(error: any): string {
+  const detail = error?.error?.detail;
+  if (!detail) return error?.message || 'Unknown error';
+  if (typeof detail === 'string') return detail;
+  if (detail.message) return detail.message;
+  return error?.message || 'Unknown error';
+}
 
 @Injectable({
   providedIn: 'root',
@@ -28,6 +46,16 @@ export class ErrorDialogComponent {
    * @param msg Context message about where the error occurred
    * @param error The error object (string, HttpErrorResponse, or Error)
    */
+  /**
+   * Extract a human-readable message from a detail field that may be
+   * a string or a structured error object.
+   */
+  private extractDetail(detail: string | StructuredError | undefined): string | undefined {
+    if (!detail) return undefined;
+    if (typeof detail === 'string') return detail;
+    return detail.message;
+  }
+
   openErrorDialog(msg: string, error: AppError): void {
     console.error(msg, error);
 
@@ -35,9 +63,9 @@ export class ErrorDialogComponent {
     if (typeof error === 'string') {
       errorMessage = error;
     } else if (error instanceof HttpErrorResponse) {
-      errorMessage = error.error?.detail || error.message || 'An error occurred';
+      errorMessage = this.extractDetail(error.error?.detail) || error.message || 'An error occurred';
     } else if ('error' in error && error.error) {
-      errorMessage = error.error.detail || error.error.message || 'An error occurred';
+      errorMessage = this.extractDetail(error.error.detail) || error.error.message || 'An error occurred';
     } else if (error instanceof Error) {
       errorMessage = error.message;
     } else {

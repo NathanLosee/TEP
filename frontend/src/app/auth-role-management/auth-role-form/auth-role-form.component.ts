@@ -134,7 +134,7 @@ export class AuthRoleFormComponent implements OnInit {
 
   getSelectedPermissionsCount(category: string): number {
     return this.availablePermissions[category].filter((p) =>
-      this.selectedPermissions.has(p)
+      this.selectedPermissions.has(p),
     ).length;
   }
 

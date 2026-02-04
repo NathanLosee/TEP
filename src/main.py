@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+import time
 from contextlib import asynccontextmanager
 from http import HTTPStatus
 from importlib import import_module
@@ -16,9 +17,11 @@ from starlette.background import BackgroundTask
 from starlette.types import Message
 
 from src.config import Settings
+from src.health import record_request
+from src.health import router as health_router
 from src.logger.app_logger import get_logger
 from src.logger.formatter import CustomFormatter
-from src.scheduler import periodic_cleanup
+from src.scheduler import periodic_cleanup, periodic_update_check
 from src.services import (
     clear_database,
     create_root_user_if_not_exists,
@@ -31,20 +34,33 @@ from src.services import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifespan events."""
-    # Startup: Start background scheduler
+    # Startup: Start background tasks
     cleanup_task = asyncio.create_task(periodic_cleanup())
+    update_task = asyncio.create_task(periodic_update_check())
 
     yield
 
     # Shutdown: Cancel background tasks
-    cleanup_task.cancel()
-    try:
-        await cleanup_task
-    except asyncio.CancelledError:
-        pass
+    for task in [cleanup_task, update_task]:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="TAP - Timeclock and Payroll",
+    description=(
+        "API for managing employee timeclock entries, "
+        "payroll, departments, organizational units, "
+        "holiday groups, user authentication, "
+        "and licensing."
+    ),
+    version="1.0.0",
+    lifespan=lifespan,
+)
+app.include_router(health_router)
 settings = Settings()
 formatter = CustomFormatter("%(asctime)s")
 logger = get_logger(__name__, formatter, log_level=settings.LOG_LEVEL)
@@ -71,11 +87,12 @@ def import_routers():
         "src.report.routes",
         "src.system_settings.routes",
         "src.timeclock.routes",
+        "src.updater.routes",
         "src.user.routes",
     ]
 
     # Check if running as PyInstaller bundle
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Use explicit module list
         for module_name in route_modules:
             try:
@@ -94,18 +111,21 @@ def import_routers():
                 and domain_path.name != "logger"
                 and not domain_path.name.startswith("__")
             ):
-                routes_path = Path(f"{src_path.name}.{domain_path.name}.routes")
+                routes_path = Path(
+                    f"{src_path.name}.{domain_path.name}.routes"
+                )
                 routes_module = import_module(str(routes_path))
                 router = getattr(routes_module, "router", None)
                 app.include_router(router)
 
 
-def write_log_data(request: Request, response: Response):
+def write_log_data(request: Request, response: Response, duration_ms: float):
     """The log for an incoming request.
 
     Args:
-        request (Request): The incoming request
+        request (Request): The incoming request.
         response (Response): The outgoing response.
+        duration_ms (float): Request duration in milliseconds.
 
     """
     logger.info(
@@ -114,6 +134,7 @@ def write_log_data(request: Request, response: Response):
             "extra_info": {
                 "status_code": response.status_code,
                 "status": status_reasons[response.status_code],
+                "duration_ms": round(duration_ms, 2),
             }
         },
     )
@@ -137,7 +158,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next) -> Response:
-    """Log incoming request to the application.
+    """Log incoming request and collect metrics.
 
     Args:
         request (Request): The incoming request.
@@ -150,6 +171,8 @@ async def log_requests(request: Request, call_next) -> Response:
     if request.url.path in ignored_endpoints:
         return await call_next(request)
 
+    start = time.monotonic()
+
     req_body = await request.body()
     await set_request_body(request, req_body)
     response = await call_next(request)
@@ -158,7 +181,12 @@ async def log_requests(request: Request, call_next) -> Response:
     async for chunk in response.body_iterator:
         res_body += chunk
 
-    task = BackgroundTask(write_log_data, request, response)
+    duration_ms = (time.monotonic() - start) * 1000
+    record_request(
+        request.method, request.url.path, response.status_code, duration_ms
+    )
+
+    task = BackgroundTask(write_log_data, request, response, duration_ms)
 
     return Response(
         content=res_body,
@@ -219,7 +247,7 @@ def root() -> dict:
         dict: The JSON welcome message for the application.
 
     """
-    return {"message": "Welcome to Timeclock and Employee Payroll!"}
+    return {"message": "Welcome to Timeclock and Payroll!"}
 
 
 import_routers()
@@ -240,21 +268,28 @@ def setup_static_files():
     bundle or from source.
     """
     # Determine the base path
-    if getattr(sys, 'frozen', False):
-        # Running as PyInstaller bundle - get the directory containing the executable
-        # sys.executable points to tep.exe in the backend folder
+    if getattr(sys, "frozen", False):
+        # Running as PyInstaller bundle - get the directory
+        # containing the executable
+        # sys.executable points to tap.exe in the backend folder
         # Frontend is a sibling folder at the same level as backend
         exe_dir = Path(sys.executable).parent  # backend/
-        base_path = exe_dir.parent  # TEP-x.x.x/ (parent of backend)
+        base_path = exe_dir.parent  # TAP-x.x.x/ (parent of backend)
     else:
         # Running from source - check for built frontend
         base_path = Path(__file__).parent.parent
 
     # Look for frontend in multiple possible locations
     frontend_paths = [
-        base_path / "frontend",              # Release structure: TEP-x.x.x/frontend/
-        base_path / "frontend" / "browser",  # Alternative with browser subfolder
-        base_path / "frontend" / "dist" / "tep-frontend" / "browser",  # Dev build location
+        base_path / "frontend",  # Release structure: TAP-x.x.x/frontend/
+        base_path
+        / "frontend"
+        / "browser",  # Alternative with browser subfolder
+        base_path
+        / "frontend"
+        / "dist"
+        / "tap-frontend"
+        / "browser",  # Dev build location
     ]
 
     frontend_path = None
@@ -272,8 +307,14 @@ def setup_static_files():
     # Mount static files for assets (JS, CSS, images, etc.)
     app.mount(
         "/assets",
-        StaticFiles(directory=frontend_path / "assets" if (frontend_path / "assets").exists() else frontend_path),
-        name="assets"
+        StaticFiles(
+            directory=(
+                frontend_path / "assets"
+                if (frontend_path / "assets").exists()
+                else frontend_path
+            )
+        ),
+        name="assets",
     )
 
     # Serve other static files (favicon, etc.)
@@ -285,7 +326,16 @@ def setup_static_files():
         return Response(status_code=404)
 
     # Serve Angular's static files (JS bundles, CSS)
-    for pattern in ["*.js", "*.css", "*.woff2", "*.woff", "*.ttf", "*.svg", "*.png", "*.jpg"]:
+    for pattern in [
+        "*.js",
+        "*.css",
+        "*.woff2",
+        "*.woff",
+        "*.ttf",
+        "*.svg",
+        "*.png",
+        "*.jpg",
+    ]:
         for static_file in frontend_path.glob(pattern):
             file_name = static_file.name
 

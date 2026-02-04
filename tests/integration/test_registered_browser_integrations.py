@@ -94,7 +94,7 @@ def test_register_browser_409_uuid_already_exists(test_client: TestClient):
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_BROWSER_ALREADY_REGISTERED
+    assert response.json()["detail"]["message"] == EXC_MSG_BROWSER_ALREADY_REGISTERED
 
 
 def test_register_browser_409_name_already_exists(test_client: TestClient):
@@ -120,7 +120,7 @@ def test_register_browser_409_name_already_exists(test_client: TestClient):
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == EXC_MSG_BROWSER_NAME_ALREADY_EXISTS
+    assert response.json()["detail"]["message"] == EXC_MSG_BROWSER_NAME_ALREADY_EXISTS
 
 
 def test_verify_browser_by_uuid(test_client: TestClient):

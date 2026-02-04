@@ -1,6 +1,9 @@
 """Module defining API for registered browser operations."""
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
+from fastapi import (
+    APIRouter, Depends, HTTPException,
+    Request, Security, status,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -36,7 +39,10 @@ from src.registered_browser.uuid_generator import (
     generate_unique_uuid,
     validate_uuid_format,
 )
-from src.services import create_event_log, requires_license, requires_permission, validate
+from src.services import (
+    create_event_log, requires_license,
+    requires_permission, validate,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["registered_browsers"])
 
@@ -58,7 +64,8 @@ def register_browser(
     """Register a new browser.
 
     Args:
-        request (RegisteredBrowserCreate): Request data for registering browser.
+        request (RegisteredBrowserCreate): Request data
+            for registering browser.
         http_request (Request): FastAPI request object for IP address.
         db (Session): Database session for current request.
         caller_badge (str): Badge number of the caller.
@@ -81,7 +88,10 @@ def register_browser(
 
     # Set IP address from request if not provided
     if not request.ip_address:
-        request.ip_address = http_request.client.host if http_request.client else None
+        request.ip_address = (
+            http_request.client.host
+            if http_request.client else None
+        )
 
     # Use database constraint to handle uniqueness (avoids race condition)
     try:
@@ -89,22 +99,36 @@ def register_browser(
     except IntegrityError:
         db.rollback()
         # Determine which constraint was violated by checking what exists
-        existing_uuid = get_registered_browser_by_uuid(request.browser_uuid, db)
+        existing_uuid = get_registered_browser_by_uuid(
+            request.browser_uuid, db,
+        )
         if existing_uuid:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=EXC_MSG_BROWSER_ALREADY_REGISTERED,
+                detail={
+                    "message": EXC_MSG_BROWSER_ALREADY_REGISTERED,
+                    "field": "browser_uuid",
+                    "constraint": "unique",
+                },
             )
-        existing_name = get_registered_browser_by_name(request.browser_name, db)
+        existing_name = get_registered_browser_by_name(
+            request.browser_name, db,
+        )
         if existing_name:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=EXC_MSG_BROWSER_NAME_ALREADY_EXISTS,
+                detail={
+                    "message": EXC_MSG_BROWSER_NAME_ALREADY_EXISTS,
+                    "field": "browser_name",
+                    "constraint": "unique",
+                },
             )
         # If neither found (shouldn't happen), raise generic conflict
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Browser registration conflict",
+            detail={
+                "message": "Browser registration conflict",
+            },
         )
 
     log_args = {
@@ -127,7 +151,8 @@ def verify_browser(
     """Verify browser fingerprint and return UUID if match found.
 
     Args:
-        request (RegisteredBrowserVerify): Verification request with fingerprint.
+        request (RegisteredBrowserVerify): Verification
+            request with fingerprint.
         db (Session): Database session for current request.
 
     Returns:
@@ -237,11 +262,13 @@ def recover_browser(
 ):
     """Recover browser registration using device ID (UUID).
 
-    This allows an employee to recover their device registration if localStorage
+    This allows an employee to recover their device
+    registration if localStorage
     was cleared. The device ID is the device UUID in human-readable format.
 
     Args:
-        request (RegisteredBrowserRecover): Recovery request with code and fingerprint.
+        request (RegisteredBrowserRecover): Recovery request
+            with code and fingerprint.
         db (Session): Database session for current request.
 
     Returns:
@@ -272,11 +299,15 @@ def recover_browser(
         status.HTTP_404_NOT_FOUND,
     )
 
-    # Check if this device ID has an active session with a different fingerprint
+    # Check if device has active session with different fingerprint
     validate(
         not has_active_session_conflict(browser, request.fingerprint_hash),
-        "This device ID is currently in use by another browser. Please wait a few minutes and try again, or contact an administrator if the device is no longer in use.",
+        "This device ID is currently in use by another browser."
+        " Please wait a few minutes and try again,"
+        " or contact an administrator.",
         status.HTTP_409_CONFLICT,
+        field="browser_uuid",
+        constraint="session",
     )
 
     # Update browser fingerprint to current device
@@ -285,8 +316,9 @@ def recover_browser(
     # Start active session for this browser
     start_active_session(browser, request.fingerprint_hash, db)
 
-    # Note: Event logging is skipped for recovery since this is an unauthenticated
-    # endpoint and there's no valid badge_number to associate with the log entry.
+    # Note: Event logging is skipped for recovery since
+    # this is an unauthenticated endpoint and there's no
+    # valid badge_number to associate with the log entry.
     # Recovery is already tracked through the active_session_started timestamp.
 
     return {

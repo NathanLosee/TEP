@@ -1,0 +1,222 @@
+<div class="update-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="page-icon">system_update</mat-icon>
+        <h1>System Updates</h1>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <div class="update-content">
+      <!-- Current Version Card -->
+      <mat-card class="update-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>info</mat-icon>
+            Current Version
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="version-info">
+            <div class="version-row">
+              <span class="label">Version</span>
+              <span class="value version-number">v{{ status?.current_version }}</span>
+            </div>
+            <div class="version-row">
+              <span class="label">Last Checked</span>
+              <span class="value">{{ formatDate(status?.last_checked ?? null) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="checkForUpdate()"
+            [disabled]="isChecking"
+          >
+            @if (isChecking) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <mat-icon>refresh</mat-icon>
+            }
+            Check for Updates
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Update Available Card -->
+      @if (status?.update_available && status?.state !== 'downloading' && status?.state !== 'ready') {
+        <mat-card class="update-card update-available">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>new_releases</mat-icon>
+              Update Available
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="version-info">
+              <div class="version-row">
+                <span class="label">New Version</span>
+                <span class="value version-number">v{{ status?.latest_version }}</span>
+              </div>
+              @if (releaseInfo) {
+                <div class="version-row">
+                  <span class="label">Download Size</span>
+                  <span class="value">{{ formatBytes(releaseInfo.asset_size) }}</span>
+                </div>
+                @if (releaseInfo.release_notes) {
+                  <div class="release-notes">
+                    <span class="label">Release Notes</span>
+                    <div class="notes-content">{{ releaseInfo.release_notes }}</div>
+                  </div>
+                }
+              }
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="downloadUpdate()"
+              [disabled]="isDownloading"
+            >
+              @if (isDownloading) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>download</mat-icon>
+              }
+              Download Update
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+
+      <!-- Download Progress Card -->
+      @if (status?.state === 'downloading') {
+        <mat-card class="update-card downloading">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>downloading</mat-icon>
+              Downloading Update
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="download-progress">
+              <mat-progress-bar
+                mode="determinate"
+                [value]="status?.download_progress ?? 0"
+              ></mat-progress-bar>
+              <span class="progress-text">
+                {{ status?.download_progress?.toFixed(1) ?? 0 }}%
+              </span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Ready to Apply Card -->
+      @if (status?.state === 'ready') {
+        <mat-card class="update-card ready">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>check_circle</mat-icon>
+              Ready to Apply
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="version-info">
+              <div class="version-row">
+                <span class="label">Downloaded Version</span>
+                <span class="value version-number">v{{ status?.latest_version }}</span>
+              </div>
+              <p class="apply-warning">
+                Applying this update will restart the server. The application will be
+                briefly unavailable during the restart.
+              </p>
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="applyUpdate()"
+              [disabled]="isApplying"
+            >
+              @if (isApplying) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>system_update_alt</mat-icon>
+              }
+              Apply Update
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+
+      <!-- Error Card -->
+      @if (status?.state === 'error') {
+        <mat-card class="update-card error-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>error</mat-icon>
+              Update Error
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="error-message">{{ status?.error }}</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="checkForUpdate()"
+            >
+              <mat-icon>refresh</mat-icon>
+              Retry
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+
+      <!-- Rollback Card -->
+      @if (status?.backup_available && status?.state !== 'downloading' && status?.state !== 'applying') {
+        <mat-card class="update-card rollback-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>restore</mat-icon>
+              Rollback
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="rollback-info">
+              A backup of the previous version is available. You can restore it
+              if the current version has issues.
+            </p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button
+              mat-button
+              color="warn"
+              (click)="rollback()"
+              [disabled]="isRollingBack"
+            >
+              @if (isRollingBack) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>restore</mat-icon>
+              }
+              Rollback to Previous Version
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

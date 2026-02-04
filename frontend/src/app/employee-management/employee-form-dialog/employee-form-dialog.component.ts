@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
@@ -24,12 +25,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  Department,
+  DepartmentService,
+} from '../../../services/department.service';
 import { Employee, EmployeeService } from '../../../services/employee.service';
-import { Department, DepartmentService } from '../../../services/department.service';
+import {
+  HolidayGroup,
+  HolidayGroupService,
+} from '../../../services/holiday-group.service';
 import { OrgUnit, OrgUnitService } from '../../../services/org-unit.service';
-import { HolidayGroup, HolidayGroupService } from '../../../services/holiday-group.service';
 import { ManagerSearchDialogComponent } from '../manager-search-dialog/manager-search-dialog.component';
 
 export interface EmployeeFormDialogData {
@@ -125,7 +131,9 @@ export class EmployeeFormDialogComponent {
       ],
       time_type: [this.data.editEmployee?.time_type || true],
       allow_clocking: [this.data.editEmployee?.allow_clocking || true],
-      external_clock_allowed: [this.data.editEmployee?.external_clock_allowed || false],
+      external_clock_allowed: [
+        this.data.editEmployee?.external_clock_allowed || false,
+      ],
       allow_delete: [this.data.editEmployee?.allow_delete || true],
       holiday_group_id: [this.data.editEmployee?.holiday_group?.id || null],
       org_unit_id: [

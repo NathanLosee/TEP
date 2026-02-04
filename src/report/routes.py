@@ -102,7 +102,7 @@ def export_report_pdf(
     # Get logo and company name for PDF
     logo_data = get_logo(db)
     settings = get_settings(db)
-    company_name = settings.company_name if settings else "TEP Timeclock"
+    company_name = settings.company_name if settings else "TAP Timeclock"
 
     # Generate PDF
     try:
@@ -119,15 +119,19 @@ def export_report_pdf(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=timeclock_report_{start_date}_to_{end_date}.pdf",
-                "Content-Length": str(len(pdf_bytes))
+                "Content-Disposition": (
+                    "attachment; filename="
+                    f"timeclock_report_{start_date}"
+                    f"_to_{end_date}.pdf"
+                ),
+                "Content-Length": str(len(pdf_bytes)),
             },
         )
     except Exception as e:
-        # Log the error for debugging
+        # Log the real error server-side only
         import traceback
+
         traceback.print_exc()
         raise HTTPException(
-            status_code=500,
-            detail=f"Error generating PDF: {str(e)}"
+            status_code=500, detail="Error generating PDF report"
         )

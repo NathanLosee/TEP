@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Database Restore Script for TEP.
+"""Database Restore Script for TAP.
 
 Restores a database from a backup file.
 
@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-DEFAULT_DB_PATH = Path("tep.sqlite")
+DEFAULT_DB_PATH = Path("tap.sqlite")
 
 
 def restore_database(
@@ -110,21 +110,21 @@ def verify_database(db_path: Path) -> bool:
 def main():
     """Main entry point for the restore script."""
     parser = argparse.ArgumentParser(
-        description="TEP Database Restore Utility",
+        description="TAP Database Restore Utility",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Restore from backup
-  python restore_database.py backups/tep_20260113_120000.sqlite
+  python restore_database.py backups/tap_20260113_120000.sqlite
 
   # Restore from compressed backup
-  python restore_database.py backups/tep_20260113_120000.sqlite.gz --decompress
+  python restore_database.py backups/tap_20260113_120000.sqlite.gz --decompress
 
   # Restore to custom location
-  python restore_database.py backups/tep_backup.sqlite --db-path /path/to/tep.sqlite
+  python restore_database.py backups/tap_backup.sqlite --db-path /path/to/tap.sqlite
 
   # Skip safety backup (not recommended)
-  python restore_database.py backups/tep_backup.sqlite --no-backup
+  python restore_database.py backups/tap_backup.sqlite --no-backup
 
 WARNING: This will replace your current database. Always ensure you have
          a recent backup before performing a restore.
@@ -210,7 +210,7 @@ WARNING: This will replace your current database. Always ensure you have
             print()
             print("✓ Restore operation completed successfully")
             print()
-            print("IMPORTANT: Restart the TEP service for changes to take effect.")
+            print("IMPORTANT: Restart the TAP service for changes to take effect.")
             return 0
         else:
             return 1

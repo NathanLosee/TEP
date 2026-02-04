@@ -82,7 +82,9 @@ def is_uuid_unique(uuid: str, existing_uuids: Set[str]) -> bool:
     return uuid not in existing_uuids
 
 
-def generate_unique_uuid(existing_uuids: Set[str], max_attempts: int = 100) -> str:
+def generate_unique_uuid(
+    existing_uuids: Set[str], max_attempts: int = 100,
+) -> str:
     """Generate a unique UUID that doesn't exist in the provided set.
 
     Args:
@@ -102,5 +104,6 @@ def generate_unique_uuid(existing_uuids: Set[str], max_attempts: int = 100) -> s
 
     raise RuntimeError(
         f"Failed to generate unique UUID after {max_attempts} attempts. "
-        "This is extremely unlikely and may indicate a problem with the word list."
+        "This is extremely unlikely and may indicate "
+        "a problem with the word list."
     )

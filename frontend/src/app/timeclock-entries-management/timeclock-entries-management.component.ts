@@ -11,19 +11,18 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TimeclockService } from '../../services/timeclock.service';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
-import { TimeclockEntryFormDialogComponent } from './timeclock-entry-form-dialog/timeclock-entry-form-dialog.component';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
+import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 import {
   GenericTableComponent,
   TableCellDirective,
@@ -33,6 +32,7 @@ import {
   TableActionEvent,
   TableColumn,
 } from '../shared/models/table.models';
+import { TimeclockEntryFormDialogComponent } from './timeclock-entry-form-dialog/timeclock-entry-form-dialog.component';
 
 interface TimeclockEntryListing {
   id?: number;
@@ -191,7 +191,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
         filters.dateRange?.end,
         filters.badge_number,
         filters.first_name,
-        filters.last_name
+        filters.last_name,
       )
       .subscribe({
         next: (response) => {
@@ -204,7 +204,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
             total_hours: entry.clock_out
               ? this.calculateTotalHours(
                   new Date(entry.clock_in),
-                  new Date(entry.clock_out)
+                  new Date(entry.clock_out),
                 )
               : 0,
             status: this.getEntryStatus(entry),
@@ -215,7 +215,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
         error: (error) => {
           this.errorDialog.openErrorDialog(
             'Failed to load time entries',
-            error
+            error,
           );
           this.isLoading = false;
         },
@@ -248,7 +248,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
   deleteEntry(entry: TimeclockEntryListing) {
     if (
       confirm(
-        `Are you sure you want to delete the time entry for ${entry.employee_name} (${entry.badge_number})? This action cannot be undone.`
+        `Are you sure you want to delete the time entry for ${entry.employee_name} (${entry.badge_number})? This action cannot be undone.`,
       )
     ) {
       this.isLoading = true;
@@ -258,7 +258,10 @@ export class TimeclockEntriesManagementComponent implements OnInit {
           this.showSnackBar('Time entry deleted successfully', 'success');
         },
         error: (error) => {
-          this.errorDialog.openErrorDialog('Failed to delete time entry', error);
+          this.errorDialog.openErrorDialog(
+            'Failed to delete time entry',
+            error,
+          );
           this.isLoading = false;
         },
       });
@@ -295,7 +298,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
     if (!clockOut) return 0;
     return (
       Math.round(
-        ((clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)) * 100
+        ((clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60)) * 100,
       ) / 100
     );
   }
@@ -327,7 +330,8 @@ export class TimeclockEntriesManagementComponent implements OnInit {
   }
 
   getCompletedEntriesCount(): number {
-    return this.dataSource.data.filter((e) => e.status === 'clocked_out').length;
+    return this.dataSource.data.filter((e) => e.status === 'clocked_out')
+      .length;
   }
 
   getIncompleteEntriesCount(): number {
@@ -336,7 +340,7 @@ export class TimeclockEntriesManagementComponent implements OnInit {
 
   private showSnackBar(
     message: string,
-    type: 'success' | 'error' | 'info' = 'info'
+    type: 'success' | 'error' | 'info' = 'info',
   ) {
     this.snackBar.open(message, 'Close', {
       duration: 4000,

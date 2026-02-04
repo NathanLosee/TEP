@@ -17,7 +17,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PartialObserver } from 'rxjs';
 import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { ErrorDialogComponent, extractErrorDetail } from '../error-dialog/error-dialog.component';
 import { GenericTableComponent } from '../shared/components/generic-table';
 import {
   TableAction,
@@ -282,7 +282,7 @@ export class OrgUnitManagementComponent implements OnInit {
       data: {
         title: 'Error',
         message: `${message}. Please try again.`,
-        error: error?.error?.detail || error?.message || 'Unknown error',
+        error: extractErrorDetail(error),
       },
     });
   }

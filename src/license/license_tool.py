@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""License tool for TEP application (DEPRECATED).
+"""License tool for TAP application (DEPRECATED).
 
 This tool has been deprecated. License management is now handled by
 the license server at license_server/.
@@ -18,10 +18,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.license.key_generator import (
-    hex_to_words,
-    words_to_hex,
-)
+from src.license.key_generator import hex_to_words, words_to_hex
 
 
 def cmd_convert(args: argparse.Namespace) -> None:
@@ -29,7 +26,9 @@ def cmd_convert(args: argparse.Namespace) -> None:
     license_key = args.license_key.strip()
 
     # Detect format and convert
-    if len(license_key) == 128 and all(c in "0123456789abcdefABCDEF" for c in license_key):
+    if len(license_key) == 128 and all(
+        c in "0123456789abcdefABCDEF" for c in license_key
+    ):
         # Hex format -> word format
         print("Converting from hex to word format:")
         print()
@@ -48,7 +47,10 @@ def cmd_convert(args: argparse.Namespace) -> None:
 def main() -> None:
     """Main entry point for the license tool."""
     parser = argparse.ArgumentParser(
-        description="TEP License Tool (DEPRECATED - Use license_server/license_tool.py instead)",
+        description=(
+            "TAP License Tool (DEPRECATED - "
+            "Use license_server/license_tool.py instead)"
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 DEPRECATED: This tool has been replaced by the license server.

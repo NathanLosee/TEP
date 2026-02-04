@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Database Backup Script for TEP.
+"""Database Backup Script for TAP.
 
 Creates timestamped backups of the SQLite database with optional compression.
 
@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-DEFAULT_DB_PATH = Path("tep.sqlite")
+DEFAULT_DB_PATH = Path("tap.sqlite")
 DEFAULT_BACKUP_DIR = Path("backups")
 
 
@@ -46,7 +46,7 @@ def backup_database(
 
     # Generate backup filename with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_name = f"tep_{timestamp}.sqlite"
+    backup_name = f"tap_{timestamp}.sqlite"
 
     if compress:
         backup_path = backup_dir / f"{backup_name}.gz"
@@ -87,7 +87,7 @@ def cleanup_old_backups(backup_dir: Path, keep_count: int = 30):
 
     # Find all backup files
     backups = sorted(
-        backup_dir.glob("tep_*.sqlite*"),
+        backup_dir.glob("tap_*.sqlite*"),
         key=lambda p: p.stat().st_mtime,
         reverse=True
     )
@@ -106,7 +106,7 @@ def cleanup_old_backups(backup_dir: Path, keep_count: int = 30):
 def main():
     """Main entry point for the backup script."""
     parser = argparse.ArgumentParser(
-        description="TEP Database Backup Utility",
+        description="TAP Database Backup Utility",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -117,7 +117,7 @@ Examples:
   python backup_database.py --compress
 
   # Specify custom paths
-  python backup_database.py --db-path /path/to/tep.sqlite --output-dir /path/to/backups
+  python backup_database.py --db-path /path/to/tap.sqlite --output-dir /path/to/backups
 
   # Cleanup old backups (keep 30 most recent)
   python backup_database.py --cleanup --keep 30

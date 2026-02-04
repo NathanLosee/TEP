@@ -2,7 +2,7 @@
 
 ## Overview
 
-The TEP application uses a human-readable UUID system for device registration. Each registered device receives a recovery code in the format: **WORD-WORD-WORD-NUMBER** (e.g., `EAGLE-RIVER-MOUNTAIN-42`).
+The TAP application uses a human-readable UUID system for device registration. Each registered device receives a recovery code in the format: **WORD-WORD-WORD-NUMBER** (e.g., `EAGLE-RIVER-MOUNTAIN-42`).
 
 This recovery code serves dual purposes:
 1. **Device Identifier**: Uniquely identifies the device in the system
@@ -141,7 +141,7 @@ When recovering a device:
 
 **Cause**: The code is active in another browser session on this computer
 **Solution**:
-- Close all other browser windows/tabs with TEP open
+- Close all other browser windows/tabs with TAP open
 - Try recovery again
 - If problem persists, restart the browser completely
 

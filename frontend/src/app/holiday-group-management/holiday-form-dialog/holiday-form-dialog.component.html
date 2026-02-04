@@ -16,7 +16,11 @@
     <div class="current-holidays">
       <h3>Holidays ({{ getHolidays().length }})</h3>
       <div class="holidays-list" formArrayName="holidays">
-        <mat-accordion *ngIf="getHolidays().length > 0" class="holidays-accordion" multi>
+        <mat-accordion
+          *ngIf="getHolidays().length > 0"
+          class="holidays-accordion"
+          multi
+        >
           <mat-expansion-panel
             *ngFor="let holiday of getHolidays().controls; let i = index"
             [formGroupName]="i"
@@ -25,11 +29,14 @@
             <mat-expansion-panel-header>
               <mat-panel-title>
                 <span class="holiday-name">
-                  {{ holiday.get('name')?.value || 'New Holiday' }}
+                  {{ holiday.get("name")?.value || "New Holiday" }}
                 </span>
               </mat-panel-title>
               <mat-panel-description>
-                <mat-chip *ngIf="holiday.get('is_recurring')?.value" class="recurring-badge">
+                <mat-chip
+                  *ngIf="holiday.get('is_recurring')?.value"
+                  class="recurring-badge"
+                >
                   <mat-icon>repeat</mat-icon>
                   Recurring
                 </mat-chip>
@@ -91,34 +98,60 @@
                 </mat-checkbox>
               </div>
 
-              <div class="recurring-fields" *ngIf="holiday.get('is_recurring')?.value">
+              <div
+                class="recurring-fields"
+                *ngIf="holiday.get('is_recurring')?.value"
+              >
                 <mat-form-field appearance="outline">
                   <mat-label>Recurrence Type</mat-label>
                   <mat-select formControlName="recurrence_type">
-                    <mat-option value="fixed">Fixed Date (e.g., December 25)</mat-option>
-                    <mat-option value="relative">Relative Date (e.g., First Monday in September)</mat-option>
+                    <mat-option value="fixed"
+                      >Fixed Date (e.g., December 25)</mat-option
+                    >
+                    <mat-option value="relative"
+                      >Relative Date (e.g., First Monday in
+                      September)</mat-option
+                    >
                   </mat-select>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                   <mat-label>Month</mat-label>
                   <mat-select formControlName="recurrence_month">
-                    <mat-option *ngFor="let month of monthNames; let idx = index" [value]="idx + 1">
+                    <mat-option
+                      *ngFor="let month of monthNames; let idx = index"
+                      [value]="idx + 1"
+                    >
                       {{ month }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
 
-                <mat-form-field appearance="outline" *ngIf="holiday.get('recurrence_type')?.value === 'fixed'">
+                <mat-form-field
+                  appearance="outline"
+                  *ngIf="holiday.get('recurrence_type')?.value === 'fixed'"
+                >
                   <mat-label>Day of Month</mat-label>
-                  <input matInput type="number" formControlName="recurrence_day" min="1" max="31" />
+                  <input
+                    matInput
+                    type="number"
+                    formControlName="recurrence_day"
+                    min="1"
+                    max="31"
+                  />
                 </mat-form-field>
 
-                <div class="relative-fields" *ngIf="holiday.get('recurrence_type')?.value === 'relative'">
+                <div
+                  class="relative-fields"
+                  *ngIf="holiday.get('recurrence_type')?.value === 'relative'"
+                >
                   <mat-form-field appearance="outline">
                     <mat-label>Week</mat-label>
                     <mat-select formControlName="recurrence_week">
-                      <mat-option *ngFor="let week of weekNumbers" [value]="week.value">
+                      <mat-option
+                        *ngFor="let week of weekNumbers"
+                        [value]="week.value"
+                      >
                         {{ week.label }}
                       </mat-option>
                     </mat-select>
@@ -127,7 +160,10 @@
                   <mat-form-field appearance="outline">
                     <mat-label>Weekday</mat-label>
                     <mat-select formControlName="recurrence_weekday">
-                      <mat-option *ngFor="let day of weekdayNames; let idx = index" [value]="idx">
+                      <mat-option
+                        *ngFor="let day of weekdayNames; let idx = index"
+                        [value]="idx"
+                      >
                         {{ day }}
                       </mat-option>
                     </mat-select>
@@ -162,6 +198,8 @@
       diameter="20"
       mode="indeterminate"
     ></mat-progress-spinner>
-    <span *ngIf="!isLoading">{{ isEditMode ? 'Save Changes' : 'Create Group' }}</span>
+    <span *ngIf="!isLoading">{{
+      isEditMode ? "Save Changes" : "Create Group"
+    }}</span>
   </button>
 </mat-dialog-actions>

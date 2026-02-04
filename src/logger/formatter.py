@@ -33,7 +33,7 @@ def get_access_log(record):
         A log record for access.
 
     """
-    return {
+    log_data = {
         "log": {
             "type": "access",
             "level": record.levelname,
@@ -45,6 +45,9 @@ def get_access_log(record):
             "status": record.extra_info["status"],
         },
     }
+    if "duration_ms" in record.extra_info:
+        log_data["response"]["duration_ms"] = record.extra_info["duration_ms"]
+    return log_data
 
 
 class CustomFormatter(logging.Formatter):

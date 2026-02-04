@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * TEP E2E Test Configuration
+ * TAP E2E Test Configuration
  *
  * To run E2E tests:
  * 1. Start the backend: cd .. && python -m uvicorn src.main:app --reload

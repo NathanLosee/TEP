@@ -19,6 +19,7 @@ describe('LicenseService', () => {
       imports: [HttpClientTestingModule],
       providers: [LicenseService]
     });
+    localStorage.removeItem('tap_license_cache');
     service = TestBed.inject(LicenseService);
     httpMock = TestBed.inject(HttpTestingController);
   });

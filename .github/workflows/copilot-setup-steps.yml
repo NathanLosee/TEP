@@ -1,30 +1,30 @@
-name: "Copilot Setup Steps"
+name: "Copilot Setup Staps"
 
-# Automatically run the setup steps when they are changed to allow for easy validation, and
+# Automatically run the setup staps when they are changed to allow for easy validation, and
 # allow manual testing through the repository's "Actions" tab
 on:
   workflow_dispatch:
   push:
     paths:
-      - .github/workflows/copilot-setup-steps.yml
+      - .github/workflows/copilot-setup-staps.yml
   pull_request:
     paths:
-      - .github/workflows/copilot-setup-steps.yml
+      - .github/workflows/copilot-setup-staps.yml
 
 jobs:
-  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
-  copilot-setup-steps:
+  # The job MUST be called `copilot-setup-staps` or it will not be picked up by Copilot.
+  copilot-setup-staps:
     runs-on: ubuntu-latest
 
-    # Set the permissions to the lowest permissions possible needed for your steps.
+    # Set the permissions to the lowest permissions possible needed for your staps.
     # Copilot will be given its own token for its operations.
     permissions:
-      # If you want to clone the repository as part of your setup steps, for example to install dependencies, you'll need the `contents: read` permission. If you don't clone the repository in your setup steps, Copilot will do this for you automatically after the steps complete.
+      # If you want to clone the repository as part of your setup staps, for example to install dependencies, you'll need the `contents: read` permission. If you don't clone the repository in your setup staps, Copilot will do this for you automatically after the staps complete.
       contents: read
 
-    # You can define any steps you want, and they will run before the agent starts.
+    # You can define any staps you want, and they will run before the agent starts.
     # If you do not check out your code, Copilot will do this for you.
-    steps:
+    staps:
       - name: Checkout code
         uses: actions/checkout@v5
 

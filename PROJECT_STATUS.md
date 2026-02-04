@@ -1,14 +1,14 @@
-# TEP Project Status Report
+# TAP Project Status Report
 
 **Generated**: 2026-01-13
-**Project**: TEP - Timeclock and Employee Payroll
+**Project**: TAP - Timeclock and payroll
 **Status**: Production Ready (Pending Packaging)
 
 ---
 
 ## Executive Summary
 
-The TEP application is a comprehensive timeclock and payroll management system featuring:
+The TAP application is a comprehensive timeclock and payroll management system featuring:
 - Employee time tracking with browser-based device registration
 - Role-based access control with granular permissions
 - Cryptographic license system (Ed25519 signatures)
@@ -33,7 +33,7 @@ The TEP application is a comprehensive timeclock and payroll management system f
    - Fixed README.md (was incorrectly referencing "Super Health API")
    - Created comprehensive DEPLOYMENT.md guide
    - Created detailed TODO.md with prioritized tasks
-   - All documentation now accurate and TEP-specific
+   - All documentation now accurate and TAP-specific
 
 3. **✅ Code Quality Improvements**
    - Moved hardcoded error messages to constants ([src/timeclock/constants.py](src/timeclock/constants.py))
@@ -82,7 +82,7 @@ The TEP application is a comprehensive timeclock and payroll management system f
 ## Project Structure
 
 ```
-TEP/
+TAP/
 ├── src/                          # Backend (Python/FastAPI)
 │   ├── auth_role/               # RBAC system
 │   ├── department/              # Department management
@@ -305,7 +305,7 @@ This will:
 7. Copy utility scripts and documentation
 8. Create release archive
 
-**Output**: `releases/TEP-1.0.0.zip`
+**Output**: `releases/TAP-1.0.0.zip`
 
 ---
 
@@ -326,7 +326,7 @@ None currently identified.
 
 ---
 
-## Next Steps
+## Next Staps
 
 ### Immediate (This Week)
 1. ✅ Complete code review and documentation ✅
@@ -417,7 +417,7 @@ python scripts/build_release.py --version 1.0.0
 
 ## Conclusion
 
-The TEP project is in excellent shape with a solid foundation, comprehensive testing, and clear documentation. The core functionality is complete and working well. The primary remaining work is packaging/distribution infrastructure and addressing the high-priority items identified in the code review.
+The TAP project is in excellent shape with a solid foundation, comprehensive testing, and clear documentation. The core functionality is complete and working well. The primary remaining work is packaging/distribution infrastructure and addressing the high-priority items identified in the code review.
 
 **Project Health**: ⭐⭐⭐⭐ (4/5 stars)
 - Deducting one star only for pending packaging work

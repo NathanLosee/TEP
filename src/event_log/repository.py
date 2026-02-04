@@ -137,7 +137,8 @@ def filter_logs_by_permissions(
         can_view = False
         for permission, keywords in permission_to_log_keywords.items():
             if permission in user_permissions:
-                # If user has this permission, check if log contains related keywords
+                # If user has this permission, check if
+                # log contains related keywords
                 if not keywords:  # Empty list means always allow
                     can_view = True
                     break

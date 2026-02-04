@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   ContentChildren,
   EventEmitter,
   Input,
+  OnChanges,
   Output,
   QueryList,
+  SimpleChanges,
   TemplateRef,
   ViewChild,
-  AfterViewInit,
-  OnChanges,
-  SimpleChanges,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -99,7 +99,7 @@ export class GenericTableComponent<T = any>
   @Input() createButtonText = 'Create New';
 
   /** Create button permission */
-  @Input() createPermission?: string;
+  @Input() creatapermission?: string;
 
   /** Emitted when an action button is clicked */
   @Output() actionClick = new EventEmitter<TableActionEvent<T>>();

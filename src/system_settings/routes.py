@@ -20,7 +20,9 @@ from src.system_settings.repository import (
     update_logo,
     update_settings,
 )
-from src.system_settings.schemas import SystemSettingsResponse, SystemSettingsUpdate
+from src.system_settings.schemas import (
+    SystemSettingsResponse, SystemSettingsUpdate,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["system-settings"])
 

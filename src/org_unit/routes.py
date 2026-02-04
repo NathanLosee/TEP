@@ -22,7 +22,10 @@ from src.org_unit.repository import (
     update_org_unit as update_org_unit_in_db,
 )
 from src.org_unit.schemas import OrgUnitBase, OrgUnitExtended
-from src.services import create_event_log, requires_license, requires_permission, validate
+from src.services import (
+    create_event_log, requires_license,
+    requires_permission, validate,
+)
 
 router = APIRouter(prefix=BASE_URL, tags=["org_unit"])
 
@@ -55,6 +58,8 @@ def create_org_unit(
         duplicate_org_unit is None,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     org_unit = create_org_unit_in_db(request, db)
@@ -193,6 +198,8 @@ def update_org_unit(
         duplicate_org_unit is None or duplicate_org_unit.id == id,
         EXC_MSG_NAME_ALREADY_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="name",
+        constraint="unique",
     )
 
     org_unit = update_org_unit_in_db(org_unit, request, db)
@@ -227,6 +234,7 @@ def delete_org_unit(
         len(org_unit.employees) == 0,
         EXC_MSG_EMPLOYEES_ASSIGNED,
         status.HTTP_409_CONFLICT,
+        constraint="foreign_key",
     )
 
     delete_org_unit_from_db(org_unit, db)

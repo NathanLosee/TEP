@@ -23,13 +23,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { map, Observable, startWith } from 'rxjs';
+import { Employee, EmployeeService } from '../../../services/employee.service';
 import {
-  TimeclockEntry,
   TimeclockEntryCreate,
   TimeclockService,
 } from '../../../services/timeclock.service';
-import { Employee, EmployeeService } from '../../../services/employee.service';
-import { map, Observable, startWith } from 'rxjs';
 
 export interface TimeclockEntryFormDialogData {
   editEntry?: {
@@ -104,10 +103,12 @@ export class TimeclockEntryFormDialogComponent implements OnInit {
     });
 
     // Setup autocomplete filtering
-    this.filteredEmployees$ = this.entryForm.get('badge_number')!.valueChanges.pipe(
-      startWith(''),
-      map((value) => this.filterEmployees(value || ''))
-    );
+    this.filteredEmployees$ = this.entryForm
+      .get('badge_number')!
+      .valueChanges.pipe(
+        startWith(''),
+        map((value) => this.filterEmployees(value || '')),
+      );
   }
 
   private formatTime(date: Date): string {
@@ -128,7 +129,7 @@ export class TimeclockEntryFormDialogComponent implements OnInit {
         employee.badge_number.toLowerCase().includes(filterValue) ||
         `${employee.first_name} ${employee.last_name}`
           .toLowerCase()
-          .includes(filterValue)
+          .includes(filterValue),
     );
   }
 
@@ -136,14 +137,14 @@ export class TimeclockEntryFormDialogComponent implements OnInit {
     if (this.data.employees) {
       // Filter out root employee (id 0 or badge '000000')
       this.employees = this.data.employees.filter(
-        (e) => e.id !== 0 && e.badge_number !== '000000'
+        (e) => e.id !== 0 && e.badge_number !== '000000',
       );
     } else {
       this.employeeService.getEmployees().subscribe({
         next: (employees) => {
           // Filter out root employee (id 0 or badge '000000')
           this.employees = employees.filter(
-            (e) => e.id !== 0 && e.badge_number !== '000000'
+            (e) => e.id !== 0 && e.badge_number !== '000000',
           );
         },
         error: (error) => {

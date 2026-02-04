@@ -1,35 +1,37 @@
-import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
   Validators,
-} from "@angular/forms";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatSelectModule } from "@angular/material/select";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatNativeDateModule } from "@angular/material/core";
-import { MatExpansionModule } from "@angular/material/expansion";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatSnackBarModule, MatSnackBar } from "@angular/material/snack-bar";
-import { MatTooltipModule } from "@angular/material/tooltip";
+} from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
-  ReportService,
-  ReportResponse,
-  EmployeeReportData,
+  Department,
+  DepartmentService,
+} from '../../services/department.service';
+import { Employee, EmployeeService } from '../../services/employee.service';
+import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
+import {
   DayDetail,
-  TimePeriod
-} from "../../services/report.service";
-import { EmployeeService, Employee } from "../../services/employee.service";
-import { DepartmentService, Department } from "../../services/department.service";
-import { OrgUnitService, OrgUnit } from "../../services/org-unit.service";
+  EmployeeReportData,
+  ReportResponse,
+  ReportService,
+} from '../../services/report.service';
 
 interface CalendarDay {
   date: Date;
@@ -49,7 +51,7 @@ interface EmployeeCalendar {
 }
 
 @Component({
-  selector: "app-reports",
+  selector: 'app-reports',
   standalone: true,
   imports: [
     CommonModule,
@@ -68,8 +70,8 @@ interface EmployeeCalendar {
     MatSnackBarModule,
     MatTooltipModule,
   ],
-  templateUrl: "./reports.component.html",
-  styleUrl: "./reports.component.scss",
+  templateUrl: './reports.component.html',
+  styleUrl: './reports.component.scss',
 })
 export class ReportsComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -88,16 +90,16 @@ export class ReportsComponent implements OnInit {
   orgUnits: OrgUnit[] = [];
 
   reportTypes = [
-    { value: "all", label: "All Employees" },
-    { value: "employee", label: "Individual Employee" },
-    { value: "department", label: "Department" },
-    { value: "org_unit", label: "Organizational Unit" },
+    { value: 'all', label: 'All Employees' },
+    { value: 'employee', label: 'Individual Employee' },
+    { value: 'department', label: 'Department' },
+    { value: 'org_unit', label: 'Organizational Unit' },
   ];
 
   allDetailLevels = [
-    { value: "summary", label: "Summary Only" },
-    { value: "employee_summary", label: "Summary + Employee Details" },
-    { value: "detailed", label: "Full Detailed Report" },
+    { value: 'summary', label: 'Summary Only' },
+    { value: 'employee_summary', label: 'Summary + Employee Details' },
+    { value: 'detailed', label: 'Full Detailed Report' },
   ];
 
   // Filtered detail levels (excludes "summary" for single employee reports)
@@ -105,7 +107,7 @@ export class ReportsComponent implements OnInit {
     const reportType = this.reportForm?.get('reportType')?.value;
     if (reportType === 'employee') {
       // For individual employee, summary only produces empty content
-      return this.allDetailLevels.filter(level => level.value !== 'summary');
+      return this.allDetailLevels.filter((level) => level.value !== 'summary');
     }
     return this.allDetailLevels;
   }
@@ -122,7 +124,7 @@ export class ReportsComponent implements OnInit {
     this.userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     this.reportForm = this.fb.group({
-      reportType: ["all"],
+      reportType: ['all'],
       dateRange: this.fb.group({
         start: [this.getLastWeekStart(), Validators.required],
         end: [new Date(), Validators.required],
@@ -130,18 +132,21 @@ export class ReportsComponent implements OnInit {
       employee: [null],
       department: [null],
       orgUnit: [null],
-      detailLevel: ["summary"],
+      detailLevel: ['summary'],
     });
 
     // Subscribe to report type changes to reset filters
-    this.reportForm.get("reportType")?.valueChanges.subscribe((reportType) => {
+    this.reportForm.get('reportType')?.valueChanges.subscribe((reportType) => {
       this.reportForm.patchValue({
         employee: null,
         department: null,
         orgUnit: null,
       });
       // For individual employee reports, "summary" is not valid - reset to "employee_summary"
-      if (reportType === 'employee' && this.reportForm.get('detailLevel')?.value === 'summary') {
+      if (
+        reportType === 'employee' &&
+        this.reportForm.get('detailLevel')?.value === 'summary'
+      ) {
         this.reportForm.patchValue({ detailLevel: 'employee_summary' });
       }
     });
@@ -157,11 +162,11 @@ export class ReportsComponent implements OnInit {
     this.employeeService.getEmployees().subscribe({
       next: (data) => {
         // Filter out root employee (id=0)
-        this.employees = data.filter(emp => emp.id !== 0);
+        this.employees = data.filter((emp) => emp.id !== 0);
       },
       error: (error) => {
-        console.error("Error loading employees:", error);
-        this.showSnackBar("Failed to load employees", "error");
+        console.error('Error loading employees:', error);
+        this.showSnackBar('Failed to load employees', 'error');
       },
     });
   }
@@ -172,8 +177,8 @@ export class ReportsComponent implements OnInit {
         this.departments = data;
       },
       error: (error) => {
-        console.error("Error loading departments:", error);
-        this.showSnackBar("Failed to load departments", "error");
+        console.error('Error loading departments:', error);
+        this.showSnackBar('Failed to load departments', 'error');
       },
     });
   }
@@ -182,18 +187,18 @@ export class ReportsComponent implements OnInit {
     this.orgUnitService.getOrgUnits().subscribe({
       next: (data) => {
         // Filter out root org unit (id=0)
-        this.orgUnits = data.filter(unit => unit.id !== 0);
+        this.orgUnits = data.filter((unit) => unit.id !== 0);
       },
       error: (error) => {
-        console.error("Error loading org units:", error);
-        this.showSnackBar("Failed to load org units", "error");
+        console.error('Error loading org units:', error);
+        this.showSnackBar('Failed to load org units', 'error');
       },
     });
   }
 
   generateReport() {
     if (this.reportForm.invalid) {
-      this.showSnackBar("Please fill in all required fields", "error");
+      this.showSnackBar('Please fill in all required fields', 'error');
       return;
     }
 
@@ -204,9 +209,10 @@ export class ReportsComponent implements OnInit {
     const request = {
       start_date: this.formatDate(formValue.dateRange.start),
       end_date: this.formatDate(formValue.dateRange.end),
-      employee_id: reportType === "employee" ? formValue.employee : undefined,
-      department_id: reportType === "department" ? formValue.department : undefined,
-      org_unit_id: reportType === "org_unit" ? formValue.orgUnit : undefined,
+      employee_id: reportType === 'employee' ? formValue.employee : undefined,
+      department_id:
+        reportType === 'department' ? formValue.department : undefined,
+      org_unit_id: reportType === 'org_unit' ? formValue.orgUnit : undefined,
     };
 
     this.reportService.generateReport(request).subscribe({
@@ -217,23 +223,23 @@ export class ReportsComponent implements OnInit {
         this.employeeCalendars.clear();
 
         // Initialize calendars for each employee
-        data.employees.forEach(employee => {
+        data.employees.forEach((employee) => {
           this.initializeEmployeeCalendar(employee);
         });
 
-        this.showSnackBar("Report generated successfully", "success");
+        this.showSnackBar('Report generated successfully', 'success');
       },
       error: (error) => {
-        console.error("Error generating report:", error);
+        console.error('Error generating report:', error);
         this.isLoading = false;
-        this.showSnackBar("Failed to generate report", "error");
+        this.showSnackBar('Failed to generate report', 'error');
       },
     });
   }
 
   exportPDF() {
     if (!this.reportData) {
-      this.showSnackBar("Please generate a report first", "error");
+      this.showSnackBar('Please generate a report first', 'error');
       return;
     }
 
@@ -245,23 +251,23 @@ export class ReportsComponent implements OnInit {
         this.formatDate(formValue.dateRange.start),
         this.formatDate(formValue.dateRange.end),
         formValue.detailLevel,
-        reportType === "employee" ? formValue.employee : undefined,
-        reportType === "department" ? formValue.department : undefined,
-        reportType === "org_unit" ? formValue.orgUnit : undefined
+        reportType === 'employee' ? formValue.employee : undefined,
+        reportType === 'department' ? formValue.department : undefined,
+        reportType === 'org_unit' ? formValue.orgUnit : undefined,
       )
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
+          const link = document.createElement('a');
           link.href = url;
           link.download = `timeclock_report_${this.formatDate(formValue.dateRange.start)}_to_${this.formatDate(formValue.dateRange.end)}.pdf`;
           link.click();
           window.URL.revokeObjectURL(url);
-          this.showSnackBar("PDF exported successfully", "success");
+          this.showSnackBar('PDF exported successfully', 'success');
         },
         error: (error) => {
-          console.error("Error exporting PDF:", error);
-          this.showSnackBar("Failed to export PDF", "error");
+          console.error('Error exporting PDF:', error);
+          this.showSnackBar('Failed to export PDF', 'error');
         },
       });
   }
@@ -289,8 +295,8 @@ export class ReportsComponent implements OnInit {
     let earliestDate: Date | undefined;
     let latestDate: Date | undefined;
 
-    employee.months.forEach(month => {
-      month.days.forEach(day => {
+    employee.months.forEach((month) => {
+      month.days.forEach((day) => {
         const dayDate = new Date(day.date);
         if (!earliestDate || dayDate < earliestDate) {
           earliestDate = dayDate;
@@ -305,7 +311,11 @@ export class ReportsComponent implements OnInit {
     const startMonth = earliestDate || new Date(this.reportData.start_date);
 
     const calendar: EmployeeCalendar = {
-      currentMonth: new Date(startMonth.getFullYear(), startMonth.getMonth(), 1),
+      currentMonth: new Date(
+        startMonth.getFullYear(),
+        startMonth.getMonth(),
+        1,
+      ),
       calendarDays: [],
       canGoPrevious: true,
       canGoNext: true,
@@ -317,7 +327,11 @@ export class ReportsComponent implements OnInit {
     this.employeeCalendars.set(employee.employee_id, calendar);
   }
 
-  updateEmployeeCalendar(employeeId: number, calendar: EmployeeCalendar, employee: EmployeeReportData) {
+  updateEmployeeCalendar(
+    employeeId: number,
+    calendar: EmployeeCalendar,
+    employee: EmployeeReportData,
+  ) {
     const year = calendar.currentMonth.getFullYear();
     const month = calendar.currentMonth.getMonth();
 
@@ -336,8 +350,8 @@ export class ReportsComponent implements OnInit {
 
     // Create a map of date strings to day details for quick lookup
     const dayDetailsMap = new Map<string, DayDetail>();
-    employee.months.forEach(m => {
-      m.days.forEach(day => {
+    employee.months.forEach((m) => {
+      m.days.forEach((day) => {
         const dateStr = this.formatDate(new Date(day.date));
         dayDetailsMap.set(dateStr, day);
       });
@@ -364,19 +378,29 @@ export class ReportsComponent implements OnInit {
 
     // Update navigation availability
     if (calendar.earliestDate) {
-      const earliestMonth = new Date(calendar.earliestDate.getFullYear(), calendar.earliestDate.getMonth(), 1);
+      const earliestMonth = new Date(
+        calendar.earliestDate.getFullYear(),
+        calendar.earliestDate.getMonth(),
+        1,
+      );
       calendar.canGoPrevious = calendar.currentMonth > earliestMonth;
     }
 
     if (calendar.latestDate) {
-      const latestMonth = new Date(calendar.latestDate.getFullYear(), calendar.latestDate.getMonth(), 1);
+      const latestMonth = new Date(
+        calendar.latestDate.getFullYear(),
+        calendar.latestDate.getMonth(),
+        1,
+      );
       calendar.canGoNext = calendar.currentMonth < latestMonth;
     }
   }
 
   previousMonth(employeeId: number) {
     const calendar = this.employeeCalendars.get(employeeId);
-    const employee = this.reportData?.employees.find(e => e.employee_id === employeeId);
+    const employee = this.reportData?.employees.find(
+      (e) => e.employee_id === employeeId,
+    );
 
     if (calendar && employee && calendar.canGoPrevious) {
       const newMonth = new Date(calendar.currentMonth);
@@ -388,7 +412,9 @@ export class ReportsComponent implements OnInit {
 
   nextMonth(employeeId: number) {
     const calendar = this.employeeCalendars.get(employeeId);
-    const employee = this.reportData?.employees.find(e => e.employee_id === employeeId);
+    const employee = this.reportData?.employees.find(
+      (e) => e.employee_id === employeeId,
+    );
 
     if (calendar && employee && calendar.canGoNext) {
       const newMonth = new Date(calendar.currentMonth);
@@ -402,7 +428,7 @@ export class ReportsComponent implements OnInit {
     if (!this.reportData) return 0;
     return this.reportData.employees.reduce(
       (sum, emp) => sum + emp.summary.total_hours,
-      0
+      0,
     );
   }
 
@@ -419,14 +445,14 @@ export class ReportsComponent implements OnInit {
     if (!this.reportData) return 0;
     return this.reportData.employees.reduce(
       (sum, emp) => sum + emp.summary.overtime_hours,
-      0
+      0,
     );
   }
 
   private formatDate(date: Date): string {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
@@ -438,9 +464,9 @@ export class ReportsComponent implements OnInit {
 
   private showSnackBar(
     message: string,
-    type: "success" | "error" | "info" = "info"
+    type: 'success' | 'error' | 'info' = 'info',
   ) {
-    this.snackBar.open(message, "Close", {
+    this.snackBar.open(message, 'Close', {
       duration: 4000,
       panelClass: [`snack-${type}`],
     });

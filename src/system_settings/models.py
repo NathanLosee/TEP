@@ -31,4 +31,4 @@ class SystemSettings(Base):
     logo_data = Column(LargeBinary, nullable=True)
     logo_mime_type = Column(String(50), nullable=True)
     logo_filename = Column(String(255), nullable=True)
-    company_name = Column(String(255), default="TEP Timeclock")
+    company_name = Column(String(255), default="TAP Timeclock")

@@ -23,7 +23,16 @@ class EventLogBase(BaseModel):
     log: str
     badge_number: str
 
-    model_config = ConfigDict(str_strip_whitespace=True, str_min_length=1)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_min_length=1,
+        json_schema_extra={
+            "example": {
+                "log": "Employee EMP001 clocked in",
+                "badge_number": "ADMIN",
+            }
+        },
+    )
 
 
 class EventLogExtended(EventLogBase):

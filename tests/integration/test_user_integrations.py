@@ -64,7 +64,7 @@ def test_create_user_409_user_already_exists(
     response = test_client.post(BASE_URL, json=user_data)
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json() == {"detail": EXC_MSG_USER_WITH_ID_EXISTS}
+    assert response.json()["detail"]["message"] == EXC_MSG_USER_WITH_ID_EXISTS
 
 
 def test_get_users_200(

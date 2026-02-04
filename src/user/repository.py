@@ -56,7 +56,9 @@ def get_user_by_id(id: int, db: Session) -> Union[User, None]:
     return db.get(User, id)
 
 
-def get_user_by_badge_number(badge_number: str, db: Session) -> Union[User, None]:
+def get_user_by_badge_number(
+    badge_number: str, db: Session,
+) -> Union[User, None]:
     """Retrieve a user by a provided badge number.
 
     Args:

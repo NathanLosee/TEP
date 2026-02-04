@@ -31,7 +31,10 @@ class SystemSettingsBase(BaseModel):
     accent_color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     company_name: Optional[str] = Field(None, max_length=255)
 
-    @field_validator("primary_color", "secondary_color", "accent_color", mode="before")
+    @field_validator(
+        "primary_color", "secondary_color",
+        "accent_color", mode="before",
+    )
     @classmethod
     def validate_colors(cls, v: Optional[str]) -> Optional[str]:
         """Validate and normalize hex colors."""
@@ -41,7 +44,16 @@ class SystemSettingsBase(BaseModel):
 class SystemSettingsUpdate(SystemSettingsBase):
     """Schema for updating system settings."""
 
-    pass
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "primary_color": "#1976D2",
+                "secondary_color": "#424242",
+                "accent_color": "#FF9800",
+                "company_name": "Acme Corporation",
+            }
+        }
+    }
 
 
 class SystemSettingsResponse(BaseModel):

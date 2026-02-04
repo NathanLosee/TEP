@@ -82,6 +82,8 @@ def create_user(
         duplicate_user is None,
         EXC_MSG_USER_WITH_ID_EXISTS,
         status.HTTP_409_CONFLICT,
+        field="badge_number",
+        constraint="unique",
     )
 
     user = create_user_in_db(request, db)
@@ -184,7 +186,8 @@ def update_user_password(
     """Update a user's password.
 
     Users can change their own password (requires current password).
-    Users with user.update permission can change any user's password (no current password needed).
+    Users with user.update permission can change any user's
+    password (no current password needed).
 
     Args:
         badge_number (str): User's badge number.
@@ -229,7 +232,10 @@ def update_user_password(
         # User doesn't have permission to change other users' passwords
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to change other users' passwords",
+            detail=(
+                "You don't have permission to "
+                "change other users' passwords"
+            ),
         )
 
     user = update_user_in_db(
@@ -317,6 +323,7 @@ def login(
         httponly=True,
         secure=settings.ENVIRONMENT == "production",
         samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRY_MINUTES * 60,
     )
     log_args = {"badge_number": user.badge_number}
     create_event_log(IDENTIFIER, "LOGIN", log_args, user.badge_number, db)

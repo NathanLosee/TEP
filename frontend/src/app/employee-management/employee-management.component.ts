@@ -18,7 +18,7 @@ import { Employee, EmployeeService } from '../../services/employee.service';
 import { HolidayGroup, HolidayGroupService } from '../../services/holiday-group.service';
 import { OrgUnit, OrgUnitService } from '../../services/org-unit.service';
 import { DisableIfNoPermissionDirective } from '../directives/has-permission.directive';
-import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
+import { ErrorDialogComponent, extractErrorDetail } from '../error-dialog/error-dialog.component';
 import {
   GenericTableComponent,
   TableCellDirective,
@@ -400,7 +400,7 @@ export class EmployeeManagementComponent implements OnInit {
       data: {
         title: 'Error',
         message: `${message}. Please try again.`,
-        error: error?.error?.detail || error?.message || 'Unknown error',
+        error: extractErrorDetail(error),
       },
     });
   }

@@ -2,12 +2,13 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 
 import { TimeclockComponent, TimeclockDialog } from './timeclock.component';
 import { TimeclockService } from '../../services/timeclock.service';
 import { BrowserUuidService } from '../../services/browser-uuid.service';
 import { RegisteredBrowserService } from '../../services/registered-browser.service';
+import { OfflineQueueService } from '../../services/offline-queue.service';
 import { ErrorDialogComponent } from '../error-dialog/error-dialog.component';
 
 describe('TimeclockComponent', () => {
@@ -16,8 +17,11 @@ describe('TimeclockComponent', () => {
   let timeclockServiceSpy: jasmine.SpyObj<TimeclockService>;
   let browserUuidServiceSpy: jasmine.SpyObj<BrowserUuidService>;
   let registeredBrowserServiceSpy: jasmine.SpyObj<RegisteredBrowserService>;
+  let offlineQueueServiceSpy: jasmine.SpyObj<OfflineQueueService>;
   let dialogSpy: jasmine.SpyObj<MatDialog>;
   let errorDialogSpy: jasmine.SpyObj<ErrorDialogComponent>;
+  let pendingCount$: BehaviorSubject<number>;
+  let isOffline$: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
     const timeclockSpy = jasmine.createSpyObj('TimeclockService', ['timeclock', 'checkStatus']);
@@ -35,6 +39,16 @@ describe('TimeclockComponent', () => {
       'deleteBrowser',
       'recoverBrowser'
     ]);
+
+    pendingCount$ = new BehaviorSubject<number>(0);
+    isOffline$ = new BehaviorSubject<boolean>(false);
+    const offlineQueueSpy = jasmine.createSpyObj('OfflineQueueService', ['enqueue', 'syncAll'], {
+      pendingCount$,
+      isOffline$,
+      lastSyncResult$: new Subject(),
+    });
+    offlineQueueSpy.enqueue.and.returnValue(Promise.resolve({ badgeNumber: '', clientTimestamp: '', status: 'pending' as const, attempts: 0, createdAt: '' }));
+
     const matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
     const errorSpy = jasmine.createSpyObj('ErrorDialogComponent', ['openErrorDialog']);
 
@@ -47,6 +61,7 @@ describe('TimeclockComponent', () => {
           { provide: TimeclockService, useValue: timeclockSpy },
           { provide: BrowserUuidService, useValue: browserUuidSpy },
           { provide: RegisteredBrowserService, useValue: registeredBrowserSpy },
+          { provide: OfflineQueueService, useValue: offlineQueueSpy },
           { provide: MatDialog, useValue: matDialogSpy },
           { provide: ErrorDialogComponent, useValue: errorSpy }
         ]
@@ -57,6 +72,7 @@ describe('TimeclockComponent', () => {
     timeclockServiceSpy = timeclockSpy;
     browserUuidServiceSpy = browserUuidSpy;
     registeredBrowserServiceSpy = registeredBrowserSpy;
+    offlineQueueServiceSpy = offlineQueueSpy;
     dialogSpy = matDialogSpy;
     errorDialogSpy = errorSpy;
 
@@ -125,20 +141,19 @@ describe('TimeclockComponent', () => {
 
       timeclockServiceSpy.timeclock.and.returnValue(of(mockResponse));
       dialogSpy.open.and.returnValue(mockDialogRef);
-      spyOn(console, 'log');
       spyOn(component, 'openTimeclockDialog').and.callThrough();
 
       component.badgeNumber = 'EMP001';
       component.clockInOut();
 
       expect(timeclockServiceSpy.timeclock).toHaveBeenCalledWith('EMP001');
-      expect(console.log).toHaveBeenCalledWith(mockResponse);
       expect(component.openTimeclockDialog).toHaveBeenCalledWith('EMP001', 'Clocked in');
       expect(component.badgeNumber).toBe('');
     });
 
     it('should handle clock in/out error', () => {
       const mockError = {
+        status: 404,
         error: {
           detail: 'Employee not found'
         }
@@ -156,13 +171,46 @@ describe('TimeclockComponent', () => {
     });
 
     it('should not clear badge number on error', () => {
-      timeclockServiceSpy.timeclock.and.returnValue(throwError(() => new Error('Error')));
+      const mockError = { status: 400, error: { detail: 'Bad request' } };
+      timeclockServiceSpy.timeclock.and.returnValue(throwError(() => mockError));
       component.badgeNumber = 'EMP001';
 
       component.clockInOut();
 
       expect(component.badgeNumber).toBe('EMP001');
     });
+
+    it('should queue punch when offline', fakeAsync(() => {
+      const mockDialogRef = {
+        afterOpened: () => of(undefined),
+        close: jasmine.createSpy('close')
+      } as any;
+      dialogSpy.open.and.returnValue(mockDialogRef);
+
+      isOffline$.next(true);
+      component.badgeNumber = 'EMP001';
+      component.clockInOut();
+      tick();
+
+      expect(offlineQueueServiceSpy.enqueue).toHaveBeenCalledWith('EMP001');
+      expect(component.badgeNumber).toBe('');
+    }));
+
+    it('should fall back to queue on network error', fakeAsync(() => {
+      const mockDialogRef = {
+        afterOpened: () => of(undefined),
+        close: jasmine.createSpy('close')
+      } as any;
+      dialogSpy.open.and.returnValue(mockDialogRef);
+
+      const networkError = { status: 0 };
+      timeclockServiceSpy.timeclock.and.returnValue(throwError(() => networkError));
+      component.badgeNumber = 'EMP001';
+      component.clockInOut();
+      tick();
+
+      expect(offlineQueueServiceSpy.enqueue).toHaveBeenCalledWith('EMP001');
+    }));
   });
 
   describe('checkStatus', () => {

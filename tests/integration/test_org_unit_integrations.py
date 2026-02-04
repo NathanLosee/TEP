@@ -42,7 +42,7 @@ def test_create_org_unit_409_name_already_exists(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json() == {"detail": EXC_MSG_NAME_ALREADY_EXISTS}
+    assert response.json()["detail"]["message"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
 def test_get_org_units_200(
@@ -176,7 +176,7 @@ def test_update_org_unit_by_id_409_name_already_exists(
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json() == {"detail": EXC_MSG_NAME_ALREADY_EXISTS}
+    assert response.json()["detail"]["message"] == EXC_MSG_NAME_ALREADY_EXISTS
 
 
 def test_delete_org_unit_by_id_200(
@@ -213,4 +213,4 @@ def test_delete_org_unit_by_id_409_employees_assigned(
     response = test_client.delete(f"{BASE_URL}/{org_unit["id"]}")
 
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json() == {"detail": EXC_MSG_EMPLOYEES_ASSIGNED}
+    assert response.json()["detail"]["message"] == EXC_MSG_EMPLOYEES_ASSIGNED

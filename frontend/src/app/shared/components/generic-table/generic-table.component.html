@@ -1,6 +1,9 @@
 <!-- Loading State -->
 <div *ngIf="isLoading" class="loading-container">
-  <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
+  <mat-progress-spinner
+    mode="indeterminate"
+    diameter="60"
+  ></mat-progress-spinner>
 </div>
 
 <!-- Empty State -->
@@ -12,7 +15,7 @@
     *ngIf="showCreateOnEmpty"
     mat-raised-button
     color="primary"
-    [disableIfNoPermission]="createPermission || ''"
+    [disableIfNoPermission]="creatapermission || ''"
     (click)="createClick.emit()"
   >
     <mat-icon>add</mat-icon>
@@ -80,14 +83,17 @@
 
         <!-- Date -->
         <span *ngSwitchCase="'date'">
-          {{ getValue(row, col) | date : (col.dateFormat || 'medium') }}
+          {{ getValue(row, col) | date: col.dateFormat || "medium" }}
         </span>
 
         <!-- Template type - use content projection -->
         <ng-container *ngSwitchCase="'template'">
           <ng-container *ngIf="getTemplate(col.key) as template">
             <ng-container
-              *ngTemplateOutlet="template; context: { $implicit: row, column: col }"
+              *ngTemplateOutlet="
+                template;
+                context: { $implicit: row, column: col }
+              "
             ></ng-container>
           </ng-container>
         </ng-container>

@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DATABASE_URL: str = ""
     CORS_ORIGINS: str = "http://localhost:4200"
+    ACCESS_TOKEN_EXPIRY_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRY_MINUTES: int = 1440  # 24 hours
+    GITHUB_REPO: str = ""  # e.g. "myorg/TAP"
+    GITHUB_TOKEN: str = ""  # Optional PAT for private repos
+    AUTO_CHECK_UPDATES: bool = True
+    UPDATE_CHECK_INTERVAL_HOURS: int = 6
 
     def get_database_url(self) -> str:
         """Get the database URL based on environment.
@@ -49,9 +55,9 @@ class Settings(BaseSettings):
             return self.DATABASE_URL
 
         if self.ENVIRONMENT.lower() == "production":
-            return "sqlite:///tep_prod.sqlite"
+            return "sqlite:///tap_prod.sqlite"
         else:
-            return "sqlite:///tep_dev.sqlite"
+            return "sqlite:///tap_dev.sqlite"
 
     def get_cors_origins(self) -> list[str]:
         """Get the list of allowed CORS origins.
@@ -61,4 +67,6 @@ class Settings(BaseSettings):
         """
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
-    model_config = SettingsConfigDict(env_file=get_env_file_path(), extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=get_env_file_path(), extra="ignore"
+    )

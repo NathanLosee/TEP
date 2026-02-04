@@ -3,9 +3,9 @@
   <div class="welcome-header">
     <div class="welcome-content">
       <div class="welcome-text">
-        <h1>Welcome to TEP Admin</h1>
+        <h1>Welcome to TAP Admin</h1>
         <p class="welcome-subtitle">
-          {{ currentDateAndTime | date : "EEEE, MMMM d, yyyy - h:mm a" }}
+          {{ currentDateAndTime | date: "EEEE, MMMM d, yyyy - h:mm a" }}
         </p>
       </div>
       <div class="admin-avatar">
@@ -28,10 +28,7 @@
         mode="indeterminate"
       ></mat-progress-bar>
       <div class="activity-list" *ngIf="!isLoadingEvents">
-        <div
-          *ngFor="let activity of recentActivity"
-          class="activity-item"
-        >
+        <div *ngFor="let activity of recentActivity" class="activity-item">
           <div class="activity-icon">
             <mat-icon [class]="'activity-icon-' + activity.type">{{
               activity.icon
